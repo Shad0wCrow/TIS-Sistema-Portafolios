@@ -1,0 +1,234 @@
+# Proyecto Fullstack
+
+Backend **Laravel 8 + PHP 7.4 + PostgreSQL 12.7**
+Frontend **React + Vite**
+
+El proyecto está dividido en dos partes dentro del mismo repositorio:
+
+* **backend/** → API Laravel
+* **front-portafolio/** → Frontend React
+
+Docker se utiliza para ejecutar el backend y la base de datos.
+El frontend se ejecuta con Node.js.
+
+---
+
+# Estructura del proyecto
+
+```
+backend/
+front-portafolio/
+docker/
+docker-compose.yml
+README.md
+```
+
+---
+
+# Requisitos
+
+Instalar:
+
+* Docker
+* Node.js (v18 o superior)
+* npm
+
+Verificar instalación:
+
+```
+docker --version
+docker compose version
+node -v
+npm -v
+```
+
+---
+
+# Backend (Laravel)
+
+El backend se ejecuta con Docker usando:
+
+* PHP 7.4
+* Laravel 8
+* PostgreSQL 12.7
+
+## 1. Construir contenedores
+
+Desde la raíz del proyecto osea en /TIS:
+
+```
+docker compose build
+```
+
+---
+
+## 2. Instalar dependencias del backend
+
+```
+docker compose run backend composer install
+```
+
+---
+
+## 3. Ejecutar contenedores
+
+```
+docker compose up
+```
+
+O en segundo plano:
+
+```
+docker compose up -d
+```
+
+---
+
+## 4. Acceder al backend
+
+Abrir en el navegador:
+
+```
+http://localhost:8000
+```
+
+---
+
+## 5. Ejecutar migraciones
+
+```
+docker compose exec backend php artisan migrate
+```
+
+---
+
+# Frontend (React + Vite)
+
+## 1. Entrar a la carpeta del frontend
+
+```
+cd front-portafolio
+```
+
+---
+
+## 2. Instalar dependencias
+
+```
+npm install
+```
+
+---
+
+## 3. Ejecutar servidor de desarrollo
+
+```
+npm run dev
+```
+
+---
+
+## 4. Acceder al frontend
+
+```
+http://localhost:5173
+```
+
+---
+
+# Puertos del proyecto
+
+| Servicio        | Puerto |
+| --------------- | ------ |
+| Frontend React  | 5173   |
+| Backend Laravel | 8000   |
+| PostgreSQL      | 5432   |
+
+---
+
+# Encender el proyecto
+
+Para iniciar backend y base de datos:
+
+```
+docker compose up -d
+```
+
+Para iniciar el frontend:
+
+```
+cd front-portafolio
+npm run dev
+```
+
+---
+
+# Apagar el proyecto
+
+Detener contenedores:
+
+```
+docker compose down
+```
+
+Esto detiene:
+
+* Laravel
+* PostgreSQL
+
+---
+
+# Comandos útiles Docker
+
+Ver contenedores activos:
+
+```
+docker ps
+```
+
+Entrar al contenedor del backend:
+
+```
+docker compose exec backend bash
+```
+
+Ver logs:
+
+```
+docker compose logs
+```
+
+---
+
+# ¿Debo dejar los contenedores siempre encendidos?
+
+No es necesario.
+
+Lo recomendable es:
+
+* Encenderlos cuando vayas a trabajar
+* Apagarlos cuando termines
+
+Docker consume memoria y CPU incluso cuando no estás usando el proyecto.
+
+Flujo típico de trabajo:
+
+1. Encender backend
+2. Ejecutar frontend
+3. Trabajar
+4. Apagar contenedores
+
+---
+
+# Notas importantes
+
+No instalar PHP ni PostgreSQL manualmente.
+Todo el backend corre dentro de Docker.
+
+No subir estas carpetas al repositorio:
+
+```
+backend/vendor
+front-portafolio/node_modules
+front-portafolio/dist
+```
