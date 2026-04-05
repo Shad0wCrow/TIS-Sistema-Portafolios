@@ -1,13 +1,13 @@
-import { useState } from 'react'
-
-
+import RegisterPage from './pages/Registration/Registerpage'
+import {Routes, Route} from "react-router-dom"
 
 function App() {
 
   return (
-    <>
-    <h1>Holaaaa</h1>
-    </>
+    <Routes>
+      <Route path='/' element={<h1>Home</h1>}/>
+      <Route path='/register' element={<RegisterPage/>}/>
+    </Routes>
   )
 }
 
