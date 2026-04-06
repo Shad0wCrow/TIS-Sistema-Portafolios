@@ -5,7 +5,35 @@ import logoDevfolio from "../assets/devfolio-logo.png";
 
 function Landing() {
   const navigate = useNavigate();
+const handleEmpezar = async () => {
+  const token = localStorage.getItem("token");
 
+  // ❌ No logueado
+  if (!token) {
+    navigate("/login");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:8000/api/perfil/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (data.has_profile) {
+      navigate("/dashboard");
+    } else {
+      navigate("/createAccount");
+    }
+
+  } catch (error) {
+    console.error("Error verificando perfil:", error);
+    navigate("/login");
+  }
+};
   return (
     <div className="landing-page">
       <section
@@ -53,7 +81,7 @@ function Landing() {
             <div className="landing-right">
               <button
                 className="landing-main-button"
-                onClick={() => navigate("/register")}
+                onClick={handleEmpezar}
               >
                 EMPEZAR A DESCUBIR
               </button>

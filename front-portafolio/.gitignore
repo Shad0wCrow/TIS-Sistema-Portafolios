@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# lo del Readme xd
+backend/vendor
+front-portafolio/node_modules
+front-portafolio/dist
+
+#Por tradición
+.env

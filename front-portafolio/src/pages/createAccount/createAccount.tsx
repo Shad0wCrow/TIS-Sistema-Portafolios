@@ -4,6 +4,9 @@ import Input from "../../components/ui/Input/input"
 import ErrorMessage from "../../components/ui/ErrorMessage/ErrorMessage"
 import perfilIcon from "../../assets/icons/icon-perfil.svg"
 import Button from "../../components/ui/Button/button"
+import { createProfile } from "../../services/profile";
+import { useNavigate } from "react-router-dom";
+
 
 interface FormValues {
     nombre: string
@@ -51,6 +54,9 @@ function validate(values: FormValues): FormErrors {
 }
 
 export default function CreateAccount() {
+
+    const navigate = useNavigate();
+
     const [values, setValues] = useState<FormValues>({
         nombre: "",
         apellido: "",
@@ -79,19 +85,36 @@ export default function CreateAccount() {
         }
     }
 
-    function handleGuardar() {
-        const allTouched = Object.fromEntries(
-            (Object.keys(values) as (keyof FormValues)[]).map((k) => [k, true])
-        ) as Record<keyof FormValues, boolean>
-        setTouched(allTouched)
+const handleCancelar = () => {
+  navigate("/");
+};
+    
+ async function handleGuardar() {
+    const allTouched = Object.fromEntries(
+        (Object.keys(values) as (keyof FormValues)[]).map((k) => [k, true])
+    ) as Record<keyof FormValues, boolean>
 
-        const currentErrors = validate(values)
-        setErrors(currentErrors)
+    setTouched(allTouched)
 
-        if (Object.keys(currentErrors).length === 0) {
-            console.log("Formulario válido:", values)
+    const currentErrors = validate(values)
+    setErrors(currentErrors)
+
+    if (Object.keys(currentErrors).length === 0) {
+        try {
+            await createProfile({
+                nombre_perfil: values.nombre,
+                apellido_perfil: values.apellido,
+                profesion: values.profesion,
+                celular: values.celular,
+                descripcion: values.descripcion,
+            })
+
+            navigate("/dashboard")
+        } catch (error) {
+            console.error("Error al guardar perfil:", error)
         }
     }
+}
 
     return (
         <main className={styles.page}>
@@ -189,7 +212,7 @@ export default function CreateAccount() {
 
                 <div className={styles.actions}>
                     <Button text="Guardar" className={styles.save} onClick={handleGuardar} />
-                    <Button text="Cancelar" className={styles.cancel} />
+                    <Button text="Cancelar" className={styles.cancel} onClick={handleCancelar} />
                 </div>
 
             </section>
