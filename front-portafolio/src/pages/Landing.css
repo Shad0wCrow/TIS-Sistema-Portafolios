@@ -18,65 +18,6 @@
   overflow: hidden;
 }
 
-.landing-navbar {
-  height: 126px;
-  width: 100%;
-  background: linear-gradient(
-    90deg,
-    #000000 0%,
-    #143026 25%,
-    #2e735a 100%
-  );
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 18px 0 22px;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 2;
-}
-
-.landing-brand {
-  display: flex;
-  align-items: center;
-}
-
-.landing-brand-logo {
-  height: 66px;
-  width: auto;
-  display: block;
-  object-fit: contain;
-}
-
-.landing-nav {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  margin-right: 6px;
-}
-
-.landing-login-link {
-  color: #dbeee6;
-  text-decoration: none;
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1;
-}
-
-.landing-register-link {
-  color: #f4f4f4;
-  text-decoration: none;
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1;
-  border: 2px solid #f3f3f3;
-  border-radius: 15px;
-  padding: 11px 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .landing-dark-overlay {
   width: 100%;
   min-height: calc(100vh - 126px);
@@ -181,25 +122,6 @@
 }
 
 @media (max-width: 700px) {
-  .landing-navbar {
-    height: auto;
-    padding: 16px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
-
-  .landing-nav {
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-right: 0;
-  }
-
-  .landing-login-link,
-  .landing-register-link {
-    font-size: 18px;
-  }
-
   .landing-content {
     padding: 36px 18px 24px 18px;
   }
