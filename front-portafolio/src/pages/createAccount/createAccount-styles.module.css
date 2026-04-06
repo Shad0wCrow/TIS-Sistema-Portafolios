@@ -1,52 +1,40 @@
 .page {
     min-height: 100vh;
-    background: #d9d9d9;
+    background: #ffffff;
     display: flex;
     flex-direction: column;
-    font-family: sans-serif;
-}
-
-.header {
-    background: linear-gradient(90deg, #0f2027, #1a3a2a, #1e4d3a);
-    color: white;
-    padding: 12px 18px;
-    font-size: 17px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    letter-spacing: 0.5px;
-}
-
-.headerIcon {
-    width: 28px;
-    height: 28px;
+    font-family: 'Source Sans 3', sans-serif;
 }
 
 .container {
     display: flex;
     flex-direction: column;
     padding: 24px 20px;
-    gap: 20px;
+    gap: 30px;
     max-width: 600px;
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
 }
 
+.top {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+
 .left {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-shrink: 0;
 }
 
 .avatar {
-    width: 110px;
-    height: 110px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
-    background: #111;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -54,20 +42,20 @@
 }
 
 .avatarIcon {
-    width: 75px;
-    height: 75px;
+    width: 150px;
+    height: 150px;
     fill: #888;
 }
 
 .addPhoto {
-    background: #2e6e52;
+    background: #285A48;
     color: white;
     border: none;
-    padding: 7px 14px;
-    border-radius: 5px;
-    font-size: 13px;
-    cursor: pointer;
-    white-space: nowrap;
+    font-size: 24px;
+    width: 176px;
+    height: 44px;
+    padding: 0;
+    min-width: unset;
 }
 
 .right {
@@ -79,7 +67,7 @@
 
 .title {
     font-size: 20px;
-    font-weight: bold;
+    font-weight: 700;
     text-align: center;
     margin-bottom: 4px;
     color: #111;
@@ -92,7 +80,7 @@
 }
 
 .label {
-    font-size: 12px;
+    font-size: 26px;
     color: #333;
     font-weight: 500;
 }
@@ -105,12 +93,12 @@
 
 .input,
 .textarea {
-    padding: 8px 10px;
-    border-radius: 5px;
+    padding: 10px;
+    border-radius: 10px;
     border: none;
-    background: #c4c4c4;
-    font-size: 13px;
-    color: #333;
+    background: #9B9B9B !important;
+    font-size: 18px;
+    color: #000 !important;
     width: 100%;
     box-sizing: border-box;
     outline: none;
@@ -136,65 +124,90 @@
     flex-direction: row;
     justify-content: center;
     gap: 30px;
-    margin-top: 6px;
+    margin-top: 30px;
 }
 
 .button {
     padding: 9px 28px;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid #666;
-    font-size: 14px;
+    font-size: 32px;
     font-weight: 500;
     cursor: pointer;
     min-width: 100px;
 }
 
 .save {
-    background: #a8d5c2;
-    border-color: #7aaa99;
+    background: #B0E4CC;
+    border-color: #000;
+    font-size: clamp(18px, 4vw, 32px);
 }
 
 .cancel {
-    background: #dda098;
-    border-color: #b07068;
+    background: #E4B6B0;
+    border-color: #000;
+    font-size: clamp(18px, 4vw, 32px);
 }
-
 @media (min-width: 600px) {
     .container {
-        flex-direction: row;
-        align-items: flex-start;
         padding: 30px 28px;
         max-width: 700px;
+    }
+
+    .top {
+        flex-direction: row;
+        align-items: flex-start;
     }
 
     .title {
         text-align: left;
     }
+
+    
 }
 
 @media (min-width: 1024px) {
     .container {
         padding: 40px 50px;
-        gap: 36px;
-        max-width: 820px;
+        max-width: 1100px;
+    }
+
+    .top {
+        justify-content: space-between;
+    }
+
+    .right {
+        max-width: 600px;
+    }
+
+    .left {
+        gap: 40px;
     }
 
     .avatar {
-        width: 130px;
-        height: 130px;
+        width: 315px;
+        height: 315px;
     }
 
     .avatarIcon {
-        width: 90px;
-        height: 90px;
-    }
-
-    .header {
-        font-size: 19px;
-        padding: 14px 24px;
+        width: 315px;
+        height: 315px;
     }
 
     .title {
-        font-size: 22px;
+        font-size: 48px;
+        font-weight: bold;
+    }
+    .addPhoto {
+        background: #285A48;
+        color: white;
+        border: none;
+        padding: 7px 14px;
+        border-radius: 10px;
+        font-size: 24px;
+        cursor: pointer;
+        white-space: nowrap;
+        width: 176px;
+        height: 44px;
     }
 }
