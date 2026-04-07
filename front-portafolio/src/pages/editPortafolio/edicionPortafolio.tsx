@@ -49,12 +49,6 @@ const PlusIcon = () => (
   </svg>
 );
 
-const TrashIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M9 3a1 1 0 0 0-1 1v1H4a1 1 0 1 0 0 2h1v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7h1a1 1 0 1 0 0-2h-4V4a1 1 0 0 0-1-1H9zm1 2h4v0H10zm-2 4a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1zm6 0a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1z" />
-  </svg>
-);
-
 interface ModalPerfilProps {
   perfil: PortafolioData["perfil"] | null;
   onClose: () => void;
@@ -518,14 +512,14 @@ export default function EdicionPortafolio() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Volver">
-          <ArrowLeftIcon />
-        </button>
-        <span className={styles.topBarTitle}>edicion portafolio</span>
-      </div>
-
       <div className={styles.container}>
+        <div className={styles.topBar}>
+          <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Volver">
+            <ArrowLeftIcon />
+          </button>
+          <span className={styles.topBarTitle}>edicion portafolio</span>
+        </div>
+
         <section className={styles.profileSection}>
           <div className={styles.profileAvatarBlock}>
             <div className={styles.profileAvatar}>
