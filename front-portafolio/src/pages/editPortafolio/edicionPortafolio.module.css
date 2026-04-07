@@ -1,531 +1,678 @@
-/* ── Layout general ─────────────────────────────────────────────────────────── */
 .page {
   min-height: 100vh;
   background: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
+  color: #000000;
 }
 
-/* ── Header ─────────────────────────────────────────────────────────────────── */
-.header {
-  background: #1a1a2e;
-  padding: 10px 16px;
+.topBar {
+  height: 34px;
+  background: linear-gradient(90deg, #000000 0%, #3f8d71 33.17%, rgba(85, 192, 154, 0.78) 77.4%);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding: 0 10px;
+  border-bottom: 1px solid #000000;
 }
 
 .backBtn {
-  background: none;
+  width: 28px;
+  height: 28px;
   border: none;
-  cursor: pointer;
-  color: white;
-  font-size: 22px;
-  line-height: 1;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background 0.15s;
-}
-
-.backBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.headerTitle {
+  background: transparent;
   color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.backBtn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.topBarTitle {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.profileSection {
+  display: grid;
+  grid-template-columns: 170px 1fr 220px;
+  align-items: start;
+  border-bottom: 1px solid #000000;
+  min-height: 120px;
+}
+
+.profileAvatarBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px 8px;
+  border-right: 1px solid #000000;
+}
+
+.profileAvatar {
+  width: 96px;
+  height: 96px;
+  border: 1px solid #000000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #ffffff;
+  margin-top: 4px;
+}
+
+.profileAvatar svg {
+  width: 72px;
+  height: 72px;
+  fill: #000000;
+}
+
+.profileAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileNameBlock {
+  text-align: center;
+  margin-top: 4px;
+}
+
+.profileName {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.profileProfession {
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.profileDescription {
+  min-height: 120px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-right: 1px solid #000000;
   font-size: 15px;
-  font-weight: 600;
+  line-height: 1.4;
+}
+
+.profileContact {
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 12px 12px;
+  gap: 10px;
+}
+
+.profilePhone {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.editProfileBtn {
+  border: 1px solid #000000;
+  background: #ffffff;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 110px;
+}
+
+.skillsSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #000000;
+}
+
+.skillsCard {
+  min-height: 210px;
+}
+
+.skillsCard:first-child {
+  border-right: 1px solid #000000;
+}
+
+.skillsHeader {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #000000;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.skillsBody {
+  min-height: 168px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 16px 10px;
+}
+
+.skillsList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+  align-items: start;
+}
+
+.skillItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #7a7a7a;
+  background: #d9d9d9;
+  padding: 4px 6px;
+  min-height: 26px;
+  font-size: 12px;
+}
+
+.skillName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.skillRemoveBtn {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #b66d6d;
+  border-radius: 50%;
+  background: #b66d6d;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.skillsActions {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  padding-top: 10px;
+}
+
+.circleBtn,
+.circleBtnDark {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.circleBtn {
+  background: #000000;
+  color: #ffffff;
+}
+
+.circleBtnDark {
+  background: #24355c;
+  color: #ffffff;
+}
+
+.circleBtn svg,
+.circleBtnDark svg,
+.addProjectBtn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.projectsSection {
+  border-bottom: 1px solid #000000;
+}
+
+.projectsTab {
+  width: 140px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.projectsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.projectCard {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 180px;
+  min-height: 126px;
+  border-bottom: 1px solid #000000;
+}
+
+.projectLeft {
+  padding: 12px 18px;
+  border-right: 1px solid #000000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.projectTitleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.projectTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.projectDates {
+  margin: 2px 0 0;
+  font-size: 11px;
+}
+
+.projectSmallActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.projectDeleteBtn,
+.projectEditBtn {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.projectDeleteBtn {
+  background: #c48f8f;
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.projectEditBtn {
+  background: #24355c;
+  color: #ffffff;
+}
+
+.projectEditBtn svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.projectRoles {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.projectRoles strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.projectRoles ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.projectRoles li {
   margin: 0;
 }
 
-/* ── Sección perfil ─────────────────────────────────────────────────────────── */
-.perfilSection {
-  display: grid;
-  grid-template-columns: 120px 1fr 180px;
-  align-items: start;
-  gap: 16px;
-  padding: 20px 16px 16px;
-  border-bottom: 1px solid #cccccc;
+.projectRoleEmpty {
+  font-size: 12px;
+  color: #555;
 }
 
-.fotoWrapper {
+.projectDescription {
+  border-right: 1px solid #000000;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #333333;
+}
+
+.projectRight {
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.projectImageBox {
+  width: 56px;
+  height: 56px;
+  border: 1px solid #9b9b9b;
+  background: #d9d9d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.projectImageBox svg {
+  width: 32px;
+  height: 32px;
+  fill: #9b9b9b;
+}
+
+.projectImageBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.projectLink {
+  font-size: 12px;
+  color: #000000;
+  text-decoration: none;
+  text-align: center;
+}
+
+.addProjectBtn {
+  margin: 14px 0 18px 16px;
+  border: 1px solid #000000;
+  background: #ffffff;
+  padding: 7px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
-.foto {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #e0e0e0;
-}
-
-.fotoPlaceholder {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  background: #d0d0d0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fotoPlaceholder svg {
-  width: 56px;
-  height: 56px;
-  fill: #888;
-}
-
-.nombreProfesion {
-  margin-top: 6px;
-  text-align: center;
-}
-
-.nombreProfesion p {
-  margin: 0;
-  font-size: 12px;
-  color: #222;
-}
-
-.nombreProfesion p:first-child {
-  font-weight: 700;
-}
-
-/* descripción */
-.descripcionBox {
-  font-size: 13px;
-  color: #333;
-  line-height: 1.5;
-  text-align: center;
-  padding: 4px 0;
-}
-
-.descripcionBox.placeholder {
-  color: #999;
-  font-style: italic;
-}
-
-/* teléfono */
-.telefonoBox {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.telefonoLabel {
-  font-size: 13px;
-  font-weight: 700;
-  color: #222;
-}
-
-/* botón editar perfil */
-.editPerfilBtn {
-  background: none;
-  border: 1.5px solid #1a1a2e;
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  color: #1a1a2e;
-  font-weight: 600;
-  margin-top: 4px;
-  transition: background 0.15s;
-}
-
-.editPerfilBtn:hover {
-  background: #f0f0f0;
-}
-
-/* ── Habilidades ────────────────────────────────────────────────────────────── */
-.habilidadesSection {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid #cccccc;
-}
-
-.habilidadesCol {
-  padding: 12px 16px;
-}
-
-.habilidadesCol:first-child {
-  border-right: 1px solid #cccccc;
-}
-
-.habilidadesHeader {
-  background: #1a1a2e;
-  color: #ffffff;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 700;
-  padding: 8px;
-  margin: -12px -16px 12px -16px;
-}
-
-.habilidadGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 12px;
-  margin-bottom: 12px;
-  min-height: 80px;
-}
-
-.habilidadItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #888;
-  padding: 4px 0;
-  font-size: 13px;
-  color: #222;
-  gap: 4px;
-}
-
-.habilidadNombre {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.removeHabBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #cc0000;
-  font-size: 14px;
-  padding: 0 2px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.habilidadAcciones {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: flex-start;
-  padding-top: 4px;
-}
-
-.iconBtn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  transition: opacity 0.15s;
-}
-
-.iconBtn:hover {
-  opacity: 0.8;
-}
-
-.iconBtnAdd {
-  background: #1a1a2e;
-  color: #ffffff;
-}
-
-.iconBtnEdit {
-  background: #1a1a2e;
-  color: #ffffff;
-  font-size: 14px;
-}
-
-/* ── Proyectos ───────────────────────────────────────────────────────────────── */
-.proyectosSection {
-  padding: 0 0 24px;
-}
-
-.proyectosTab {
-  display: inline-block;
-  background: #ffffff;
-  border: 1px solid #cccccc;
-  border-bottom: none;
-  padding: 6px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin: 0 16px;
-  margin-top: 12px;
-  cursor: default;
-}
-
-.proyectosList {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border-top: 1px solid #cccccc;
-  margin-top: 0;
-}
-
-.proyectoCard {
-  display: grid;
-  grid-template-columns: 1fr 180px 110px;
-  align-items: stretch;
-  border-bottom: 1px solid #cccccc;
-  padding: 14px 16px;
-  gap: 12px;
-}
-
-.proyectoInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.proyectoTitulo {
-  font-size: 14px;
-  font-weight: 700;
-  color: #222;
-  margin: 0;
-}
-
-.proyectoFechas {
-  font-size: 12px;
-  color: #555;
-  margin: 0;
-}
-
-.proyectoRoles {
-  font-size: 12px;
-  color: #333;
-  margin: 4px 0 0;
-  line-height: 1.6;
-}
-
-.proyectoRoles li {
-  list-style: disc;
-  margin-left: 16px;
-}
-
-.proyectoDesc {
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 8px;
-  font-size: 12px;
-  color: #888;
-  align-self: stretch;
-  display: flex;
-  align-items: flex-start;
-}
-
-.proyectoAcciones {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.proyectoImgPlaceholder {
-  width: 70px;
-  height: 55px;
-  background: #e5e5e5;
-  border: 1px solid #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.proyectoImgPlaceholder svg {
-  width: 30px;
-  height: 30px;
-  fill: #aaa;
-}
-
-.verProyectoLink {
-  font-size: 11px;
-  color: #1a1a2e;
-  text-decoration: underline;
-  text-align: center;
-  cursor: pointer;
-}
-
-.proyectoBtns {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-}
-
-.deleteProyBtn {
-  background: #cc0000;
-  border: none;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.editProyBtn {
-  background: #1a1a2e;
-  border: none;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  color: white;
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.addProyectoBtn {
-  margin: 16px 16px 0;
-  background: #1a1a2e;
-  color: white;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.addProyectoBtn:hover {
-  opacity: 0.85;
-}
-
-/* ── Modal ───────────────────────────────────────────────────────────────────── */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 1000;
+  padding: 14px;
 }
 
-.modal {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  width: 90%;
-  max-width: 420px;
+.modal,
+.modalSmall,
+.modalLarge {
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 14px;
+  width: 100%;
+  max-width: 540px;
+}
+
+.modalSmall {
+  max-width: 360px;
+}
+
+.modalLarge {
+  max-width: 640px;
+}
+
+.modalHeader {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .modalTitle {
-  font-size: 16px;
+  margin: 0;
+  font-size: 14px;
   font-weight: 700;
-  color: #1a1a2e;
-  margin: 0 0 4px;
 }
 
-.modalField {
+.modalCloseBtn {
+  border: 1px solid #000000;
+  background: #ffffff;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.modalGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+
+.modalField,
+.modalFieldFull {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.modalField label {
+.modalFieldFull {
+  grid-column: 1 / -1;
+}
+
+.modalField label,
+.modalFieldFull label {
   font-size: 12px;
-  font-weight: 600;
-  color: #444;
+  font-weight: 700;
 }
 
 .modalField input,
 .modalField select,
-.modalField textarea {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 7px 10px;
-  font-size: 13px;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #222;
+.modalField textarea,
+.modalFieldFull input,
+.modalFieldFull select,
+.modalFieldFull textarea {
+  border: 1px solid #8c8c8c;
+  background: #ffffff;
+  padding: 7px 8px;
+  font-size: 12px;
   outline: none;
-  transition: border-color 0.15s;
+  border-radius: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.modalField input:focus,
-.modalField select:focus,
-.modalField textarea:focus {
-  border-color: #1a1a2e;
-}
-
-.modalField textarea {
+.modalField textarea,
+.modalFieldFull textarea {
+  min-height: 74px;
   resize: vertical;
-  min-height: 70px;
 }
 
 .modalActions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: 14px;
 }
 
-.btnCancelar {
-  background: none;
-  border: 1.5px solid #ccc;
-  border-radius: 4px;
-  padding: 7px 16px;
-  font-size: 13px;
+.btnCancelar,
+.btnGuardar {
+  border: 1px solid #000000;
+  background: #ffffff;
+  padding: 6px 14px;
   cursor: pointer;
-  color: #444;
+  font-size: 12px;
+  border-radius: 0;
 }
 
 .btnGuardar {
-  background: #1a1a2e;
-  border: none;
-  border-radius: 4px;
-  padding: 7px 18px;
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.btnGuardar:hover {
-  opacity: 0.85;
+  background: #e8e8e8;
 }
 
 .btnGuardar:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ── Utilidades ──────────────────────────────────────────────────────────────── */
-.loading {
+.emptyProjects {
+  padding: 14px 16px;
+}
+
+.emptyMsg {
+  margin: 0;
+  font-size: 12px;
+  color: #555555;
+}
+
+.loading,
+.error {
+  padding: 24px;
   text-align: center;
-  padding: 40px;
-  color: #555;
   font-size: 14px;
 }
 
 .error {
-  text-align: center;
-  padding: 20px;
-  color: #cc0000;
-  font-size: 13px;
+  color: #b00000;
 }
 
-.emptyMsg {
-  font-size: 12px;
-  color: #aaa;
-  font-style: italic;
-  padding: 8px 0;
+@media (max-width: 1100px) {
+  .profileSection {
+    grid-template-columns: 160px 1fr;
+  }
+
+  .profileContact {
+    grid-column: 1 / -1;
+    border-top: 1px solid #000000;
+    min-height: auto;
+  }
+
+  .profileDescription {
+    min-height: 100px;
+  }
+
+  .projectCard {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .projectDescription {
+    grid-column: 1 / -1;
+    border-right: none;
+    border-top: 1px solid #000000;
+  }
+}
+
+@media (max-width: 800px) {
+  .skillsSection {
+    grid-template-columns: 1fr;
+  }
+
+  .skillsCard:first-child {
+    border-right: none;
+    border-bottom: 1px solid #000000;
+  }
+
+  .skillsList {
+    grid-template-columns: 1fr;
+  }
+
+  .projectCard {
+    grid-template-columns: 1fr;
+  }
+
+  .projectLeft {
+    border-right: none;
+    border-bottom: 1px solid #000000;
+  }
+
+  .projectRight {
+    border-top: 1px solid #000000;
+  }
+
+  .modalGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profileSection {
+    grid-template-columns: 1fr;
+  }
+
+  .profileAvatarBlock {
+    border-right: none;
+    border-bottom: 1px solid #000000;
+  }
+
+  .profileDescription {
+    border-right: none;
+    border-bottom: 1px solid #000000;
+    text-align: left;
+  }
+
+  .projectsTab {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 14px;
+  }
+
+  .addProjectBtn {
+    margin-left: 0;
+    width: calc(100% - 0px);
+    justify-content: center;
+  }
+
+  .modal,
+  .modalSmall,
+  .modalLarge {
+    max-width: 100%;
+  }
 }
