@@ -1,0 +1,203 @@
+/* ── Variables de Color ── */
+:root {
+  --primary: #55C09A;
+  --primary-dark: #44a685;
+  --bg-light: #f8f9fa;
+  --border-color: #e0e0e0;
+  --text-main: #333333;
+}
+
+.page {
+  min-height: 100vh;
+  background: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-main);
+}
+
+/* ── Header Estilo Nuevo ── */
+.header {
+  background: linear-gradient(90deg, var(--primary) 0%, #78d7b9 100%);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.backBtn {
+  background: white;
+  border: none;
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.headerTitle {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Sección Perfil Horizontal ── */
+.perfilSection {
+  display: grid;
+  grid-template-columns: 180px 1fr 180px;
+  align-items: center;
+  gap: 30px;
+  padding: 30px 40px;
+  border-bottom: 2px solid var(--primary);
+}
+
+.fotoWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.foto, .fotoPlaceholder {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 4px solid var(--primary);
+  margin-bottom: 10px;
+}
+
+.nombreProfesion p:first-child {
+  font-weight: 800;
+  font-size: 16px;
+  margin: 0;
+}
+
+.nombreProfesion p:last-child {
+  font-size: 14px;
+  color: #666;
+}
+
+.descripcionBox {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
+  text-align: center;
+  max-width: 600px;
+}
+
+.telefonoBox {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.editPerfilBtn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ── Habilidades con Subrayado ── */
+.habilidadesSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.habilidadesCol {
+  padding: 0;
+  border: 1px solid var(--border-color);
+}
+
+.habilidadesHeader {
+  background: #fff;
+  color: #000;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  padding: 15px;
+  border-bottom: 2px solid #000;
+}
+
+.habilidadGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px 30px;
+  padding: 20px;
+}
+
+.habilidadItem {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1.5px solid #666; /* El estilo de la imagen */
+  padding-bottom: 2px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── Proyectos Estilo 3 Columnas ── */
+.proyectosTab {
+  background: var(--primary);
+  color: white;
+  padding: 10px 30px;
+  font-weight: bold;
+  display: inline-block;
+  border-radius: 0 15px 0 0;
+}
+
+.proyectoCard {
+  display: grid;
+  grid-template-columns: 220px 1fr 180px;
+  gap: 20px;
+  padding: 25px;
+  border-bottom: 1px solid var(--border-color);
+  align-items: start;
+}
+
+.proyectoDesc {
+  background: #e9e9e9;
+  padding: 15px;
+  min-height: 100px;
+  font-size: 13px;
+  color: #555;
+  border: 1px solid #999;
+}
+
+.proyectoImgPlaceholder {
+  width: 100%;
+  height: 100px;
+  background: #ddd;
+  border: 1px solid #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Responsivo (Mobile) ── */
+@media (max-width: 900px) {
+  .perfilSection, 
+  .habilidadesSection, 
+  .proyectoCard {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .perfilSection { padding: 20px; }
+  .telefonoBox { align-items: center; text-align: center; }
+  .habilidadGrid { grid-template-columns: 1fr; }
+  .proyectoCard { gap: 15px; }
+  .proyectoDesc { order: 2; }
+  .proyectoInfo { order: 1; }
+  .proyectoAcciones { order: 3; }
+}

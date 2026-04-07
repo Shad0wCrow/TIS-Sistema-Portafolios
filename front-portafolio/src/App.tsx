@@ -5,8 +5,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import CreateAccount from "./pages/createAccount/createAccount";
+import EdicionPortafolio from "./pages/editPortafolio/edicionPortafolio";
 
-import ProtectedRoute from "./components/ProtectedRoute";
+
 import ProfileRoute from "./components/ProfileRoute";
 import CreateAccountRoute from "./components/CreateAccountRoute";
 
@@ -34,6 +35,16 @@ function App() {
         element={
           <ProfileRoute>
             <Dashboard />
+          </ProfileRoute>
+        }
+      />
+
+      {/* Edición de portafolio */}
+      <Route
+        path="/portafolio/editar"
+        element={
+          <ProfileRoute>
+            <EdicionPortafolio />
           </ProfileRoute>
         }
       />
