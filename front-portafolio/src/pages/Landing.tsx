@@ -1,7 +1,8 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Landing.css";
 import fondoLanding from "../assets/landing-bg.png";
 import logoDevfolio from "../assets/devfolio-logo.png";
+import LandingHeader from "../components/layout/LandingHeader";
 
 function Landing() {
   const navigate = useNavigate();
@@ -40,25 +41,7 @@ const handleEmpezar = async () => {
         className="landing-frame"
         style={{ backgroundImage: `url(${fondoLanding})` }}
       >
-        <header className="landing-navbar">
-          <div className="landing-brand">
-            <img
-              src={logoDevfolio}
-              alt="Devfolio"
-              className="landing-brand-logo"
-            />
-          </div>
-
-          <nav className="landing-nav">
-            <Link to="/login" className="landing-login-link">
-              Iniciar sesion
-            </Link>
-
-            <Link to="/register" className="landing-register-link">
-              Regitrarse
-            </Link>
-          </nav>
-        </header>
+        <LandingHeader logoSrc={logoDevfolio} />
 
         <div className="landing-dark-overlay">
           <div className="landing-content">
