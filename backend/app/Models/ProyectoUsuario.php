@@ -13,7 +13,7 @@ class ProyectoUsuario extends Model
     protected $fillable = [
         'usuario_id',
         'proyecto_id',
-        'rol_proyecto',   // "Desarrollador", "Diseñador", etc.
+        'rol_proyecto',  
         'es_propietario',
     ];
 

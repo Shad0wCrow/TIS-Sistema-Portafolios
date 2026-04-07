@@ -12,13 +12,10 @@ class Habilidad extends Model
 
     protected $fillable = [
         'nombre',
-        'tipo',        // 'tecnica' | 'blanda'
+        'tipo',       
         'descripcion',
     ];
 
-    /**
-     * Relación: una habilidad puede pertenecer a muchos usuarios (pivot).
-     */
     public function usuarios()
     {
         return $this->belongsToMany(

@@ -9,41 +9,19 @@ use App\Models\Proyecto;
 use App\Models\ProyectoUsuario;
 use Illuminate\Http\Request;
 
-/**
- * PortafolioController
- *
- * Maneja la pantalla "Edición de Portafolio".
- * Agrupa en un solo endpoint los datos que muestra esa vista:
- *   - Datos del perfil (foto, nombre, profesión, teléfono, descripción)
- *   - Habilidades técnicas y blandas del usuario
- *   - Proyectos del usuario con sus roles
- *
- * Rutas (todas bajo auth:sanctum):
- *   GET  /portafolio          → show()           ver portafolio completo
- *   PUT  /portafolio/perfil   → updatePerfil()   editar sección perfil
- *   POST /portafolio/habilidades         → addHabilidad()
- *   DELETE /portafolio/habilidades/{id}  → removeHabilidad()
- *   POST /portafolio/proyectos           → addProyecto()
- *   PUT  /portafolio/proyectos/{id}      → updateProyecto()
- *   DELETE /portafolio/proyectos/{id}    → removeProyecto()
- */
+
 class PortafolioController extends Controller
 {
-    // ──────────────────────────────────────────────────────────────────
-    // GET /portafolio
-    // Devuelve TODO lo que necesita la pantalla de edición en un solo
-    // llamado: perfil + habilidades (por tipo) + proyectos con roles.
-    // ──────────────────────────────────────────────────────────────────
     public function show(Request $request)
     {
         $user = $request->user();
 
-        // 1. Datos del perfil
+        
         $perfil = Perfil::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
             ->first();
 
-        // 2. Habilidades separadas por tipo (tecnica / blanda)
+        //habilidades separadas por tipo (tecnica / blanda)
         $todasHabilidades = UsuarioHabilidad::with('habilidad')
             ->where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
@@ -102,11 +80,7 @@ class PortafolioController extends Controller
         ]);
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    // PUT /portafolio/perfil
-    // Edita los datos del perfil visibles en la pantalla:
-    //   foto, nombre, apellido, profesión, celular, descripción (max 200)
-    // ──────────────────────────────────────────────────────────────────
+
     public function updatePerfil(Request $request)
     {
         $user = $request->user();
@@ -120,7 +94,6 @@ class PortafolioController extends Controller
             'apellido_perfil' => 'sometimes|string|max:255',
             'profesion'       => 'sometimes|string|max:150',
             'celular'         => 'sometimes|string|max:20',
-            // La pantalla muestra max 200 caracteres para la descripción
             'descripcion'     => 'sometimes|string|max:200',
             'foto_url'        => 'sometimes|nullable|string|max:500',
         ]);
@@ -133,16 +106,6 @@ class PortafolioController extends Controller
         ]);
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    // POST /portafolio/habilidades
-    // Agrega una habilidad (técnica o blanda) al portafolio.
-    //
-    // Body:
-    // {
-    //   "habilidad_id": 5,
-    //   "nivel": "intermedio"   // opcional
-    // }
-    // ──────────────────────────────────────────────────────────────────
     public function addHabilidad(Request $request)
     {
         $user = $request->user();
@@ -180,11 +143,7 @@ class PortafolioController extends Controller
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    // DELETE /portafolio/habilidades/{id}
-    // Elimina (soft-delete) una habilidad del portafolio.
-    // {id} = id_usuario_habilidad
-    // ──────────────────────────────────────────────────────────────────
+    //soft delete
     public function removeHabilidad(Request $request, $id)
     {
         $user = $request->user();
@@ -203,21 +162,7 @@ class PortafolioController extends Controller
         return response()->json(['message' => 'Habilidad eliminada']);
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    // POST /portafolio/proyectos
-    // Crea un proyecto nuevo. También registra los roles del usuario
-    // en proyecto_usuario.
-    //
-    // Body:
-    // {
-    //   "titulo": "Proyecto ECOMODA",
-    //   "descripcion": "...",
-    //   "fecha_inicio": "2024-01-01",
-    //   "fecha_fin": "2024-06-01",
-    //   "demo_url": "https://...",
-    //   "roles": ["Desarrollador", "Diseñador"]   // array de strings
-    // }
-    // ──────────────────────────────────────────────────────────────────
+
     public function addProyecto(Request $request)
     {
         $user = $request->user();
@@ -230,7 +175,6 @@ class PortafolioController extends Controller
             'demo_url'     => 'nullable|string|max:500',
             'repositorio_url'      => 'nullable|string|max:500',
             'imagen_principal_url' => 'nullable|string|max:500',
-            // roles es un array de strings; cada rol max 50 chars
             'roles'        => 'nullable|array',
             'roles.*'      => 'string|max:50',
         ]);
@@ -250,7 +194,6 @@ class PortafolioController extends Controller
                 'eliminado'            => false,
             ]);
 
-            // Registrar cada rol en proyecto_usuario
             if (!empty($data['roles'])) {
                 foreach ($data['roles'] as $rol) {
                     ProyectoUsuario::create([
@@ -261,7 +204,7 @@ class PortafolioController extends Controller
                     ]);
                 }
             } else {
-                // Si no se especifican roles, registrar como propietario sin rol
+
                 ProyectoUsuario::create([
                     'usuario_id'     => $user->id_usuario,
                     'proyecto_id'    => $proyecto->id_proyecto,
@@ -270,7 +213,6 @@ class PortafolioController extends Controller
                 ]);
             }
 
-            // Devolver el proyecto con sus roles formateados igual que show()
             $roles = ProyectoUsuario::where('proyecto_id', $proyecto->id_proyecto)
                 ->where('usuario_id', $user->id_usuario)
                 ->pluck('rol_proyecto')
@@ -286,10 +228,7 @@ class PortafolioController extends Controller
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    // PUT /portafolio/proyectos/{id}
-    // Edita un proyecto. Si se envían roles, reemplaza los existentes.
-    // ──────────────────────────────────────────────────────────────────
+
     public function updateProyecto(Request $request, $id)
     {
         $user = $request->user();
@@ -316,7 +255,7 @@ class PortafolioController extends Controller
             'roles.*'              => 'string|max:50',
         ]);
 
-        // Actualizar campos del proyecto (sin 'roles')
+        // Actualizar campos del proyecto (sin roles)
         $proyecto->update(collect($data)->except('roles')->toArray());
 
         // Si se enviaron roles, reemplazar todos los registros en proyecto_usuario
@@ -348,10 +287,7 @@ class PortafolioController extends Controller
         ]);
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    // DELETE /portafolio/proyectos/{id}
-    // Soft-delete del proyecto.
-    // ──────────────────────────────────────────────────────────────────
+//sof delete
     public function removeProyecto(Request $request, $id)
     {
         $user = $request->user();

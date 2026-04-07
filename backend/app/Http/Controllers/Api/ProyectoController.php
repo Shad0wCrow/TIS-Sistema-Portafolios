@@ -6,24 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Proyecto;
 use Illuminate\Http\Request;
 
-/**
- * ProyectoController
- *
- * Gestiona los proyectos del usuario autenticado.
- *
- * Rutas sugeridas (todas bajo auth:sanctum):
- *   GET    /proyectos           → index()   (mis proyectos)
- *   POST   /proyectos           → store()   (crear proyecto)
- *   GET    /proyectos/{id}      → show()    (detalle de un proyecto)
- *   PUT    /proyectos/{id}      → update()  (editar proyecto)
- *   DELETE /proyectos/{id}      → destroy() (soft-delete)
- */
+
 class ProyectoController extends Controller
 {
-    /**
-     * GET /proyectos
-     * Devuelve todos los proyectos activos del usuario autenticado.
-     */
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -38,10 +24,7 @@ class ProyectoController extends Controller
         ]);
     }
 
-    /**
-     * GET /proyectos/{id}
-     * Devuelve el detalle de un proyecto específico del usuario.
-     */
+
     public function show(Request $request, $id)
     {
         $user = $request->user();
@@ -58,24 +41,6 @@ class ProyectoController extends Controller
         return response()->json(['proyecto' => $proyecto]);
     }
 
-    /**
-     * POST /proyectos
-     * Crea un nuevo proyecto para el usuario autenticado.
-     *
-     * Body esperado:
-     * {
-     *   "titulo": "Mi App",
-     *   "descripcion": "Descripción del proyecto",
-     *   "fecha_inicio": "2024-01-01",
-     *   "fecha_fin": "2024-06-01",            // nullable
-     *   "estado": "en_progreso",              // en_progreso | finalizado | pausado
-     *   "repositorio_url": "https://...",     // nullable
-     *   "demo_url": "https://...",            // nullable
-     *   "imagen_principal_url": "https://...", // nullable
-     *   "visibilidad": "publico",             // publico | privado
-     *   "categoria_id": 1                    // nullable
-     * }
-     */
     public function store(Request $request)
     {
         $user = $request->user();
@@ -120,11 +85,6 @@ class ProyectoController extends Controller
         }
     }
 
-    /**
-     * PUT /proyectos/{id}
-     * Actualiza un proyecto del usuario autenticado.
-     * Solo se actualizan los campos enviados ('sometimes').
-     */
     public function update(Request $request, $id)
     {
         $user = $request->user();
@@ -159,10 +119,7 @@ class ProyectoController extends Controller
         ]);
     }
 
-    /**
-     * DELETE /proyectos/{id}
-     * Soft-delete: marca eliminado = true en la tabla proyecto.
-     */
+    //soft delete
     public function destroy(Request $request, $id)
     {
         $user = $request->user();
