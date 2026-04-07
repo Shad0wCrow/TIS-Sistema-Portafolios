@@ -36,7 +36,6 @@ interface ModalPerfilProps {
   perfil: PortafolioData["perfil"];
   onClose: () => void;
   onSave: (data: Parameters<typeof updatePerfil>[0]) => Promise<void>;
-  
 }
 
 function ModalEditarPerfil({ perfil, onClose, onSave }: ModalPerfilProps) {
@@ -297,11 +296,11 @@ export default function EdicionPortafolio() {
   }, []);
 
   // ── Handlers perfil ─────────────────────────────────────────────────────────
-const handleSavePerfil = async (formData: Parameters<typeof updatePerfil>[0]) => {
-  await updatePerfil(formData);
-  const fresh = await getPortafolio();
-  setData(fresh);
-};
+  const handleSavePerfil = async (formData: Parameters<typeof updatePerfil>[0]) => {
+    await updatePerfil(formData);
+    const fresh = await getPortafolio();
+    setData(fresh);
+  };
 
   // ── Handlers habilidades ────────────────────────────────────────────────────
   const handleAddHabilidad = async (habilidadId: number, nivel: string) => {
