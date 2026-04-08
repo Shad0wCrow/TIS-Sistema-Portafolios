@@ -1,203 +1,165 @@
-.dashboard-page {
-  min-height: 100vh;
-  background: #8f8f8f;
-  font-family: Arial, Helvetica, sans-serif;
+/* Importación de fuentes de Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@700&family=Montserrat:wght@700&family=Source+Sans+Pro:wght@400&display=swap');
+
+:root {
+  --header-bg: #091413;
+  --sidebar-bg: #143026;
+  --main-bg: #828282;
+  --search-bg: #D9D9D9;
+  --white: #FFFFFF;
 }
 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background: var(--main-bg);
+  overflow: hidden;
+}
+
+/* Header - Basado en Rectangle 56 */
+.dashboard-header {
+  height: 124px;
+  background: var(--header-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  z-index: 10;
+}
+
+.dashboard-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.dashboard-logo {
+  height: 80px; /* Ajustado según Gemini_Generated_Image */
+  object-fit: contain;
+}
+
+.dashboard-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 64px;
+  color: var(--white);
+  line-height: 78px;
+  text-transform: uppercase;
+}
+
+/* Buscador - Basado en Rectangle 58 */
+.dashboard-search-container {
+  position: relative;
+  width: 274px;
+  height: 60px; /* Ajustado para que sea armónico */
+}
+
+.dashboard-search-input {
+  width: 100%;
+  height: 100%;
+  background: var(--search-bg);
+  border-radius: 53px;
+  border: none;
+  padding: 0 60px 0 25px;
+  font-size: 18px;
+}
+
+.search-icon {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px;
+  color: #333;
+}
+
+/* Layout Inferior */
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
+  flex: 1;
 }
 
+/* Sidebar - Basado en Component 79 y Rectangle 57 */
 .dashboard-sidebar {
-  width: 94px;
-  background: #56c2a4;
+  width: 118px;
+  background: var(--sidebar-bg);
   display: flex;
-  justify-content: center;
-  padding-top: 86px;
-  box-sizing: border-box;
+  flex-direction: column;
+  padding: 40px 0;
 }
 
 .dashboard-menu {
   display: flex;
   flex-direction: column;
-  gap: 42px;
-  width: 100%;
+  height: 100%;
+  justify-content: space-around; /* Distribuye los iconos como en Figma */
   align-items: center;
 }
 
 .dashboard-menu-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: #000000;
-  font-size: 14px;
-  text-align: center;
+  color: var(--white);
+  font-family: 'Source Sans Pro', sans-serif;
+  text-decoration: none;
+}
+
+.dashboard-menu-item:hover {
+  transform: scale(1.1);
 }
 
 .dashboard-menu-icon {
-  font-size: 30px;
-  line-height: 1;
+  font-size: 32px;
+  margin-bottom: 5px;
+  /* El drop-shadow del Home en Figma */
+  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
 }
 
+.dashboard-menu-text {
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Contenido Principal */
 .dashboard-main {
   flex: 1;
   display: flex;
-  flex-direction: column;
-}
-
-.dashboard-header {
-  height: 86px;
-  background: #061114;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 26px;
-  box-sizing: border-box;
-}
-
-.dashboard-logo {
-  height: 56px;
-  width: auto;
-  object-fit: contain;
-}
-
-.dashboard-header-center {
-  color: #ffffff;
-  font-size: 17px;
-  font-weight: 400;
-}
-
-.dashboard-search {
-  width: 220px;
-  height: 54px;
-  background: #efefef;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 18px;
-  box-sizing: border-box;
-}
-
-.dashboard-search input {
-  border: none;
-  outline: none;
-  background: transparent;
-  flex: 1;
-}
-
-.dashboard-search-icon {
-  font-size: 28px;
-  color: #111111;
-}
-
-.dashboard-content {
-  flex: 1;
-  padding: 36px 44px;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(290px, 1fr));
-  gap: 36px 54px;
-}
-
-.portfolio-card {
-  background: #ece6ee;
-  border-radius: 8px;
-  overflow: hidden;
-  min-height: 270px;
-}
-
-.portfolio-card-top {
-  height: 52px;
-  background: #efeaf0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 14px;
-  box-sizing: border-box;
-}
-
-.portfolio-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #ddd8df;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 12px;
+  align-items: center;
+  padding: 20px;
 }
 
-.portfolio-name {
-  margin: 0;
-  font-size: 12px;
+.empty-state-text {
+  max-width: 600px;
+  font-family: 'Lato', sans-serif;
   font-weight: 700;
-  color: #111111;
+  font-size: 64px;
+  line-height: 77px;
+  text-align: center;
+  color: var(--white);
 }
 
-.portfolio-role {
-  margin: 2px 0 0 0;
-  font-size: 10px;
-  color: #444444;
+.dashboard-menu-icon-svg {
+  width: 50px;  
+  height: 50px;
+  margin-bottom: 8px;
+  filter: brightness(0) invert(1); 
+  transition: transform 0.2s ease;
 }
 
-.portfolio-image {
-  height: 150px;
-  background: #ddd6de;
-}
-
-.portfolio-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 14px 12px;
-  box-sizing: border-box;
-}
-
-.portfolio-title {
-  margin: 0;
-  font-size: 12px;
-  color: #111111;
-}
-
-.portfolio-subtitle {
-  margin: 2px 0 0 0;
-  font-size: 10px;
-  color: #555555;
-}
-
-.portfolio-tags {
-  display: flex;
-  gap: 8px;
-}
-
-.portfolio-tag {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #f0edf2;
-  font-size: 10px;
-  border: 1px solid #c8c3ca;
-  color: #444444;
-}
-
-.portfolio-tag-purple {
-  background: #6d57bf;
-  color: #ffffff;
-  border: none;
-}
-
-@media (max-width: 900px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-search {
-    width: 170px;
-  }
+.dashboard-menu-item:hover .dashboard-menu-icon-svg {
+  transform: scale(1.1);
 }
