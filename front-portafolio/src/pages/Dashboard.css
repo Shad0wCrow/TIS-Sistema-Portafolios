@@ -1,4 +1,3 @@
-/* Importación de fuentes de Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@700&family=Montserrat:wght@700&family=Source+Sans+Pro:wght@400&display=swap');
 
 :root {
@@ -24,83 +23,80 @@
   overflow: hidden;
 }
 
-/* Header - Basado en Rectangle 56 */
 .dashboard-header {
-  height: 124px;
+  height: 64px;
   background: var(--header-bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
+  padding: 0 32px;
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .dashboard-logo-container {
   display: flex;
   align-items: center;
-  gap: 20px;
 }
 
 .dashboard-logo {
-  height: 80px; /* Ajustado según Gemini_Generated_Image */
+  height: 36px;
   object-fit: contain;
 }
 
-.dashboard-title {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 700;
-  font-size: 64px;
-  color: var(--white);
-  line-height: 78px;
-  text-transform: uppercase;
-}
-
-/* Buscador - Basado en Rectangle 58 */
 .dashboard-search-container {
   position: relative;
-  width: 274px;
-  height: 60px; /* Ajustado para que sea armónico */
+  width: 240px;
+  height: 36px;
 }
 
 .dashboard-search-input {
   width: 100%;
   height: 100%;
   background: var(--search-bg);
-  border-radius: 53px;
+  border-radius: 18px;
   border: none;
-  padding: 0 60px 0 25px;
-  font-size: 18px;
+  outline: none;
+  padding: 0 40px 0 16px;
+  font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111111;
+}
+
+.dashboard-search-input::placeholder {
+  color: #888888;
 }
 
 .search-icon {
   position: absolute;
-  right: 20px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 24px;
-  color: #333;
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
 }
 
-/* Layout Inferior */
 .dashboard-layout {
   display: flex;
   flex: 1;
+  overflow: hidden;
 }
 
-/* Sidebar - Basado en Component 79 y Rectangle 57 */
 .dashboard-sidebar {
-  width: 118px;
+  width: 88px;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
-  padding: 40px 0;
+  padding: 28px 0;
+  flex-shrink: 0;
 }
 
 .dashboard-menu {
   display: flex;
   flex-direction: column;
   height: 100%;
-  justify-content: space-around; /* Distribuye los iconos como en Figma */
+  justify-content: space-around;
   align-items: center;
 }
 
@@ -108,58 +104,75 @@
   background: none;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 5px;
   color: var(--white);
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   text-decoration: none;
+  padding: 8px 0;
+  width: 100%;
+  transition: background 0.15s ease;
 }
 
 .dashboard-menu-item:hover {
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.dashboard-menu-icon {
-  font-size: 32px;
-  margin-bottom: 5px;
-  /* El drop-shadow del Home en Figma */
-  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+.dashboard-menu-icon-svg {
+  width: 40px;
+  height: 40px;
+  filter: brightness(0) invert(1);
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+
+.dashboard-menu-item:hover .dashboard-menu-icon-svg {
+  opacity: 1;
 }
 
 .dashboard-menu-text {
-  font-size: 12px;
-  text-align: center;
+  font-size: 10px;
+  color: var(--white);
+  opacity: 0.7;
+  letter-spacing: 0.02em;
 }
 
-/* Contenido Principal */
+.dashboard-menu-item:hover .dashboard-menu-text {
+  opacity: 1;
+}
+
 .dashboard-main {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 20px;
+  overflow: auto;
+}
+
+.dashboard-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-state-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .empty-state-text {
-  max-width: 600px;
   font-family: 'Lato', sans-serif;
   font-weight: 700;
-  font-size: 64px;
-  line-height: 77px;
+  font-size: 28px;
+  line-height: 1.4;
   text-align: center;
   color: var(--white);
-}
-
-.dashboard-menu-icon-svg {
-  width: 50px;  
-  height: 50px;
-  margin-bottom: 8px;
-  filter: brightness(0) invert(1); 
-  transition: transform 0.2s ease;
-}
-
-.dashboard-menu-item:hover .dashboard-menu-icon-svg {
-  transform: scale(1.1);
+  opacity: 0.6;
 }

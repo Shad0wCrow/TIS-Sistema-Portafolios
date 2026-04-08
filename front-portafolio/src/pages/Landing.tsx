@@ -9,7 +9,6 @@ function Landing() {
 const handleEmpezar = async () => {
   const token = localStorage.getItem("token");
 
-  // ❌ No logueado
   if (!token) {
     navigate("/login");
     return;

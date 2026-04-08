@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import HomeIcon from '../../assets/icons/Home.svg';
 import UserIcon from '../../assets/icons/perfil.svg';
@@ -6,17 +7,17 @@ import BriefcaseIcon from '../../assets/icons/Briefcase.svg';
 import BookmarkIcon from '../../assets/icons/Bookmark.svg';
 import LogoutIcon from '../../assets/icons/Logout.svg';
 
-
 export interface MenuItem {
   name: string;
   icon: string;
   id: string;
 }
-interface SidebarProps {
-  
-}
+
+interface SidebarProps {}
 
 const Sidebar: React.FC<SidebarProps> = () => {
+  const navigate = useNavigate();
+
   const menuItems: MenuItem[] = [
     { id: 'inicio', name: 'Inicio', icon: HomeIcon },
     { id: 'perfil', name: 'Perfil', icon: UserIcon },
@@ -26,7 +27,30 @@ const Sidebar: React.FC<SidebarProps> = () => {
   ];
 
   const handleNavigation = (id: string): void => {
-    console.log(`Navegando a la sección: ${id}`);
+    switch (id) {
+      case 'inicio':
+        navigate('/dashboard');
+        break;
+
+      case 'perfil':
+        navigate('/dashboard');
+        break;
+
+      case 'portafolio':
+        navigate('/portafolio/editar');
+        break;
+
+      case 'bookmarks':
+        navigate('/dashboard'); 
+        break;
+
+      case 'salir':
+        navigate('/login');
+        break;
+
+      default:
+        console.warn('Ruta no definida:', id);
+    }
   };
 
   return (
