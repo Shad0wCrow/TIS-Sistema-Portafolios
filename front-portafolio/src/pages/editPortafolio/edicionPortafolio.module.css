@@ -1,33 +1,24 @@
-/* ─────────────────────────────────────────────
-   VARIABLES — LIGHT MODE CON ACENTOS VERDES
-───────────────────────────────────────────── */
 :root {
-  /* Fondos */
   --bg:        #f4f6f5;
   --bg2:       #eef1ef;
   --bg3:       #ffffff;
   --bg4:       #f0f3f1;
 
-  /* Bordes */
   --border:    #dde3e0;
   --border2:   #c8d4cf;
 
-  /* Acento verde */
   --accent:    #1a6644;
   --accent-lt: #e8f5ee;
   --accent-md: #b8deca;
   --accent-bg: #f0faf4;
 
-  /* Texto */
   --text:      #111f18;
   --text2:     #4a5e54;
   --text3:     #8fa89e;
 
-  /* Peligro */
   --red:       #c0392b;
   --red-lt:    #fdecea;
 
-  /* Sidebar */
   --sidebar-bg:     #0f1f17;
   --sidebar-border: #1e3528;
   --sidebar-text:   #c8ddd4;
@@ -36,16 +27,10 @@
   --sidebar-active:    #6fcfa0;
 }
 
-/* ─────────────────────────────────────────────
-   RESET SCOPE
-───────────────────────────────────────────── */
 .layout * {
   box-sizing: border-box;
 }
 
-/* ─────────────────────────────────────────────
-   LAYOUT RAÍZ — FULL SCREEN
-───────────────────────────────────────────── */
 .layout {
   display: flex;
   min-height: 100vh;
@@ -55,9 +40,6 @@
   color: var(--text);
 }
 
-/* ─────────────────────────────────────────────
-   SIDEBAR
-───────────────────────────────────────────── */
 .sidebar {
   width: 230px;
   min-width: 230px;
@@ -72,7 +54,6 @@
   flex-shrink: 0;
 }
 
-/* Brand */
 .sidebarBrand {
   padding: 22px 20px 18px;
   border-bottom: 1px solid var(--sidebar-border);
@@ -103,7 +84,6 @@
   color: var(--sidebar-text2);
 }
 
-/* Avatar */
 .sidebarAvatar {
   padding: 18px 20px 16px;
   border-bottom: 1px solid var(--sidebar-border);
@@ -263,9 +243,6 @@
   fill: currentColor;
 }
 
-/* ─────────────────────────────────────────────
-   MAIN AREA
-───────────────────────────────────────────── */
 .main {
   flex: 1;
   display: flex;
@@ -274,9 +251,6 @@
   overflow: hidden;
 }
 
-/* ─────────────────────────────────────────────
-   TOPBAR
-───────────────────────────────────────────── */
 .topbar {
   height: 52px;
   background: var(--bg3);
@@ -339,9 +313,6 @@
   flex-shrink: 0;
 }
 
-/* ─────────────────────────────────────────────
-   CONTENT SCROLL AREA
-───────────────────────────────────────────── */
 .content {
   flex: 1;
   overflow-y: auto;
@@ -363,9 +334,6 @@
   border-radius: 4px;
 }
 
-/* ─────────────────────────────────────────────
-   SECTION WRAPPER
-───────────────────────────────────────────── */
 .section {
   display: flex;
   flex-direction: column;
@@ -392,9 +360,6 @@
   font-weight: 500;
 }
 
-/* ─────────────────────────────────────────────
-   PERFIL CARD
-───────────────────────────────────────────── */
 .profileGrid {
   display: grid;
   grid-template-columns: 120px 1fr 170px;
@@ -544,9 +509,6 @@
   fill: currentColor;
 }
 
-/* ─────────────────────────────────────────────
-   SKILLS
-───────────────────────────────────────────── */
 .skillsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -697,9 +659,6 @@
   color: var(--accent);
 }
 
-/* ─────────────────────────────────────────────
-   PROYECTOS
-───────────────────────────────────────────── */
 .projectsCard {
   background: var(--bg3);
   border: 1px solid var(--border2);
@@ -940,9 +899,6 @@
   fill: currentColor;
 }
 
-/* ─────────────────────────────────────────────
-   MODALES
-───────────────────────────────────────────── */
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -1127,9 +1083,6 @@
   transform: none;
 }
 
-/* ─────────────────────────────────────────────
-   ESTADOS
-───────────────────────────────────────────── */
 .stateScreen {
   display: flex;
   align-items: center;
@@ -1145,9 +1098,7 @@
   color: var(--red);
 }
 
-/* ─────────────────────────────────────────────
-   RESPONSIVE
-───────────────────────────────────────────── */
+
 @media (max-width: 900px) {
   .profileGrid {
     grid-template-columns: 110px 1fr;
