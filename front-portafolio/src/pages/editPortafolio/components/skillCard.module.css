@@ -1,0 +1,155 @@
+.skillsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.skillCard {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.skillCardHead {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skillCardTitle {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.skillCountBadge {
+  font-size: 10px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-md);
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.skillBody {
+  padding: 14px 16px;
+  flex: 1;
+  min-height: 80px;
+}
+
+.skillTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.skillTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 600;
+  transition: border-color 0.15s;
+}
+
+.skillTag:hover {
+  border-color: var(--border2);
+}
+
+.skillTagDel {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--red-lt);
+  color: var(--red);
+  border: 1px solid #f5c6c2;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.skillTagDel:hover {
+  background: var(--red);
+  color: #ffffff;
+  border-color: var(--red);
+}
+
+.skillEmpty {
+  font-size: 12px;
+  color: var(--text3);
+  margin: 0;
+}
+
+.skillFooter {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  background: var(--bg4);
+}
+
+.btnSm {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btnSm svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+
+.btnSmAccent {
+  background: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+}
+
+.btnSmAccent:hover {
+  opacity: 0.88;
+}
+
+.btnSmGhost {
+  background: var(--bg3);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+
+.btnSmGhost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .skillsGrid {
+    grid-template-columns: 1fr;
+  }
+}

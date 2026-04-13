@@ -1,0 +1,30 @@
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid #C4C4BE;
+    background: #ffffff;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1A1A1A;
+    cursor: pointer;
+    min-width: 100px;
+    white-space: nowrap;
+    line-height: 1;
+    box-sizing: border-box;
+    letter-spacing: 0.2px;
+    transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.button:hover {
+    background: #F2F2EF;
+    border-color: #AAAAAA;
+}
+
+.button:active {
+    transform: scale(0.98);
+}

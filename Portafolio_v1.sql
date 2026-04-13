@@ -69,6 +69,7 @@ CREATE TABLE "perfil" (
   "id_perfil" SERIAL PRIMARY KEY,
   "usuario_id" INT UNIQUE NOT NULL,
   "nombre_perfil" VARCHAR(255),
+  "apellido_perfil" VARCHAR(255),
   "profesion" VARCHAR(150),
   "descripcion" TEXT,
   "foto_url" VARCHAR(500),
@@ -80,6 +81,8 @@ CREATE TABLE "perfil" (
   "creado_en" TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
   "actualizado_en" TIMESTAMP DEFAULT (CURRENT_TIMESTAMP)
 );
+
+ALTER TABLE perfil ADD COLUMN celular VARCHAR(20);
 
 CREATE TABLE "configuracion_privacidad" (
   "id_configuracion" SERIAL PRIMARY KEY,
@@ -359,3 +362,5 @@ ALTER TABLE "proyecto_tag" ADD FOREIGN KEY ("tag_id") REFERENCES "tag" ("id_tag"
 ALTER TABLE "enlace_personalizado" ADD FOREIGN KEY ("usuario_id") REFERENCES "usuario" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "reporte" ADD FOREIGN KEY ("usuario_id") REFERENCES "usuario" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
+
+
