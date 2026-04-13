@@ -1,5 +1,5 @@
 .landing-navbar {
-  height: 126px;
+  height: 64px;
   width: 100%;
   background: linear-gradient(
     90deg,
@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px 0 22px;
+  padding: 0 32px 0 24px;
   box-sizing: border-box;
   position: relative;
   z-index: 2;
@@ -22,7 +22,7 @@
 }
 
 .landing-brand-logo {
-  height: 66px;
+  height: 36px;
   width: auto;
   display: block;
   object-fit: contain;
@@ -31,49 +31,64 @@
 .landing-nav {
   display: flex;
   align-items: center;
-  gap: 28px;
-  margin-right: 6px;
+  gap: 24px;
+  margin-right: 0;
 }
 
 .landing-login-link {
   color: #dbeee6;
   text-decoration: none;
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 400;
+  letter-spacing: 0.02em;
   line-height: 1;
+  transition: opacity 0.15s ease;
+}
+
+.landing-login-link:hover {
+  opacity: 0.75;
 }
 
 .landing-register-link {
   color: #f4f4f4;
   text-decoration: none;
-  font-size: 24px;
-  font-weight: 400;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   line-height: 1;
-  border: 2px solid #f3f3f3;
-  border-radius: 15px;
-  padding: 11px 18px;
+  border: 1.5px solid rgba(243, 243, 243, 0.6);
+  border-radius: 8px;
+  padding: 7px 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.landing-register-link:hover {
+  border-color: #f3f3f3;
+  background: rgba(255, 255, 255, 0.07);
 }
 
 @media (max-width: 700px) {
   .landing-navbar {
     height: auto;
-    padding: 16px;
+    padding: 12px 16px;
     flex-direction: column;
     align-items: flex-start;
-    gap: 14px;
+    gap: 12px;
+  }
+
+  .landing-brand-logo {
+    height: 28px;
   }
 
   .landing-nav {
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-right: 0;
+    gap: 16px;
   }
 
   .landing-login-link,
   .landing-register-link {
-    font-size: 18px;
+    font-size: 13px;
   }
 }

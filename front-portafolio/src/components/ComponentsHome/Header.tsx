@@ -1,6 +1,6 @@
 import React from 'react';
 import logoDevfolio from "../../assets/devfolio-logo.png";
-import search from "../../assets/icons/search.svg";
+import search from "../../assets/icons/Search.svg";
 
 
 const Header: React.FC = () => {

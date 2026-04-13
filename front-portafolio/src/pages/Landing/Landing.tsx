@@ -1,15 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import "./Landing.css";
-import fondoLanding from "../assets/landing-bg.png";
-import logoDevfolio from "../assets/devfolio-logo.png";
-import LandingHeader from "../components/layout/LandingHeader";
+import fondoLanding from "../../assets/landing-bg.png";
+import logoDevfolio from "../../assets/devfolio-logo.png";
+import LandingHeader from "../../components/layout/LandingHeader";
 
 function Landing() {
   const navigate = useNavigate();
 const handleEmpezar = async () => {
   const token = localStorage.getItem("token");
 
-  // ❌ No logueado
   if (!token) {
     navigate("/login");
     return;

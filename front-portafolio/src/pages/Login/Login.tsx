@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { loginUser } from "../services/auth";
+import { loginUser } from "../../services/auth";
 import "./Login.css";
-import fondoLanding from "../assets/landing-bg.png";
-import AuthLayout from "../components/layout/AuthLayout";
+import fondoLanding from "../../assets/landing-bg.png";
+import AuthLayout from "../../components/layout/AuthLayout";
 
 function Login() {
   const [correo, setCorreo] = useState("");
