@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
+import Landing from "./pages/Landing/Landing";
+import Login from "./pages/Login/Login";
+import Register from "./pages/Register/Register";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import CreateAccount from "./pages/createAccount/createAccount";
 import EdicionPortafolio from "./pages/editPortafolio/edicionPortafolio";
 

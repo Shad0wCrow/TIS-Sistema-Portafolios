@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerUser } from "../services/auth";
+import { registerUser } from "../../services/auth";
 import "./Register.css";
-import fondoLanding from "../assets/landing-bg.png";
-import AuthLayout from "../components/layout/AuthLayout";
+import fondoLanding from "../../assets/landing-bg.png";
+import AuthLayout from "../../components/layout/AuthLayout";
 
 function Register() {
   const [nombre_usuario, setNombreUsuario] = useState("");

@@ -1,6 +1,6 @@
 import React from 'react';
-import Sidebar from '../components/ComponentsHome/Sidebar';
-import Header from '../components/ComponentsHome/Header';
+import Sidebar from '../../components/ComponentsHome/Sidebar';
+import Header from '../../components/ComponentsHome/Header';
 import "./Dashboard.css";
 
 const Dashboard: React.FC = () => {
