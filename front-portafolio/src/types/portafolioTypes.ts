@@ -39,3 +39,29 @@ export interface PortafolioData {
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
 }
+
+export interface EntidadEmisora {
+  id_entidad_emisora: number;
+  nombre: string;
+}
+
+// ── Logros o Reconocimientos ─────────────────────────────────────────────────
+export interface Logro {
+  id_logro: number;
+  usuario_id: number;
+  entidad_emisora_id: number;
+  titulo: string;
+  descripcion?: string;
+  fecha_obtencion: string;
+  url_credencial?: string;
+  identificador?: string;
+  visibilidad: "publico" | "privado";
+  eliminado: boolean;
+  entidad_emisora?: EntidadEmisora;
+}
+// ── Secciones del editor de portafolio ───────────────────────────────────────
+export type ActiveSection =
+  | "perfil"
+  | "habilidades"
+  | "proyectos"
+  | "logros";
