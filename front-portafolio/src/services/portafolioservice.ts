@@ -91,7 +91,8 @@ export const removeProyecto = async (id: number) => {
   });
   return res.data;
 };
-// ── Logros ───────────────────────────────────────────────────────────────
+
+// ── Logros ────────────────────────────────────────────────────────────────────
 export const getLogros = async () => {
   const res = await axios.get(`${API}/logros`, {
     headers: authHeaders(),
@@ -120,13 +121,13 @@ export const removeLogro = async (id: number) => {
   });
   return res.data;
 };
-// ── Entidad emisora ───────────────────────────────────────────────────────
+
+// ── Tipos ─────────────────────────────────────────────────────────────────────
 export interface EntidadEmisora {
   id_entidad_emisora: number;
   nombre: string;
 }
 
-// ── Logro ─────────────────────────────────────────────────────────────────
 export interface Logro {
   id_logro: number;
   usuario_id: number;

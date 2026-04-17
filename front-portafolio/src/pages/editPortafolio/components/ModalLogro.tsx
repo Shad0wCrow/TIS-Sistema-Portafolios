@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styles from "./modals.module.css"; // Puedes reutilizar estilos
+import styles from "./modals.module.css"; 
 
 interface LogroForm {
   titulo: string;

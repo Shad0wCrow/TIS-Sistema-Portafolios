@@ -21,7 +21,7 @@ class PortafolioController extends Controller
             ->where('eliminado', false)
             ->first();
 
-        //habilidades separadas por tipo (tecnica / blanda)
+        
         $todasHabilidades = UsuarioHabilidad::with('habilidad')
             ->where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
@@ -45,13 +45,13 @@ class PortafolioController extends Controller
                 'nivel'                => $uh->nivel,
             ]);
 
-        // 3. Proyectos con roles del usuario en cada uno
+        
         $proyectos = Proyecto::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
             ->orderBy('creado_en', 'desc')
             ->get()
             ->map(function ($proyecto) use ($user) {
-                // Roles que el usuario tiene en este proyecto
+                
                 $roles = ProyectoUsuario::where('proyecto_id', $proyecto->id_proyecto)
                     ->where('usuario_id', $user->id_usuario)
                     ->pluck('rol_proyecto')
@@ -68,7 +68,7 @@ class PortafolioController extends Controller
                     'repositorio_url' => $proyecto->repositorio_url,
                     'imagen_principal_url' => $proyecto->imagen_principal_url,
                     'estado'        => $proyecto->estado,
-                    'roles'         => $roles,   // ["Desarrollador", "Diseñador", ...]
+                    'roles'         => $roles,   
                 ];
             });
 
@@ -115,7 +115,7 @@ class PortafolioController extends Controller
             'nivel'        => 'nullable|in:basico,intermedio,avanzado,experto',
         ]);
 
-        // Evitar duplicados
+     
         $existe = UsuarioHabilidad::where('usuario_id', $user->id_usuario)
             ->where('habilidad_id', $data['habilidad_id'])
             ->where('eliminado', false)
@@ -143,7 +143,7 @@ class PortafolioController extends Controller
         }
     }
 
-    //soft delete
+    
     public function removeHabilidad(Request $request, $id)
     {
         $user = $request->user();
@@ -255,12 +255,12 @@ class PortafolioController extends Controller
             'roles.*'              => 'string|max:50',
         ]);
 
-        // Actualizar campos del proyecto (sin roles)
+       
         $proyecto->update(collect($data)->except('roles')->toArray());
 
-        // Si se enviaron roles, reemplazar todos los registros en proyecto_usuario
+   
         if (isset($data['roles'])) {
-            // Borrar roles anteriores del usuario en este proyecto
+            
             ProyectoUsuario::where('proyecto_id', $proyecto->id_proyecto)
                 ->where('usuario_id', $user->id_usuario)
                 ->delete();

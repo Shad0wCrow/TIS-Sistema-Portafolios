@@ -59,6 +59,7 @@ export interface Logro {
   eliminado: boolean;
   entidad_emisora?: EntidadEmisora;
 }
+
 // ── Secciones del editor de portafolio ───────────────────────────────────────
 export type ActiveSection =
   | "perfil"
