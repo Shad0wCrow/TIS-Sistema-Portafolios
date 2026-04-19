@@ -1,14 +1,15 @@
 import styles from "./sidebarEdicion.module.css";
-import { IconPersona, IconStar, IconFolder, IconArrowLeft } from "./icons";
+import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconGraduate } from "./icons";
 import type { PortafolioData } from "../../types/portafolioTypes";
 
-type ActiveSection = "perfil" | "habilidades" | "proyectos";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion";
 
 interface SidebarEdicionProps {
   perfil: PortafolioData["perfil"] | null;
   nombreCompleto: string;
   activeSection: ActiveSection;
   proyectosCount: number;
+  educacionCount: number;
   onSectionChange: (section: ActiveSection) => void;
   onBack: () => void;
 }
@@ -18,13 +19,15 @@ export default function SidebarEdicion({
   nombreCompleto,
   activeSection,
   proyectosCount,
+  educacionCount,
   onSectionChange,
   onBack,
 }: SidebarEdicionProps) {
   const navItems: { key: ActiveSection; label: string; icon: React.ReactNode }[] = [
-    { key: "perfil", label: "Perfil", icon: <IconPersona /> },
-    { key: "habilidades", label: "Habilidades", icon: <IconStar /> },
-    { key: "proyectos", label: "Proyectos", icon: <IconFolder /> },
+    { key: "perfil",      label: "Perfil",      icon: <IconPersona /> },
+    { key: "habilidades", label: "Habilidades", icon: <IconStar />    },
+    { key: "proyectos",   label: "Proyectos",   icon: <IconFolder />  },
+    { key: "educacion",   label: "Educación",   icon: <IconGraduate />},
   ];
 
   return (
@@ -59,6 +62,9 @@ export default function SidebarEdicion({
             {label}
             {key === "proyectos" && proyectosCount > 0 && (
               <span className={styles.navBadge}>{proyectosCount}</span>
+            )}
+            {key === "educacion" && educacionCount > 0 && (
+              <span className={styles.navBadge}>{educacionCount}</span>
             )}
           </button>
         ))}

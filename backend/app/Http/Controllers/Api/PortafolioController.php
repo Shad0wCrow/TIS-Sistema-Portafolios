@@ -7,6 +7,7 @@ use App\Models\Perfil;
 use App\Models\UsuarioHabilidad;
 use App\Models\Proyecto;
 use App\Models\ProyectoUsuario;
+use App\Models\Educacion;
 use Illuminate\Http\Request;
 
 
@@ -72,11 +73,18 @@ class PortafolioController extends Controller
                 ];
             });
 
+        // 4. Educaciones del usuario
+        $educaciones = Educacion::where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->orderByDesc('fecha_inicio')
+            ->get();
+
         return response()->json([
             'perfil'                => $perfil,
             'habilidades_tecnicas'  => $habilidadesTecnicas,
             'habilidades_blandas'   => $habilidadesBlandas,
             'proyectos'             => $proyectos,
+            'educaciones'           => $educaciones,
         ]);
     }
 

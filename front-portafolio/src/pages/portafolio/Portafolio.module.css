@@ -105,3 +105,64 @@
   font-size: 14px; color: #8fa89e; font-family: 'Segoe UI', system-ui, sans-serif;
 }
 .stateError { color: #c0392b; }
+/* ── Educación ─────────────────────────────────────────────────────────────── */
+.educacionList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.educacionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: #f9fafb;
+  border: 1px solid #e2e8e5;
+  border-radius: 10px;
+  transition: border-color 0.15s;
+}
+.educacionItem:hover { border-color: #b2c5be; }
+
+.educacionIcono {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.educacionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.educacionTitulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a2e25;
+}
+
+.educacionInstitucion {
+  font-size: 13px;
+  color: #3d6b58;
+  font-weight: 500;
+}
+
+.educacionArea {
+  font-size: 12px;
+  color: #8fa89e;
+}
+
+.educacionFechas {
+  font-size: 11px;
+  color: #8fa89e;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.educacionDesc {
+  font-size: 12px;
+  color: #5a7a6e;
+  margin-top: 4px;
+  line-height: 1.5;
+}

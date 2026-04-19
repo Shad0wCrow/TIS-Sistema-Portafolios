@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPortafolio } from "../../services/portafolioservice";
-import type { PortafolioData } from "../../types/portafolioTypes";
-
+import type { PortafolioData, Educacion } from "../../types/portafolioTypes";
 
 import ProjectCard from "../../components/portafolio/ProjectCard";
 import SkillChip   from "../../components/portafolio/SkillChip";
 
 import styles from "./Portafolio.module.css";
-
 
 const IconBack = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,7 +25,6 @@ const IconUser = () => (
   </svg>
 );
 
-//Vacio generico
 function EmptyState({ label }: { label: string }) {
   return (
     <div className={styles.emptyState}>
@@ -36,6 +33,33 @@ function EmptyState({ label }: { label: string }) {
   );
 }
 
+function formatFecha(fecha: string | null): string {
+  if (!fecha) return "Presente";
+  const [y, m] = fecha.split("-");
+  const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  return `${meses[parseInt(m) - 1]} ${y}`;
+}
+
+function EducacionItem({ edu }: { edu: Educacion }) {
+  return (
+    <div className={styles.educacionItem}>
+      <div className={styles.educacionIcono}>🎓</div>
+      <div className={styles.educacionInfo}>
+        <span className={styles.educacionTitulo}>{edu.titulo}</span>
+        <span className={styles.educacionInstitucion}>{edu.institucion}</span>
+        {edu.area_estudio && (
+          <span className={styles.educacionArea}>{edu.area_estudio}</span>
+        )}
+        <span className={styles.educacionFechas}>
+          {formatFecha(edu.fecha_inicio)} — {formatFecha(edu.fecha_fin)}
+        </span>
+        {edu.descripcion && (
+          <span className={styles.educacionDesc}>{edu.descripcion}</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Portafolio() {
   const navigate = useNavigate();
@@ -53,11 +77,15 @@ export default function Portafolio() {
   if (loading) return <div className={styles.stateScreen}>Cargando...</div>;
   if (error)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{error}</div>;
 
-  const perfil    = data?.perfil ?? null;
-  const tecnicas  = data?.habilidades_tecnicas ?? [];
-  const blandas   = data?.habilidades_blandas ?? [];
-  const proyectos = data?.proyectos ?? [];
-  const nombre    = perfil
+  const perfil      = data?.perfil ?? null;
+  const tecnicas    = data?.habilidades_tecnicas ?? [];
+  const blandas     = data?.habilidades_blandas ?? [];
+  const proyectos   = data?.proyectos ?? [];
+  // Solo mostrar educaciones públicas en la vista del portafolio
+  const educaciones = (data?.educaciones ?? [] as Educacion[]).filter(
+    (e) => e.visibilidad === "publico"
+  );
+  const nombre = perfil
     ? `${perfil.nombre_perfil} ${perfil.apellido_perfil}`.trim()
     : "Sin nombre";
 
@@ -74,7 +102,7 @@ export default function Portafolio() {
 
       <div className={styles.container}>
 
-        
+        {/* Hero / Perfil */}
         <section className={styles.hero}>
           <div className={styles.avatarWrap}>
             {perfil?.foto_url
@@ -90,7 +118,7 @@ export default function Portafolio() {
           </div>
         </section>
 
-
+        {/* Habilidades */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Habilidades</h2>
@@ -98,7 +126,6 @@ export default function Portafolio() {
           </div>
           <div className={styles.sectionBody}>
             <div className={styles.habilidadesGrid}>
-
               <div className={styles.habilidadesCol}>
                 <p className={styles.colLabel}>Técnicas</p>
                 {tecnicas.length === 0
@@ -112,9 +139,7 @@ export default function Portafolio() {
                   )
                 }
               </div>
-
               <div className={styles.colDivider} />
-
               <div className={styles.habilidadesCol}>
                 <p className={styles.colLabel}>Blandas</p>
                 {blandas.length === 0
@@ -128,11 +153,31 @@ export default function Portafolio() {
                   )
                 }
               </div>
-
             </div>
           </div>
         </section>
 
+        {/* Formación Académica */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Formación Académica</h2>
+            <span className={styles.sectionCount}>{educaciones.length}</span>
+          </div>
+          <div className={styles.sectionBody}>
+            {educaciones.length === 0
+              ? <EmptyState label="formaciones académicas" />
+              : (
+                <div className={styles.educacionList}>
+                  {educaciones.map(edu => (
+                    <EducacionItem key={edu.id_educacion} edu={edu} />
+                  ))}
+                </div>
+              )
+            }
+          </div>
+        </section>
+
+        {/* Proyectos */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Proyectos</h2>
@@ -151,10 +196,6 @@ export default function Portafolio() {
             }
           </div>
         </section>
-
-        {/*
-          Para agregar secciones futuras
-        */}
 
       </div>
     </div>
