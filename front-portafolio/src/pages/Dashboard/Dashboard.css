@@ -214,3 +214,24 @@
   letter-spacing: 0.02em;
   text-align: center;
 }
+.empty-state-btn {
+  margin-top: 12px;
+  padding: 10px 28px;
+  border-radius: 9px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.empty-state-btn:hover {
+  background: #155235;
+}
+
+.empty-state-btn:active {
+  transform: scale(0.97);
+}

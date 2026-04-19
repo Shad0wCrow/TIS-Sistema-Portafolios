@@ -12,7 +12,7 @@ const Dashboard: React.FC = () => {
         <main className="dashboard-main">
           <section className="dashboard-content">
             <div className="empty-state-container">
-              <h2 className="empty-state-text">Publicaciones aun no disponibles</h2>
+              <h2 className="empty-state-text">Publicaciones aún no disponibles</h2>
             </div>
           </section>
         </main>
