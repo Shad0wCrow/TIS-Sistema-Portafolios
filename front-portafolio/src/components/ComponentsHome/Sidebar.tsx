@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import HomeIcon from '../../assets/icons/Home.svg';
@@ -7,16 +7,18 @@ import BriefcaseIcon from '../../assets/icons/Briefcase.svg';
 import BookmarkIcon from '../../assets/icons/Bookmark.svg';
 import LogoutIcon from '../../assets/icons/Logout.svg';
 
+
+import ModalCrearPortafolio from '../portafolio/ModalCrearPortafolio';
+
 export interface MenuItem {
   name: string;
   icon: string;
   id: string;
 }
 
-interface SidebarProps {}
-
-const Sidebar: React.FC<SidebarProps> = () => {
+const Sidebar: React.FC = () => {
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
 
   const menuItems: MenuItem[] = [
     { id: 'inicio', name: 'Inicio', icon: HomeIcon },
@@ -36,15 +38,25 @@ const Sidebar: React.FC<SidebarProps> = () => {
         navigate('/dashboard');
         break;
 
-      case 'portafolio':
-        navigate('/portafolio/editar');
+      case 'portafolio': {
+        const hasPortafolio = localStorage.getItem('hasPortafolio') === 'true';
+
+        if (hasPortafolio) {
+          navigate('/portafolio');
+        } else {
+          setShowModal(true);
+        }
         break;
+      }
 
       case 'bookmarks':
-        navigate('/dashboard'); 
+        navigate('/dashboard');
         break;
 
       case 'salir':
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('hasPortafolio');
         navigate('/login');
         break;
 
@@ -53,26 +65,48 @@ const Sidebar: React.FC<SidebarProps> = () => {
     }
   };
 
+ 
+  const handleCrear = () => {
+    localStorage.setItem('hasPortafolio', 'true');
+    setShowModal(false);
+    navigate('/portafolio/editar');
+  };
+
+
+  const handleOmitir = () => {
+    setShowModal(false);
+  };
+
   return (
-    <aside className="dashboard-sidebar">
-      <nav className="dashboard-menu">
-        {menuItems.map((item) => (
-          <button 
-            key={item.id} 
-            className="dashboard-menu-item"
-            onClick={() => handleNavigation(item.id)}
-            type="button"
-          >
-            <img 
-              src={item.icon} 
-              alt={item.name} 
-              className="dashboard-menu-icon-svg" 
-            />
-            <span className="dashboard-menu-text">{item.name}</span>
-          </button>
-        ))}
-      </nav>
-    </aside>
+    <>
+      <aside className="dashboard-sidebar">
+        <nav className="dashboard-menu">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              className="dashboard-menu-item"
+              onClick={() => handleNavigation(item.id)}
+              type="button"
+            >
+              <img
+                src={item.icon}
+                alt={item.name}
+                className="dashboard-menu-icon-svg"
+              />
+              <span className="dashboard-menu-text">{item.name}</span>
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      
+      {showModal && (
+        <ModalCrearPortafolio
+          onCrear={handleCrear}
+          onOmitir={handleOmitir}
+        />
+      )}
+    </>
   );
 };
 

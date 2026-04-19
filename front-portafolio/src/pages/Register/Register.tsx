@@ -44,6 +44,7 @@ function Register() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.removeItem("hasPortafolio");
       navigate("/createAccount");
     } catch (err: any) {
       const responseData = err?.response?.data;
