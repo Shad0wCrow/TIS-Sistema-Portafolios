@@ -132,3 +132,36 @@ export const removeEducacion = async (id: number) => {
   });
   return res.data;
 };
+// ── Logros ─────────────────────────────────────────────────────────────────
+export const getCatalogoEntidades = async () => {
+  const res = await axios.get(`${API}/catalogo/entidades`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+export const getLogros = async () => {
+  const res = await axios.get(`${API}/logros`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+export const addLogro = async (data: {
+  entidad_emisora_id: number;
+  titulo: string;
+  descripcion?: string;
+  fecha_obtencion?: string;
+  url_credencial?: string;
+  identificador?: string;
+  visibilidad?: "publico" | "privado";
+}) => {
+  const res = await axios.post(`${API}/logros`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+export const removeLogro = async (id: number) => {
+  const res = await axios.delete(`${API}/logros/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};

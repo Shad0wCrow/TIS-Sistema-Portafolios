@@ -43,11 +43,22 @@ export interface Educacion {
   descripcion: string | null;
   visibilidad: "publico" | "privado";
 }
-
+export interface logros{
+  id_logro: number;
+  titulo: string;
+  descripcion: string | null;
+  fecha_obtencion: string | null;
+  entidad_emisora_id: number;
+  entidad_nombre?: string;
+  url_credencial?: string | null;
+  identificador?: string | null;
+  visibilidad: "publico" | "privado";
+}
 export interface PortafolioData {
   perfil: Perfil | null;
   habilidades_tecnicas: HabilidadItem[];
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
   educaciones: Educacion[];
+  logros: logros[];
 }

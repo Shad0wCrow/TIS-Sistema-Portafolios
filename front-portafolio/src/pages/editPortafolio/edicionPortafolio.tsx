@@ -33,13 +33,14 @@ import ModalAlert from "./components/modalAlert";
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "logros";
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
   habilidades: "Habilidades",
   proyectos: "Proyectos",
   educacion: "Educación",
+  logros: "Logros",
 };
 
 export default function EdicionPortafolio() {
@@ -82,6 +83,7 @@ export default function EdicionPortafolio() {
   const habilidadesBlandas  = data?.habilidades_blandas ?? [];
   const proyectos           = data?.proyectos ?? [];
   const educaciones         = (data?.educaciones ?? []) as Educacion[];
+  const logros              = data?.logros ?? [];
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
@@ -283,6 +285,36 @@ export default function EdicionPortafolio() {
               />
             </div>
           )}
+          {activeSection === "logros" && (
+  <div className={styles.section}>
+    <div className={styles.sectionHeader}>
+      <span className={styles.sectionTitle}>Logros</span>
+      <span className={styles.sectionMeta}>
+        {logros.length} logro{logros.length !== 1 ? "s" : ""}
+      </span>
+    </div>
+
+    <div>
+      {logros.length === 0 ? (
+        <p>No tienes logros registrados</p>
+      ) : (
+        logros.map((logro) => (
+          <div key={logro.id_logro} style={{ marginBottom: "10px" }}>
+            <strong>{logro.titulo}</strong>
+            <p>{logro.descripcion}</p>
+            <small>{logro.entidad_nombre}</small>
+
+            <div>
+              <button onClick={() => console.log("Eliminar", logro.id_logro)}>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+)}
 
         </div>
       </main>
