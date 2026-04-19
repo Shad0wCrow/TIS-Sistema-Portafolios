@@ -91,3 +91,44 @@ export const removeProyecto = async (id: number) => {
   });
   return res.data;
 };
+
+// ── Educación ─────────────────────────────────────────────────────────────────
+export const getEducaciones = async () => {
+  const res = await axios.get(`${API}/educacion`, { headers: authHeaders() });
+  return res.data; // { educaciones: Educacion[] }
+};
+
+/**
+ * Obtiene sugerencias de instituciones desde la base de datos
+ * según el término ingresado (mínimo 3 caracteres). CA #10
+ */
+export const getSugerenciasInstitucion = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 3) return [];
+  const res = await axios.get(`${API}/educacion/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+
+export const addEducacion = async (data: {
+  institucion: string;
+  titulo: string;
+  area_estudio?: string;
+  fecha_inicio: string;
+  fecha_fin?: string;
+  descripcion?: string;
+  visibilidad?: "publico" | "privado";
+}) => {
+  const res = await axios.post(`${API}/educacion`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const removeEducacion = async (id: number) => {
+  const res = await axios.delete(`${API}/educacion/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};

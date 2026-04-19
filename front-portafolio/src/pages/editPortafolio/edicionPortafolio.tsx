@@ -11,11 +11,14 @@ import {
   addProyecto,
   updateProyecto,
   removeProyecto,
+  addEducacion,
+  removeEducacion,
 } from "../../services/portafolioservice";
 import type {
   PortafolioData,
   HabilidadCatalogo,
   Proyecto,
+  Educacion,
 } from "../../types/portafolioTypes";
 import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
@@ -23,18 +26,20 @@ import ProjectRowList from "./components/projectRowList";
 import ModalEditarPerfil from "./components/modalEditarPerfil";
 import ModalAgregarHabilidad from "./components/modalAgregarHabilidad";
 import ModalProyecto from "./components/modalProyecto";
+import ModalEducacion from "./components/modalEducacion";
+import EducacionCard from "./components/educacionCard";
 import { IconPersona, IconPencil } from "./components/icons";
 import ModalAlert from "./components/modalAlert";
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
-
 type ModalProyectoState = Proyecto | null | "nuevo";
-type ActiveSection = "perfil" | "habilidades" | "proyectos";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion";
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
   habilidades: "Habilidades",
   proyectos: "Proyectos",
+  educacion: "Educación",
 };
 
 export default function EdicionPortafolio() {
@@ -48,7 +53,10 @@ export default function EdicionPortafolio() {
   const [modalPerfil, setModalPerfil] = useState(false);
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
+  const [modalEducacion, setModalEducacion] = useState(false);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
+
+  // Refrescar todo el portafolio (educaciones incluidas via /portafolio)
   const refreshData = async () => setData(await getPortafolio());
 
   useEffect(() => {
@@ -69,16 +77,18 @@ export default function EdicionPortafolio() {
     cargar();
   }, []);
 
-  const perfil = data?.perfil ?? null;
+  const perfil             = data?.perfil ?? null;
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
-  const habilidadesBlandas = data?.habilidades_blandas ?? [];
-  const proyectos = data?.proyectos ?? [];
+  const habilidadesBlandas  = data?.habilidades_blandas ?? [];
+  const proyectos           = data?.proyectos ?? [];
+  const educaciones         = (data?.educaciones ?? []) as Educacion[];
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Nombre completo";
   }, [perfil]);
 
+  // ── Handlers ─────────────────────────────────────────────────────────────────
   const handleSavePerfil = async (formData: Parameters<typeof updatePerfil>[0]) => {
     await updatePerfil(formData);
     await refreshData();
@@ -90,15 +100,15 @@ export default function EdicionPortafolio() {
   };
 
   const handleRemoveHabilidad = async (id: number) => {
-  setModalAlert({
-    mensaje: "Esta habilidad será eliminada de tu perfil.",
-    onConfirm: async () => {
-      setModalAlert(null);
-      await removeHabilidad(id);
-      await refreshData();
-    },
-  });
-};
+    setModalAlert({
+      mensaje: "Esta habilidad será eliminada de tu perfil.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        await removeHabilidad(id);
+        await refreshData();
+      },
+    });
+  };
 
   const handleSaveProyecto = async (formData: Parameters<typeof addProyecto>[0]) => {
     if (modalProy && modalProy !== "nuevo") {
@@ -110,19 +120,35 @@ export default function EdicionPortafolio() {
   };
 
   const handleRemoveProyecto = async (id: number) => {
-  setModalAlert({
-    mensaje: "Este proyecto será eliminado permanentemente.",
-    onConfirm: async () => {
-      setModalAlert(null);
-      await removeProyecto(id);
-      await refreshData();
-    },
-  });
-};
+    setModalAlert({
+      mensaje: "Este proyecto será eliminado permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        await removeProyecto(id);
+        await refreshData();
+      },
+    });
+  };
+
+  const handleSaveEducacion = async (formData: Parameters<typeof addEducacion>[0]) => {
+    await addEducacion(formData);
+    await refreshData(); // /portafolio ya devuelve educaciones
+  };
+
+  const handleRemoveEducacion = async (id: number) => {
+    setModalAlert({
+      mensaje: "Este registro de educación será eliminado permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        await removeEducacion(id);
+        await refreshData();
+      },
+    });
+  };
 
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
-  if (errorPage) return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
-  if (!data) return null;
+  if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
+  if (!data)       return null;
 
   return (
     <div className={styles.layout}>
@@ -132,6 +158,7 @@ export default function EdicionPortafolio() {
         nombreCompleto={nombreCompleto}
         activeSection={activeSection}
         proyectosCount={proyectos.length}
+        educacionCount={educaciones.length}
         onSectionChange={setActiveSection}
         onBack={() => navigate(-1)}
       />
@@ -241,6 +268,22 @@ export default function EdicionPortafolio() {
             </div>
           )}
 
+          {activeSection === "educacion" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Formación Académica</span>
+                <span className={styles.sectionMeta}>
+                  {educaciones.length} registro{educaciones.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <EducacionCard
+                educaciones={educaciones}
+                onAdd={() => setModalEducacion(true)}
+                onRemove={handleRemoveEducacion}
+              />
+            </div>
+          )}
+
         </div>
       </main>
 
@@ -255,6 +298,12 @@ export default function EdicionPortafolio() {
           proyecto={modalProy === "nuevo" ? null : modalProy}
           onClose={() => setModalProy(null)}
           onSave={handleSaveProyecto}
+        />
+      )}
+      {modalEducacion && (
+        <ModalEducacion
+          onClose={() => setModalEducacion(false)}
+          onSave={handleSaveEducacion}
         />
       )}
       {modalAlert && (
