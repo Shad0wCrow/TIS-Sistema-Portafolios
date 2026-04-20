@@ -17,14 +17,20 @@ import {
   removeEducacion,
   addCurso,
   removeCurso,
+  addLogro,
+  removeLogro,
 } from "../../services/portafolioservice";
+
 import type {
   PortafolioData,
   HabilidadCatalogo,
   Proyecto,
   Educacion,
   Curso,
+  Logro
 } from "../../types/portafolioTypes";
+
+
 import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
 import ProjectRowList from "./components/projectRowList";
@@ -37,10 +43,13 @@ import EducacionCard from "./components/educacionCard";
 import CursoCard from "./components/cursoCard";
 import { IconPersona, IconPencil } from "./components/icons";
 import ModalAlert from "./components/modalAlert";
+import ModalLogro from "./components/modalLogro";
+import LogroCard from "./components/logroCard";
+
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros";
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
@@ -48,6 +57,7 @@ const SECTION_LABELS: Record<ActiveSection, string> = {
   proyectos: "Proyectos",
   educacion: "Educación",
   cursos: "Cursos",
+  logros: "Logros",
 };
 
 export default function EdicionPortafolio() {
@@ -64,6 +74,8 @@ export default function EdicionPortafolio() {
   const [modalEducacion, setModalEducacion] = useState(false);
   const [modalCurso, setModalCurso] = useState(false);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
+  const [modalLogro, setModalLogro] = useState(false);
+  
 
   const refreshData = async () => setData(await getPortafolio());
 
@@ -91,6 +103,7 @@ export default function EdicionPortafolio() {
   const proyectos           = data?.proyectos ?? [];
   const educaciones         = (data?.educaciones ?? []) as Educacion[];
   const cursos              = (data?.cursos ?? []) as Curso[];
+  const logros              = (data?.logros ?? []) as Logro[];
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
@@ -172,6 +185,23 @@ export default function EdicionPortafolio() {
     });
   };
 
+  const handleRemoveLogro = async (id: number) => {
+    setModalAlert({
+      mensaje: "Este logro será eliminado permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        await removeLogro(id);
+        await refreshData();
+      },
+    });
+  };
+
+  const handleAddLogro = async (formData: Parameters<typeof addLogro>[0]) => {
+    await addLogro(formData);
+    await refreshData();
+  };
+
+
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
   if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
   if (!data)       return null;
@@ -186,6 +216,7 @@ export default function EdicionPortafolio() {
         proyectosCount={proyectos.length}
         educacionCount={educaciones.length}
         cursosCount={cursos.length}
+        logrosCount={logros.length}
         onSectionChange={setActiveSection}
         onBack={() => navigate(-1)}
       />
@@ -327,6 +358,23 @@ export default function EdicionPortafolio() {
             </div>
           )}
 
+          {activeSection === "logros" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Logros</span>
+                <span className={styles.sectionMeta}>
+                  {logros.length} logro{logros.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+
+              <LogroCard
+                logros={logros}
+                onAdd={() => setModalLogro(true)}
+                onRemove={handleRemoveLogro}
+              />
+            </div>
+          )}
+
         </div>
       </main>
 
@@ -353,6 +401,13 @@ export default function EdicionPortafolio() {
         <ModalCurso
           onClose={() => setModalCurso(false)}
           onSave={handleSaveCurso}
+        />
+      )}
+
+      {modalLogro && (
+        <ModalLogro
+          onClose={() => setModalLogro(false)}
+          onSave={handleAddLogro}
         />
       )}
       {modalAlert && (

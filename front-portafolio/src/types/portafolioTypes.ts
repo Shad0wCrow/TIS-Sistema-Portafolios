@@ -43,6 +43,16 @@ export interface Curso {
   descripcion: string | null;
   visibilidad: "publico" | "privado";
 }
+export interface Logro{
+  id_logro: number;
+  titulo: string;
+  descripcion: string | null;
+  fecha_obtencion: string | null;
+  entidad_nombre?: string | null; 
+  url_credencial?: string | null;
+  identificador?: string | null;
+  visibilidad: "publico" | "privado";
+}
 
 export interface PortafolioData {
   perfil: Perfil | null;
@@ -51,6 +61,7 @@ export interface PortafolioData {
   proyectos: Proyecto[];
   educaciones: Educacion[];
   cursos: Curso[];
+  logros: Logro[];
 }
 export interface Educacion {
   id_educacion: number;
