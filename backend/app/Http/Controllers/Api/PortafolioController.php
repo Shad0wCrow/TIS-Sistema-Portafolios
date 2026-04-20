@@ -73,9 +73,17 @@ class PortafolioController extends Controller
                 ];
             });
 
-        // 4. Educaciones del usuario
+        // Educaciones (HU-01) — excluye los registros de tipo 'curso'
         $educaciones = Educacion::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
+            ->where(function ($q) { $q->whereNull('area_estudio')->orWhere('area_estudio', '!=', 'curso'); })
+            ->orderByDesc('fecha_inicio')
+            ->get();
+
+        // Cursos (HU-07) — discriminados por area_estudio = 'curso'
+        $cursos = Educacion::where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->where('area_estudio', 'curso')
             ->orderByDesc('fecha_inicio')
             ->get();
 
@@ -85,6 +93,7 @@ class PortafolioController extends Controller
             'habilidades_blandas'   => $habilidadesBlandas,
             'proyectos'             => $proyectos,
             'educaciones'           => $educaciones,
+            'cursos'                => $cursos,
         ]);
     }
 

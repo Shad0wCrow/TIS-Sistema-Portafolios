@@ -13,12 +13,15 @@ import {
   removeProyecto,
   addEducacion,
   removeEducacion,
+  addCurso,
+  removeCurso,
 } from "../../services/portafolioservice";
 import type {
   PortafolioData,
   HabilidadCatalogo,
   Proyecto,
   Educacion,
+  Curso,
 } from "../../types/portafolioTypes";
 import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
@@ -27,19 +30,22 @@ import ModalEditarPerfil from "./components/modalEditarPerfil";
 import ModalAgregarHabilidad from "./components/modalAgregarHabilidad";
 import ModalProyecto from "./components/modalProyecto";
 import ModalEducacion from "./components/modalEducacion";
+import ModalCurso from "./components/modalCurso";
 import EducacionCard from "./components/educacionCard";
+import CursoCard from "./components/cursoCard";
 import { IconPersona, IconPencil } from "./components/icons";
 import ModalAlert from "./components/modalAlert";
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos";
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
   habilidades: "Habilidades",
   proyectos: "Proyectos",
   educacion: "Educación",
+  cursos: "Cursos",
 };
 
 export default function EdicionPortafolio() {
@@ -54,9 +60,9 @@ export default function EdicionPortafolio() {
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
   const [modalEducacion, setModalEducacion] = useState(false);
+  const [modalCurso, setModalCurso] = useState(false);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
 
-  // Refrescar todo el portafolio (educaciones incluidas via /portafolio)
   const refreshData = async () => setData(await getPortafolio());
 
   useEffect(() => {
@@ -82,6 +88,7 @@ export default function EdicionPortafolio() {
   const habilidadesBlandas  = data?.habilidades_blandas ?? [];
   const proyectos           = data?.proyectos ?? [];
   const educaciones         = (data?.educaciones ?? []) as Educacion[];
+  const cursos              = (data?.cursos ?? []) as Curso[];
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
@@ -89,6 +96,7 @@ export default function EdicionPortafolio() {
   }, [perfil]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
+
   const handleSavePerfil = async (formData: Parameters<typeof updatePerfil>[0]) => {
     await updatePerfil(formData);
     await refreshData();
@@ -132,7 +140,7 @@ export default function EdicionPortafolio() {
 
   const handleSaveEducacion = async (formData: Parameters<typeof addEducacion>[0]) => {
     await addEducacion(formData);
-    await refreshData(); // /portafolio ya devuelve educaciones
+    await refreshData();
   };
 
   const handleRemoveEducacion = async (id: number) => {
@@ -141,6 +149,22 @@ export default function EdicionPortafolio() {
       onConfirm: async () => {
         setModalAlert(null);
         await removeEducacion(id);
+        await refreshData();
+      },
+    });
+  };
+
+  const handleSaveCurso = async (formData: Parameters<typeof addCurso>[0]) => {
+    await addCurso(formData);
+    await refreshData();
+  };
+
+  const handleRemoveCurso = async (id: number) => {
+    setModalAlert({
+      mensaje: "Este curso será eliminado permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        await removeCurso(id);
         await refreshData();
       },
     });
@@ -159,6 +183,7 @@ export default function EdicionPortafolio() {
         activeSection={activeSection}
         proyectosCount={proyectos.length}
         educacionCount={educaciones.length}
+        cursosCount={cursos.length}
         onSectionChange={setActiveSection}
         onBack={() => navigate(-1)}
       />
@@ -284,6 +309,22 @@ export default function EdicionPortafolio() {
             </div>
           )}
 
+          {activeSection === "cursos" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Cursos y Certificados</span>
+                <span className={styles.sectionMeta}>
+                  {cursos.length} registro{cursos.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <CursoCard
+                cursos={cursos}
+                onAdd={() => setModalCurso(true)}
+                onRemove={handleRemoveCurso}
+              />
+            </div>
+          )}
+
         </div>
       </main>
 
@@ -304,6 +345,12 @@ export default function EdicionPortafolio() {
         <ModalEducacion
           onClose={() => setModalEducacion(false)}
           onSave={handleSaveEducacion}
+        />
+      )}
+      {modalCurso && (
+        <ModalCurso
+          onClose={() => setModalCurso(false)}
+          onSave={handleSaveCurso}
         />
       )}
       {modalAlert && (
