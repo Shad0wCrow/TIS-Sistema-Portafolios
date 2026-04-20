@@ -19,6 +19,7 @@ import {
   removeCurso,
   addLogro,
   removeLogro,
+  addIdioma,
 } from "../../services/portafolioservice";
 
 import type {
@@ -27,7 +28,8 @@ import type {
   Proyecto,
   Educacion,
   Curso,
-  Logro
+  Logro,
+  Idioma
 } from "../../types/portafolioTypes";
 
 
@@ -45,11 +47,12 @@ import { IconPersona, IconPencil } from "./components/icons";
 import ModalAlert from "./components/modalAlert";
 import ModalLogro from "./components/modalLogro";
 import LogroCard from "./components/logroCard";
-
+import ModalIdioma from "./components/modalIdioma";
+import IdiomaCard from "./components/idiomaCard";
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas";
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
@@ -58,6 +61,7 @@ const SECTION_LABELS: Record<ActiveSection, string> = {
   educacion: "Educación",
   cursos: "Cursos",
   logros: "Logros",
+  idiomas: "Idiomas",
 };
 
 export default function EdicionPortafolio() {
@@ -75,7 +79,7 @@ export default function EdicionPortafolio() {
   const [modalCurso, setModalCurso] = useState(false);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
   const [modalLogro, setModalLogro] = useState(false);
-  
+  const [modalIdioma, setModalIdioma] = useState(false);
 
   const refreshData = async () => setData(await getPortafolio());
 
@@ -104,6 +108,8 @@ export default function EdicionPortafolio() {
   const educaciones         = (data?.educaciones ?? []) as Educacion[];
   const cursos              = (data?.cursos ?? []) as Curso[];
   const logros              = (data?.logros ?? []) as Logro[];
+  const idiomas             = (data?.idiomas ?? []) as Idioma[];
+
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
@@ -201,6 +207,10 @@ export default function EdicionPortafolio() {
     await refreshData();
   };
 
+  const handleAddIdioma = async (formData: Parameters<typeof addIdioma>[0]) => {
+    await addIdioma(formData);
+    await refreshData();
+  } 
 
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
   if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
@@ -217,6 +227,7 @@ export default function EdicionPortafolio() {
         educacionCount={educaciones.length}
         cursosCount={cursos.length}
         logrosCount={logros.length}
+        IdiomasCount={idiomas.length}
         onSectionChange={setActiveSection}
         onBack={() => navigate(-1)}
       />
@@ -375,6 +386,23 @@ export default function EdicionPortafolio() {
             </div>
           )}
 
+          {activeSection === "idiomas" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Idiomas</span>
+                <span className={styles.sectionMeta}>
+                  {idiomas.length} idioma{idiomas.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+
+              <IdiomaCard
+                idiomas={idiomas}
+                onAdd={() => setModalIdioma(true)}
+                
+              />
+            </div>
+          )}  
+
         </div>
       </main>
 
@@ -410,6 +438,14 @@ export default function EdicionPortafolio() {
           onSave={handleAddLogro}
         />
       )}
+
+      {modalIdioma && (
+        <ModalIdioma
+          onClose={() => setModalIdioma(false)}
+          onSave={handleAddIdioma}
+        />
+      )}
+
       {modalAlert && (
         <ModalAlert
           title="¿Confirmar eliminación?"

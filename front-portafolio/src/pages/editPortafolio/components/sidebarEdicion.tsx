@@ -4,7 +4,7 @@ import type { PortafolioData } from "../../../types/portafolioTypes";
 
 
 
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas";
 
 interface SidebarEdicionProps {
   perfil: PortafolioData["perfil"] | null;
@@ -14,6 +14,7 @@ interface SidebarEdicionProps {
   educacionCount: number;
   cursosCount: number;
   logrosCount: number;
+  IdiomasCount: number;
   onSectionChange: (section: ActiveSection) => void;
   onBack: () => void;
 }
@@ -26,6 +27,7 @@ export default function SidebarEdicion({
   educacionCount,
   cursosCount,
   logrosCount,
+  IdiomasCount,
   onSectionChange,
   onBack,
 }: SidebarEdicionProps) {
@@ -36,6 +38,7 @@ export default function SidebarEdicion({
     { key: "educacion",   label: "Educación",   icon: <IconGraduate /> },
     { key: "cursos",      label: "Cursos",      icon: <IconBook />     },
     { key: "logros",      label: "Logros",      icon: <IconStar />     },
+    { key: "idiomas",     label: "Idiomas",     icon: <IconStar />     },
   ];
 
   const badgeCount: Partial<Record<ActiveSection, number>> = {
@@ -43,6 +46,7 @@ export default function SidebarEdicion({
     educacion: educacionCount,
     cursos: cursosCount,
     logros: logrosCount,
+    idiomas: IdiomasCount,
   };
 
   return (
