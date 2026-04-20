@@ -9,7 +9,7 @@ use App\Models\Proyecto;
 use App\Models\ProyectoUsuario;
 use App\Models\Educacion;
 use Illuminate\Http\Request;
-
+use App\Models\Logro;
 
 class PortafolioController extends Controller
 {
@@ -17,12 +17,11 @@ class PortafolioController extends Controller
     {
         $user = $request->user();
 
-        
         $perfil = Perfil::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
             ->first();
 
-        //habilidades separadas por tipo (tecnica / blanda)
+        // habilidades
         $todasHabilidades = UsuarioHabilidad::with('habilidad')
             ->where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
@@ -33,8 +32,8 @@ class PortafolioController extends Controller
             ->values()
             ->map(fn($uh) => [
                 'id_usuario_habilidad' => $uh->id_usuario_habilidad,
-                'nombre'               => $uh->habilidad->nombre,
-                'nivel'                => $uh->nivel,
+                'nombre' => $uh->habilidad->nombre,
+                'nivel' => $uh->nivel,
             ]);
 
         $habilidadesBlandas = $todasHabilidades
@@ -42,17 +41,16 @@ class PortafolioController extends Controller
             ->values()
             ->map(fn($uh) => [
                 'id_usuario_habilidad' => $uh->id_usuario_habilidad,
-                'nombre'               => $uh->habilidad->nombre,
-                'nivel'                => $uh->nivel,
+                'nombre' => $uh->habilidad->nombre,
+                'nivel' => $uh->nivel,
             ]);
 
-        // 3. Proyectos con roles del usuario en cada uno
+        // proyectos
         $proyectos = Proyecto::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
             ->orderBy('creado_en', 'desc')
             ->get()
             ->map(function ($proyecto) use ($user) {
-                // Roles que el usuario tiene en este proyecto
                 $roles = ProyectoUsuario::where('proyecto_id', $proyecto->id_proyecto)
                     ->where('usuario_id', $user->id_usuario)
                     ->pluck('rol_proyecto')
@@ -60,33 +58,53 @@ class PortafolioController extends Controller
                     ->values();
 
                 return [
-                    'id_proyecto'   => $proyecto->id_proyecto,
-                    'titulo'        => $proyecto->titulo,
-                    'descripcion'   => $proyecto->descripcion,
-                    'fecha_inicio'  => $proyecto->fecha_inicio,
-                    'fecha_fin'     => $proyecto->fecha_fin,
-                    'demo_url'      => $proyecto->demo_url,
+                    'id_proyecto' => $proyecto->id_proyecto,
+                    'titulo' => $proyecto->titulo,
+                    'descripcion' => $proyecto->descripcion,
+                    'fecha_inicio' => $proyecto->fecha_inicio,
+                    'fecha_fin' => $proyecto->fecha_fin,
+                    'demo_url' => $proyecto->demo_url,
                     'repositorio_url' => $proyecto->repositorio_url,
                     'imagen_principal_url' => $proyecto->imagen_principal_url,
-                    'estado'        => $proyecto->estado,
-                    'roles'         => $roles,   // ["Desarrollador", "Diseñador", ...]
+                    'estado' => $proyecto->estado,
+                    'roles' => $roles,
                 ];
             });
 
-        // Educaciones (HU-01) — excluye los registros de tipo 'curso'
+        // educaciones
         $educaciones = Educacion::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
             ->where(function ($q) { $q->whereNull('area_estudio')->orWhere('area_estudio', '!=', 'curso'); })
             ->orderByDesc('fecha_inicio')
             ->get();
 
-        // Cursos (HU-07) — discriminados por area_estudio = 'curso'
+        
         $cursos = Educacion::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
             ->where('area_estudio', 'curso')
             ->orderByDesc('fecha_inicio')
             ->get();
 
+        $logros = Logro::with('entidadEmisora')
+            ->where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->orderByDesc('fecha_obtencion')
+            ->get()
+            ->map(function ($logro) {
+                return [
+                    'id_logro' => $logro->id_logro,
+                    'titulo' => $logro->titulo,
+                    'descripcion' => $logro->descripcion,
+                    'fecha_obtencion' => $logro->fecha_obtencion,
+                    'entidad_emisora_id' => $logro->entidad_emisora_id,
+                    'entidad_nombre' => $logro->entidadEmisora->nombre ?? null,
+                    'url_credencial' => $logro->url_credencial,
+                    'identificador' => $logro->identificador,
+                    'visibilidad' => $logro->visibilidad,
+                ];
+            });
+
+        // ✅ RESPONSE FINAL
         return response()->json([
             'perfil'                => $perfil,
             'habilidades_tecnicas'  => $habilidadesTecnicas,
@@ -94,6 +112,7 @@ class PortafolioController extends Controller
             'proyectos'             => $proyectos,
             'educaciones'           => $educaciones,
             'cursos'                => $cursos,
+            'logros'                => $logros,
         ]);
     }
 

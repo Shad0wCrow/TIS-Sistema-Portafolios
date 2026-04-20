@@ -1,15 +1,10 @@
 import styles from "./sidebarEdicion.module.css";
-import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconBook } from "./icons";
+import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconBook, IconGraduate } from "./icons";
 import type { PortafolioData } from "../../../types/portafolioTypes";
 
-// Ícono de birrete para Educación
-const IconGraduate = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm-7 9.25V16l7 3.85L19 16v-3.75l-7 3.85-7-3.85z" />
-  </svg>
-);
 
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos";
+
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros";
 
 interface SidebarEdicionProps {
   perfil: PortafolioData["perfil"] | null;
@@ -18,6 +13,7 @@ interface SidebarEdicionProps {
   proyectosCount: number;
   educacionCount: number;
   cursosCount: number;
+  logrosCount: number;
   onSectionChange: (section: ActiveSection) => void;
   onBack: () => void;
 }
@@ -29,6 +25,7 @@ export default function SidebarEdicion({
   proyectosCount,
   educacionCount,
   cursosCount,
+  logrosCount,
   onSectionChange,
   onBack,
 }: SidebarEdicionProps) {
@@ -38,12 +35,14 @@ export default function SidebarEdicion({
     { key: "proyectos",   label: "Proyectos",   icon: <IconFolder />   },
     { key: "educacion",   label: "Educación",   icon: <IconGraduate /> },
     { key: "cursos",      label: "Cursos",      icon: <IconBook />     },
+    { key: "logros",      label: "Logros",      icon: <IconStar />     },
   ];
 
   const badgeCount: Partial<Record<ActiveSection, number>> = {
     proyectos: proyectosCount,
     educacion: educacionCount,
     cursos: cursosCount,
+    logros: logrosCount,
   };
 
   return (

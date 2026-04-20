@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPortafolio } from "../../services/portafolioservice";
-import type { PortafolioData, Educacion, Curso } from "../../types/portafolioTypes";
+import type { PortafolioData, Educacion, Curso, Logro } from "../../types/portafolioTypes";
 import ProjectCard from "../../components/portafolio/ProjectCard";
 import SkillChip   from "../../components/portafolio/SkillChip";
 import styles from "./Portafolio.module.css";
+
+
+
 
 const IconBack = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -82,7 +85,30 @@ function CursoItem({ curso }: { curso: Curso }) {
     </div>
   );
 }
-
+function LogroItem({ logro }: { logro: Logro }) {
+  return (
+    <div className={styles.timelineItem}>
+      <div className={styles.timelineIcono}>🏅</div>
+      <div className={styles.timelineInfo}>
+        <span className={styles.timelineTitulo}>{logro.titulo}</span>
+        <span className={styles.timelineInstitucion}>
+          {logro.entidad_nombre ?? "Entidad no especificada"}
+        </span>
+        {logro.fecha_obtencion && (
+          <span className={styles.timelineFechas}>
+            {formatFecha(logro.fecha_obtencion)}
+          </span>
+        )}
+        {logro.identificador && (
+          <span className={styles.timelineArea}>ID: {logro.identificador}</span>
+        )}
+        {logro.descripcion && (
+          <span className={styles.timelineDesc}>{logro.descripcion}</span>
+        )}
+      </div>
+    </div>
+  );
+}
 export default function Portafolio() {
   const navigate = useNavigate();
   const [data, setData]       = useState<PortafolioData | null>(null);
@@ -103,10 +129,10 @@ export default function Portafolio() {
   const tecnicas    = data?.habilidades_tecnicas ?? [];
   const blandas     = data?.habilidades_blandas ?? [];
   const proyectos   = data?.proyectos ?? [];
-  // Solo mostrar registros públicos en la vista del portafolio
+  
   const educaciones = (data?.educaciones ?? [] as Educacion[]).filter(e => e.visibilidad === "publico");
   const cursos      = (data?.cursos ?? [] as Curso[]).filter(c => c.visibilidad === "publico");
-
+  const logros       = (data?.logros ?? [] as Logro[]).filter(l => l.visibilidad === "publico");
   const nombre = perfil
     ? `${perfil.nombre_perfil} ${perfil.apellido_perfil}`.trim()
     : "Sin nombre";
@@ -192,8 +218,20 @@ export default function Portafolio() {
               : <div className={styles.timelineList}>{cursos.map(c => <CursoItem key={c.id_educacion} curso={c} />)}</div>
             }
           </div>
+          //Logros y Reconocimientos
         </section>
-
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Logros y Reconocimientos</h2>
+            <span className={styles.sectionCount}>{logros.length}</span>
+          </div>
+          <div className={styles.sectionBody}>
+            {logros.length === 0
+              ? <EmptyState label="logros" />
+              : <div className={styles.timelineList}>{logros.map(l => <LogroItem key={l.id_logro} logro={l} />)}</div>
+            }
+          </div>
+        </section>
         {/* Proyectos */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
