@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPortafolio } from "../../services/portafolioservice";
-import type { PortafolioData, Educacion, Curso, Logro } from "../../types/portafolioTypes";
+import type { PortafolioData, Educacion, Curso, Logro, Idioma } from "../../types/portafolioTypes";
 import ProjectCard from "../../components/portafolio/ProjectCard";
 import SkillChip   from "../../components/portafolio/SkillChip";
 import styles from "./Portafolio.module.css";
@@ -133,6 +133,9 @@ export default function Portafolio() {
   const educaciones = (data?.educaciones ?? [] as Educacion[]).filter(e => e.visibilidad === "publico");
   const cursos      = (data?.cursos ?? [] as Curso[]).filter(c => c.visibilidad === "publico");
   const logros       = (data?.logros ?? [] as Logro[]).filter(l => l.visibilidad === "publico");
+  const idiomas      = (data?.idiomas ?? [] as Idioma[]).filter(i => i.visibilidad === "publico");
+
+
   const nombre = perfil
     ? `${perfil.nombre_perfil} ${perfil.apellido_perfil}`.trim()
     : "Sin nombre";
@@ -206,7 +209,7 @@ export default function Portafolio() {
           </div>
         </section>
 
-        {/* Cursos y Certificados */}
+        {/* Cursos */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Cursos y Certificados</h2>
@@ -218,7 +221,8 @@ export default function Portafolio() {
               : <div className={styles.timelineList}>{cursos.map(c => <CursoItem key={c.id_educacion} curso={c} />)}</div>
             }
           </div>
-          //Logros y Reconocimientos
+          
+         {/* Logros y reconocimientos */}
         </section>
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
@@ -245,7 +249,29 @@ export default function Portafolio() {
             }
           </div>
         </section>
-
+        {/* Idiomas */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Idiomas</h2>
+            <span className={styles.sectionCount}>{idiomas.length}</span>
+          </div>
+          <div className={styles.sectionBody}>
+            {idiomas.length === 0
+              ? <EmptyState label="idiomas" />
+              : <div className={styles.timelineList}>
+                  {idiomas.map(i => (
+                    <div key={i.id_usuario_idioma} className={styles.timelineItem}>
+                      <div className={styles.timelineIcono}>🌐</div>
+                      <div className={styles.timelineInfo}>
+                        <span className={styles.timelineTitulo}>{i.nombre}</span>
+                        {i.nivel && <span className={styles.timelineArea}>{i.nivel.toUpperCase()}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+        </section>
       </div>
     </div>
   );

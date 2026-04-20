@@ -10,7 +10,7 @@ use App\Models\ProyectoUsuario;
 use App\Models\Educacion;
 use Illuminate\Http\Request;
 use App\Models\Logro;
-
+use App\Models\UsuarioIdioma;
 class PortafolioController extends Controller
 {
     public function show(Request $request)
@@ -104,7 +104,16 @@ class PortafolioController extends Controller
                 ];
             });
 
-        // ✅ RESPONSE FINAL
+            $idiomas = UsuarioIdioma::with('idioma')
+                ->where('usuario_id', $user->id_usuario)
+                ->where('eliminado', false)
+                ->get()
+                ->map(fn($ui) => [
+                    'id_usuario_idioma' => $ui->id_usuario_idioma,
+                    'nombre'            => $ui->idioma->nombre ?? null,
+                    'nivel'             => $ui->nivel,
+                    'visibilidad'       => $ui->visibilidad,
+                ]);
         return response()->json([
             'perfil'                => $perfil,
             'habilidades_tecnicas'  => $habilidadesTecnicas,
@@ -113,6 +122,7 @@ class PortafolioController extends Controller
             'educaciones'           => $educaciones,
             'cursos'                => $cursos,
             'logros'                => $logros,
+            'idiomas'               => $idiomas,
         ]);
     }
 
