@@ -13,6 +13,8 @@ import {
   removeProyecto,
   addEducacion,
   removeEducacion,
+  addLogro,
+  removeLogro,
 } from "../../services/portafolioservice";
 import type {
   PortafolioData,
@@ -30,6 +32,7 @@ import ModalEducacion from "./components/modalEducacion";
 import EducacionCard from "./components/educacionCard";
 import { IconPersona, IconPencil } from "./components/icons";
 import ModalAlert from "./components/modalAlert";
+import ModalLogro from "./components/ModalLogro";
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
@@ -55,6 +58,7 @@ export default function EdicionPortafolio() {
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
   const [modalEducacion, setModalEducacion] = useState(false);
+  const [modalLogro, setModalLogro] = useState(false);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
 
   // Refrescar todo el portafolio (educaciones incluidas via /portafolio)
@@ -111,6 +115,20 @@ export default function EdicionPortafolio() {
       },
     });
   };
+  const handleRemoveLogro = async (id: number) => {
+  setModalAlert({
+    mensaje: "Este logro será eliminado de tu perfil.",
+    onConfirm: async () => {
+      setModalAlert(null);
+      await removeLogro(id);
+      await refreshData();
+    },
+  });
+};
+const handleAddLogro = async (data: any) => {
+  await addLogro(data);
+  await refreshData();
+};
 
   const handleSaveProyecto = async (formData: Parameters<typeof addProyecto>[0]) => {
     if (modalProy && modalProy !== "nuevo") {
@@ -305,13 +323,16 @@ export default function EdicionPortafolio() {
             <small>{logro.entidad_nombre}</small>
 
             <div>
-              <button onClick={() => console.log("Eliminar", logro.id_logro)}>
+              <button onClick={() => handleRemoveLogro(logro.id_logro)}>
                 Eliminar
               </button>
             </div>
           </div>
         ))
       )}
+      <button onClick={() => setModalLogro(true)}>
+  + Agregar logro
+</button>
     </div>
   </div>
 )}
@@ -338,6 +359,12 @@ export default function EdicionPortafolio() {
           onSave={handleSaveEducacion}
         />
       )}
+      {modalLogro && (
+  <ModalLogro
+    onClose={() => setModalLogro(false)}
+    onSave={handleAddLogro}
+  />
+)}
       {modalAlert && (
         <ModalAlert
           title="¿Confirmar eliminación?"
