@@ -1,3 +1,5 @@
+//comentario
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./edicionPortafolio.module.css";
@@ -204,7 +206,7 @@ export default function EdicionPortafolio() {
             </span>
           </div>
         </div>
-
+        
         <div className={styles.content}>
 
           {activeSection === "perfil" && (
