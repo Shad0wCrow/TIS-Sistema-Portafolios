@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPortafolio } from "../../services/portafolioservice";
-import type { PortafolioData, Educacion } from "../../types/portafolioTypes";
-
+import type { PortafolioData, Educacion, Curso } from "../../types/portafolioTypes";
 import ProjectCard from "../../components/portafolio/ProjectCard";
 import SkillChip   from "../../components/portafolio/SkillChip";
-
 import styles from "./Portafolio.module.css";
 
 const IconBack = () => (
@@ -40,21 +38,45 @@ function formatFecha(fecha: string | null): string {
   return `${meses[parseInt(m) - 1]} ${y}`;
 }
 
+// ── Componente de item de educación ──────────────────────────────────────────
 function EducacionItem({ edu }: { edu: Educacion }) {
   return (
-    <div className={styles.educacionItem}>
-      <div className={styles.educacionIcono}>🎓</div>
-      <div className={styles.educacionInfo}>
-        <span className={styles.educacionTitulo}>{edu.titulo}</span>
-        <span className={styles.educacionInstitucion}>{edu.institucion}</span>
+    <div className={styles.timelineItem}>
+      <div className={styles.timelineIcono}>🎓</div>
+      <div className={styles.timelineInfo}>
+        <span className={styles.timelineTitulo}>{edu.titulo}</span>
+        <span className={styles.timelineInstitucion}>{edu.institucion}</span>
         {edu.area_estudio && (
-          <span className={styles.educacionArea}>{edu.area_estudio}</span>
+          <span className={styles.timelineArea}>{edu.area_estudio}</span>
         )}
-        <span className={styles.educacionFechas}>
+        <span className={styles.timelineFechas}>
           {formatFecha(edu.fecha_inicio)} — {formatFecha(edu.fecha_fin)}
         </span>
         {edu.descripcion && (
-          <span className={styles.educacionDesc}>{edu.descripcion}</span>
+          <span className={styles.timelineDesc}>{edu.descripcion}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Componente de item de curso ───────────────────────────────────────────────
+function CursoItem({ curso }: { curso: Curso }) {
+  const esActual = curso.fecha_fin === null;
+  return (
+    <div className={styles.timelineItem}>
+      <div className={styles.timelineIcono}>📚</div>
+      <div className={styles.timelineInfo}>
+        <div className={styles.timelineTituloRow}>
+          <span className={styles.timelineTitulo}>{curso.titulo}</span>
+          {esActual && <span className={styles.badgeActual}>En curso</span>}
+        </div>
+        <span className={styles.timelineInstitucion}>{curso.institucion}</span>
+        <span className={styles.timelineFechas}>
+          {formatFecha(curso.fecha_inicio)} — {esActual ? "En curso" : formatFecha(curso.fecha_fin)}
+        </span>
+        {curso.descripcion && (
+          <span className={styles.timelineDesc}>{curso.descripcion}</span>
         )}
       </div>
     </div>
@@ -81,10 +103,10 @@ export default function Portafolio() {
   const tecnicas    = data?.habilidades_tecnicas ?? [];
   const blandas     = data?.habilidades_blandas ?? [];
   const proyectos   = data?.proyectos ?? [];
-  // Solo mostrar educaciones públicas en la vista del portafolio
-  const educaciones = (data?.educaciones ?? [] as Educacion[]).filter(
-    (e) => e.visibilidad === "publico"
-  );
+  // Solo mostrar registros públicos en la vista del portafolio
+  const educaciones = (data?.educaciones ?? [] as Educacion[]).filter(e => e.visibilidad === "publico");
+  const cursos      = (data?.cursos ?? [] as Curso[]).filter(c => c.visibilidad === "publico");
+
   const nombre = perfil
     ? `${perfil.nombre_perfil} ${perfil.apellido_perfil}`.trim()
     : "Sin nombre";
@@ -95,7 +117,6 @@ export default function Portafolio() {
       <button className={styles.fabBack} onClick={() => navigate(-1)} type="button">
         <IconBack /> Volver
       </button>
-
       <button className={styles.fabEdit} onClick={() => navigate("/portafolio/editar")} type="button">
         <IconEdit /> Editar portafolio
       </button>
@@ -130,13 +151,7 @@ export default function Portafolio() {
                 <p className={styles.colLabel}>Técnicas</p>
                 {tecnicas.length === 0
                   ? <EmptyState label="habilidades técnicas" />
-                  : (
-                    <div className={styles.chipRow}>
-                      {tecnicas.map(h => (
-                        <SkillChip key={h.id_usuario_habilidad} nombre={h.nombre} nivel={h.nivel} tipo="tecnica" />
-                      ))}
-                    </div>
-                  )
+                  : <div className={styles.chipRow}>{tecnicas.map(h => <SkillChip key={h.id_usuario_habilidad} nombre={h.nombre} nivel={h.nivel} tipo="tecnica" />)}</div>
                 }
               </div>
               <div className={styles.colDivider} />
@@ -144,13 +159,7 @@ export default function Portafolio() {
                 <p className={styles.colLabel}>Blandas</p>
                 {blandas.length === 0
                   ? <EmptyState label="habilidades blandas" />
-                  : (
-                    <div className={styles.chipRow}>
-                      {blandas.map(h => (
-                        <SkillChip key={h.id_usuario_habilidad} nombre={h.nombre} tipo="blanda" />
-                      ))}
-                    </div>
-                  )
+                  : <div className={styles.chipRow}>{blandas.map(h => <SkillChip key={h.id_usuario_habilidad} nombre={h.nombre} tipo="blanda" />)}</div>
                 }
               </div>
             </div>
@@ -166,13 +175,21 @@ export default function Portafolio() {
           <div className={styles.sectionBody}>
             {educaciones.length === 0
               ? <EmptyState label="formaciones académicas" />
-              : (
-                <div className={styles.educacionList}>
-                  {educaciones.map(edu => (
-                    <EducacionItem key={edu.id_educacion} edu={edu} />
-                  ))}
-                </div>
-              )
+              : <div className={styles.timelineList}>{educaciones.map(e => <EducacionItem key={e.id_educacion} edu={e} />)}</div>
+            }
+          </div>
+        </section>
+
+        {/* Cursos y Certificados */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Cursos y Certificados</h2>
+            <span className={styles.sectionCount}>{cursos.length}</span>
+          </div>
+          <div className={styles.sectionBody}>
+            {cursos.length === 0
+              ? <EmptyState label="cursos" />
+              : <div className={styles.timelineList}>{cursos.map(c => <CursoItem key={c.id_educacion} curso={c} />)}</div>
             }
           </div>
         </section>
@@ -186,13 +203,7 @@ export default function Portafolio() {
           <div className={styles.sectionBody}>
             {proyectos.length === 0
               ? <EmptyState label="proyectos" />
-              : (
-                <div className={styles.projectGrid}>
-                  {proyectos.map(p => (
-                    <ProjectCard key={p.id_proyecto} proyecto={p} />
-                  ))}
-                </div>
-              )
+              : <div className={styles.projectGrid}>{proyectos.map(p => <ProjectCard key={p.id_proyecto} proyecto={p} />)}</div>
             }
           </div>
         </section>

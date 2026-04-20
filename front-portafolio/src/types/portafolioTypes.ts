@@ -33,11 +33,11 @@ export interface Proyecto {
   roles: string[];
 }
 
-export interface Educacion {
+export interface Curso {
   id_educacion: number;
   institucion: string;
-  titulo: string;
-  area_estudio: string | null;
+  titulo: string;        // almacena nombre_curso
+  area_estudio: "curso";
   fecha_inicio: string;
   fecha_fin: string | null;
   descripcion: string | null;
@@ -50,4 +50,15 @@ export interface PortafolioData {
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
   educaciones: Educacion[];
+  cursos: Curso[];
+}
+export interface Educacion {
+  id_educacion: number;
+  institucion: string;
+  titulo: string;
+  area_estudio: string | null;
+  fecha_inicio: string;
+  fecha_fin: string | null;
+  descripcion: string | null;
+  visibilidad: "publico" | "privado";
 }

@@ -1,8 +1,15 @@
 import styles from "./sidebarEdicion.module.css";
-import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconGraduate } from "./icons";
-import type { PortafolioData } from "../../types/portafolioTypes";
+import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconBook } from "./icons";
+import type { PortafolioData } from "../../../types/portafolioTypes";
 
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion";
+// Ícono de birrete para Educación
+const IconGraduate = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm-7 9.25V16l7 3.85L19 16v-3.75l-7 3.85-7-3.85z" />
+  </svg>
+);
+
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos";
 
 interface SidebarEdicionProps {
   perfil: PortafolioData["perfil"] | null;
@@ -10,6 +17,7 @@ interface SidebarEdicionProps {
   activeSection: ActiveSection;
   proyectosCount: number;
   educacionCount: number;
+  cursosCount: number;
   onSectionChange: (section: ActiveSection) => void;
   onBack: () => void;
 }
@@ -20,15 +28,23 @@ export default function SidebarEdicion({
   activeSection,
   proyectosCount,
   educacionCount,
+  cursosCount,
   onSectionChange,
   onBack,
 }: SidebarEdicionProps) {
   const navItems: { key: ActiveSection; label: string; icon: React.ReactNode }[] = [
-    { key: "perfil",      label: "Perfil",      icon: <IconPersona /> },
-    { key: "habilidades", label: "Habilidades", icon: <IconStar />    },
-    { key: "proyectos",   label: "Proyectos",   icon: <IconFolder />  },
-    { key: "educacion",   label: "Educación",   icon: <IconGraduate />},
+    { key: "perfil",      label: "Perfil",      icon: <IconPersona />  },
+    { key: "habilidades", label: "Habilidades", icon: <IconStar />     },
+    { key: "proyectos",   label: "Proyectos",   icon: <IconFolder />   },
+    { key: "educacion",   label: "Educación",   icon: <IconGraduate /> },
+    { key: "cursos",      label: "Cursos",      icon: <IconBook />     },
   ];
+
+  const badgeCount: Partial<Record<ActiveSection, number>> = {
+    proyectos: proyectosCount,
+    educacion: educacionCount,
+    cursos: cursosCount,
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -60,11 +76,8 @@ export default function SidebarEdicion({
           >
             {icon}
             {label}
-            {key === "proyectos" && proyectosCount > 0 && (
-              <span className={styles.navBadge}>{proyectosCount}</span>
-            )}
-            {key === "educacion" && educacionCount > 0 && (
-              <span className={styles.navBadge}>{educacionCount}</span>
+            {(badgeCount[key] ?? 0) > 0 && (
+              <span className={styles.navBadge}>{badgeCount[key]}</span>
             )}
           </button>
         ))}

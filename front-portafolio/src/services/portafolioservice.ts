@@ -92,16 +92,43 @@ export const removeProyecto = async (id: number) => {
   return res.data;
 };
 
-// ── Educación ─────────────────────────────────────────────────────────────────
-export const getEducaciones = async () => {
-  const res = await axios.get(`${API}/educacion`, { headers: authHeaders() });
-  return res.data; // { educaciones: Educacion[] }
+// ── Cursos ────────────────────────────────────────────────────────────────────
+export const addCurso = async (data: {
+  nombre_curso: string;
+  institucion: string;
+  fecha_inicio: string;
+  fecha_fin?: string;
+  es_actual?: boolean;
+  descripcion?: string;
+  visibilidad?: "publico" | "privado";
+}) => {
+  const res = await axios.post(`${API}/cursos`, data, { headers: authHeaders() });
+  return res.data;
+};
+
+export const removeCurso = async (id: number) => {
+  const res = await axios.delete(`${API}/cursos/${id}`, { headers: authHeaders() });
+  return res.data;
 };
 
 /**
- * Obtiene sugerencias de instituciones desde la base de datos
- * según el término ingresado (mínimo 3 caracteres). CA #10
+ * Sugerencias de instituciones de cursos desde la BD (CA #13).
+ * Requiere mínimo 3 caracteres.
  */
+export const getSugerenciasCurso = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 3) return [];
+  const res = await axios.get(`${API}/cursos/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+// ── Educación ─────────────────────────────────────────────────────────────────
+export const getEducaciones = async () => {
+  const res = await axios.get(`${API}/educacion`, { headers: authHeaders() });
+  return res.data;
+};
+
 export const getSugerenciasInstitucion = async (q: string): Promise<string[]> => {
   if (q.trim().length < 3) return [];
   const res = await axios.get(`${API}/educacion/sugerencias`, {
@@ -120,15 +147,11 @@ export const addEducacion = async (data: {
   descripcion?: string;
   visibilidad?: "publico" | "privado";
 }) => {
-  const res = await axios.post(`${API}/educacion`, data, {
-    headers: authHeaders(),
-  });
+  const res = await axios.post(`${API}/educacion`, data, { headers: authHeaders() });
   return res.data;
 };
 
 export const removeEducacion = async (id: number) => {
-  const res = await axios.delete(`${API}/educacion/${id}`, {
-    headers: authHeaders(),
-  });
+  const res = await axios.delete(`${API}/educacion/${id}`, { headers: authHeaders() });
   return res.data;
 };
