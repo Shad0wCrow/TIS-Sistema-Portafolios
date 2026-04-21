@@ -25,6 +25,8 @@
   --sidebar-text2:     #7da896;
   --sidebar-active-bg: #1a3d2b;
   --sidebar-active:    #6fcfa0;
+
+  --extra:            #38a46e;
 }
 
 .layout * {

@@ -10,7 +10,7 @@
   align-items: center;
   gap: 8px;
   padding: 48px 24px;
-  color: var(--color-text-muted, #94a3b8);
+  color: var(--text3);
   font-size: 0.875rem;
 }
 
@@ -44,9 +44,9 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--color-primary, #6366f1);
-  border: 2px solid var(--color-bg, #fff);
-  box-shadow: 0 0 0 2px var(--color-primary, #6366f1);
+  background: var(--extra);
+  border: 2px solid var(--bg3);
+  box-shadow: 0 0 0 2px var(--extra);
   flex-shrink: 0;
   z-index: 1;
 }
@@ -54,7 +54,7 @@
 .timelineLine {
   flex: 1;
   width: 2px;
-  background: var(--color-border, #e2e8f0);
+  background: var(--border);
   margin-top: 4px;
   min-height: 20px;
 }
@@ -65,8 +65,8 @@
 
 .cardBody {
   flex: 1;
-  background: var(--color-surface, #f8fafc);
-  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--bg4);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px 16px;
   margin-left: 12px;
@@ -91,12 +91,12 @@
 .puesto {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-text, #1e293b);
+  color: var(--text);
 }
 
 .empresa {
   font-size: 0.82rem;
-  color: var(--color-text-secondary, #475569);
+  color: var(--text2);
 }
 
 .cardMeta {
@@ -111,14 +111,14 @@
   font-weight: 500;
   padding: 2px 8px;
   border-radius: 20px;
-  background: var(--color-primary-light, #ede9fe);
-  color: var(--color-primary, #6366f1);
+  background: var(--accent-lt);
+  color: var(--accent);
   white-space: nowrap;
 }
 
 .badgePrivado {
-  background: var(--color-warning-light, #fef3c7);
-  color: var(--color-warning, #92400e);
+  background: var(--bg2);
+  color: var(--text3);
 }
 
 .cardDetails {
@@ -133,12 +133,12 @@
   align-items: center;
   gap: 4px;
   font-size: 0.78rem;
-  color: var(--color-text-muted, #94a3b8);
+  color: var(--text3);
 }
 
 .descripcion {
   font-size: 0.82rem;
-  color: var(--color-text-secondary, #475569);
+  color: var(--text2);
   line-height: 1.5;
   margin: 0;
   display: -webkit-box;
@@ -159,10 +159,10 @@
 .actionBtn {
   width: 30px;
   height: 30px;
-  border: 1px solid var(--color-border, #e2e8f0);
+  border: 1px solid var(--border);
   border-radius: 7px;
-  background: var(--color-bg, #fff);
-  color: var(--color-text-secondary, #475569);
+  background: var(--bg3);
+  color: var(--text2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -171,15 +171,15 @@
 }
 
 .actionBtn:hover {
-  background: var(--color-primary-light, #ede9fe);
-  color: var(--color-primary, #6366f1);
-  border-color: var(--color-primary, #6366f1);
+  background: var(--accent-lt);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .actionBtnDanger:hover {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #dc2626;
+  background: var(--red-lt);
+  color: var(--red);
+  border-color: var(--red);
 }
 
 .addBtn {
@@ -187,10 +187,10 @@
   align-items: center;
   gap: 8px;
   padding: 10px 18px;
-  border: 1.5px dashed var(--color-border, #e2e8f0);
+  border: 1.5px dashed var(--border);
   border-radius: 10px;
   background: transparent;
-  color: var(--color-text-secondary, #475569);
+  color: var(--text2);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -200,7 +200,7 @@
 }
 
 .addBtn:hover {
-  border-color: var(--color-primary, #6366f1);
-  color: var(--color-primary, #6366f1);
-  background: var(--color-primary-light, #ede9fe);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
 }

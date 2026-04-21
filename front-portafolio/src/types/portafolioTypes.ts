@@ -33,11 +33,56 @@ export interface Proyecto {
   roles: string[];
 }
 
+export interface Curso {
+  id_educacion: number;
+  institucion: string;
+  titulo: string;        // almacena nombre_curso
+  area_estudio: "curso";
+  fecha_inicio: string;
+  fecha_fin: string | null;
+  descripcion: string | null;
+  visibilidad: "publico" | "privado";
+}
+export interface Logro{
+  id_logro: number;
+  titulo: string;
+  descripcion: string | null;
+  fecha_obtencion: string | null;
+  entidad_nombre?: string | null; 
+  url_credencial?: string | null;
+  identificador?: string | null;
+  visibilidad: "publico" | "privado";
+}
+
+
+export interface Educacion {
+  id_educacion: number;
+  institucion: string;
+  titulo: string;
+  area_estudio: string | null;
+  fecha_inicio: string;
+  fecha_fin: string | null;
+  descripcion: string | null;
+  visibilidad: "publico" | "privado";
+}
+
+export interface Idioma {
+  id_usuario_idioma: number;
+  nombre: string;
+  nivel: "a1" | "a2" | "b1" | "b2" | "c1" | "c2" | "nativo";
+  visibilidad: "publico" | "privado";
+}
+
+
 export interface PortafolioData {
   perfil: Perfil | null;
   habilidades_tecnicas: HabilidadItem[];
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
+  educaciones: Educacion[];
+  cursos: Curso[];
+  logros: Logro[];
+  idiomas: Idioma[];
 }
 
 export interface Experiencia {

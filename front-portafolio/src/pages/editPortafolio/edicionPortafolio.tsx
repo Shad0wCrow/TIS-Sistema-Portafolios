@@ -1,3 +1,5 @@
+//comentario
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./edicionPortafolio.module.css";
@@ -14,13 +16,27 @@ import {
   addExperiencia,
   removeExperiencia,
   getExperiencias,
+  addEducacion,
+  removeEducacion,
+  addCurso,
+  removeCurso,
+  addLogro,
+  removeLogro,
+  addIdioma,
 } from "../../services/portafolioservice";
+
 import type {
   PortafolioData,
   HabilidadCatalogo,
   Proyecto,
   Experiencia,
+  Educacion,
+  Curso,
+  Logro,
+  Idioma
 } from "../../types/portafolioTypes";
+
+
 import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
 import ProjectRowList from "./components/projectRowList";
@@ -29,20 +45,31 @@ import ModalEditarPerfil from "./components/modalEditarPerfil";
 import ModalAgregarHabilidad from "./components/modalAgregarHabilidad";
 import ModalProyecto from "./components/modalProyecto";
 import ModalExperiencia from "./components/modalExperiencia";
+import ModalEducacion from "./components/modalEducacion";
+import ModalCurso from "./components/modalCurso";
+import EducacionCard from "./components/educacionCard";
+import CursoCard from "./components/cursoCard";
 import { IconPersona, IconPencil } from "./components/icons";
 import ModalAlert from "./components/modalAlert";
+import ModalLogro from "./components/modalLogro";
+import LogroCard from "./components/logroCard";
+import ModalIdioma from "./components/modalIdioma";
+import IdiomaCard from "./components/idiomaCard";
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
-
 type ModalProyectoState = Proyecto | null | "nuevo";
 type ModalExperienciaState = Experiencia | null | "nueva";
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "experiencia";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas" | "experiencia";
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
   habilidades: "Habilidades",
   proyectos: "Proyectos",
   experiencia: "Experiencia Laboral",
+  educacion: "Educación",
+  cursos: "Cursos",
+  logros: "Logros",
+  idiomas: "Idiomas",
 };
 
 export default function EdicionPortafolio() {
@@ -59,30 +86,12 @@ export default function EdicionPortafolio() {
   const [modalExp, setModalExp] = useState<ModalExperienciaState>(null);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
+  const [modalEducacion, setModalEducacion] = useState(false);
+  const [modalCurso, setModalCurso] = useState(false);
+  const [modalLogro, setModalLogro] = useState(false);
+  const [modalIdioma, setModalIdioma] = useState(false);
 
-
-  useEffect(() => {
-  const cargar = async () => {
-      try {
-        const [portafolioRes, catalogoRes, experienciasRes] = await Promise.all([
-          getPortafolio(),
-          getCatalogoHabilidades(),
-          getExperiencias(),
-        ]);
-
-        setData(portafolioRes);
-        setCatalogo(catalogoRes.habilidades ?? []);
-        setExperiencias(experienciasRes);
-      } catch {
-        setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
-      } finally {
-        setLoadingPage(false);
-      }
-    };
-    cargar();
-  }, []);
-
-  const refreshData = async () => {
+const refreshData = async () => {
   const [portafolioRes, experienciasRes] = await Promise.all([
     getPortafolio(),
     getExperiencias(),
@@ -92,37 +101,44 @@ export default function EdicionPortafolio() {
   setExperiencias(experienciasRes);
 };
 
-  useEffect(() => {
-    const cargar = async () => {
-      try {
-        const [portafolioRes, catalogoRes, experienciasRes] = await Promise.all([
-          getPortafolio(),
-          getCatalogoHabilidades(),
-          getExperiencias(),
-        ]);
+useEffect(() => {
+  const cargar = async () => {
+    try {
+      const [portafolioRes, catalogoRes, experienciasRes] = await Promise.all([
+        getPortafolio(),
+        getCatalogoHabilidades(),
+        getExperiencias(),
+      ]);
 
-        setData(portafolioRes);
-        setCatalogo(catalogoRes.habilidades ?? []);
-        setExperiencias(experienciasRes);
-      } catch {
-        setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
-      } finally {
-        setLoadingPage(false);
-      }
-    };
-    cargar();
-  }, []);
+      setData(portafolioRes);
+      setCatalogo(catalogoRes.habilidades ?? []);
+      setExperiencias(experienciasRes);
+    } catch {
+      setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
+    } finally {
+      setLoadingPage(false);
+    }
+  };
+  cargar();
+}, []);
 
-  const perfil = data?.perfil ?? null;
+
+  const perfil             = data?.perfil ?? null;
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
-  const habilidadesBlandas = data?.habilidades_blandas ?? [];
-  const proyectos = data?.proyectos ?? [];
-  //const experiencias = data?.experiencias ?? [];
+  const habilidadesBlandas  = data?.habilidades_blandas ?? [];
+  const proyectos           = data?.proyectos ?? [];
+  const educaciones         = (data?.educaciones ?? []) as Educacion[];
+  const cursos              = (data?.cursos ?? []) as Curso[];
+  const logros              = (data?.logros ?? []) as Logro[];
+  const idiomas             = (data?.idiomas ?? []) as Idioma[];
+
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Nombre completo";
   }, [perfil]);
+
+  // ── Handlers ─────────────────────────────────────────────────────────────────
 
   const handleSavePerfil = async (formData: Parameters<typeof updatePerfil>[0]) => {
     await updatePerfil(formData);
@@ -177,21 +193,74 @@ export default function EdicionPortafolio() {
   };
 
   const handleRemoveExperiencia = async (id: number) => {
+  setModalAlert({
+    mensaje: "Esta experiencia laboral será eliminada permanentemente.",
+    onConfirm: async () => {
+      setModalAlert(null);
+      await removeExperiencia(id);
+      await refreshData();
+    },
+  });
+};
+
+const handleSaveEducacion = async (
+  formData: Parameters<typeof addEducacion>[0]
+) => {
+  await addEducacion(formData);
+  await refreshData();
+};
+
+  const handleRemoveEducacion = async (id: number) => {
     setModalAlert({
-      mensaje: "Esta experiencia laboral será eliminada permanentemente.",
+      mensaje: "Este registro de educación será eliminado permanentemente.",
       onConfirm: async () => {
         setModalAlert(null);
-        await removeExperiencia(id);
+        await removeEducacion(id);
         await refreshData();
       },
     });
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
+  const handleSaveCurso = async (formData: Parameters<typeof addCurso>[0]) => {
+    await addCurso(formData);
+    await refreshData();
+  };
+
+  const handleRemoveCurso = async (id: number) => {
+    setModalAlert({
+      mensaje: "Este curso será eliminado permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        await removeCurso(id);
+        await refreshData();
+      },
+    });
+  };
+
+  const handleRemoveLogro = async (id: number) => {
+    setModalAlert({
+      mensaje: "Este logro será eliminado permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        await removeLogro(id);
+        await refreshData();
+      },
+    });
+  };
+
+  const handleAddLogro = async (formData: Parameters<typeof addLogro>[0]) => {
+    await addLogro(formData);
+    await refreshData();
+  };
+
+  const handleAddIdioma = async (formData: Parameters<typeof addIdioma>[0]) => {
+    await addIdioma(formData);
+    await refreshData();
+  } 
 
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
-  if (errorPage) return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
-  if (!data) return null;
+  if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
+  if (!data)       return null;
 
   return (
     <div className={styles.layout}>
@@ -201,6 +270,10 @@ export default function EdicionPortafolio() {
         nombreCompleto={nombreCompleto}
         activeSection={activeSection}
         proyectosCount={proyectos.length}
+        educacionCount={educaciones.length}
+        cursosCount={cursos.length}
+        logrosCount={logros.length}
+        IdiomasCount={idiomas.length}
         onSectionChange={setActiveSection}
         onBack={() => navigate(-1)}
       />
@@ -221,7 +294,7 @@ export default function EdicionPortafolio() {
             </span>
           </div>
         </div>
-
+        
         <div className={styles.content}>
 
           {activeSection === "perfil" && (
@@ -327,6 +400,71 @@ export default function EdicionPortafolio() {
             </div>
           )}
 
+          {activeSection === "educacion" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Formación Académica</span>
+                <span className={styles.sectionMeta}>
+                  {educaciones.length} registro{educaciones.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <EducacionCard
+                educaciones={educaciones}
+                onAdd={() => setModalEducacion(true)}
+                onRemove={handleRemoveEducacion}
+              />
+            </div>
+          )}
+
+          {activeSection === "cursos" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Cursos y Certificados</span>
+                <span className={styles.sectionMeta}>
+                  {cursos.length} registro{cursos.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <CursoCard
+                cursos={cursos}
+                onAdd={() => setModalCurso(true)}
+                onRemove={handleRemoveCurso}
+              />
+            </div>
+          )}
+
+          {activeSection === "logros" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Logros</span>
+                <span className={styles.sectionMeta}>
+                  {logros.length} logro{logros.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+
+              <LogroCard
+                logros={logros}
+                onAdd={() => setModalLogro(true)}
+                onRemove={handleRemoveLogro}
+              />
+            </div>
+          )}
+
+          {activeSection === "idiomas" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Idiomas</span>
+                <span className={styles.sectionMeta}>
+                  {idiomas.length} idioma{idiomas.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+
+              <IdiomaCard
+                idiomas={idiomas}
+                onAdd={() => setModalIdioma(true)}
+                
+              />
+            </div>
+          )}  
         </div>
       </main>
 
@@ -350,6 +488,35 @@ export default function EdicionPortafolio() {
           onSave={handleSaveExperiencia}
         />
       )}
+
+      {modalEducacion && (
+        <ModalEducacion
+          onClose={() => setModalEducacion(false)}
+          onSave={handleSaveEducacion}
+        />
+      )}
+
+      {modalCurso && (
+        <ModalCurso
+          onClose={() => setModalCurso(false)}
+          onSave={handleSaveCurso}
+        />
+      )}
+
+      {modalLogro && (
+        <ModalLogro
+          onClose={() => setModalLogro(false)}
+          onSave={handleAddLogro}
+        />
+      )}
+
+      {modalIdioma && (
+        <ModalIdioma
+          onClose={() => setModalIdioma(false)}
+          onSave={handleAddIdioma}
+        />
+      )}
+
       {modalAlert && (
         <ModalAlert
           title="¿Confirmar eliminación?"

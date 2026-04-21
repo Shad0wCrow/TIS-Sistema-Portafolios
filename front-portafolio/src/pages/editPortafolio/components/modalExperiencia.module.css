@@ -11,7 +11,7 @@
 }
 
 .modal {
-  background: var(--color-bg, #fff);
+  background: var(--bg3);
   border-radius: 16px;
   width: 100%;
   max-width: 620px;
@@ -27,13 +27,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  border-bottom: 1px solid var(--border);
 }
 
 .title {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--color-text, #1e293b);
+  color: var(--accent);
   margin: 0;
 }
 
@@ -41,18 +41,18 @@
   width: 32px;
   height: 32px;
   border: none;
-  background: var(--color-surface, #f8fafc);
+  background: var(--bg4);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--color-text-secondary, #475569);
+  color: var(--text2);
   transition: background 0.15s;
 }
 
 .closeBtn:hover {
-  background: var(--color-border, #e2e8f0);
+  background: var(--border);
 }
 
 .body {
@@ -83,24 +83,24 @@
 .label {
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--color-text-secondary, #475569);
+  color: var(--text2);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .req {
-  color: #ef4444;
+  color: var(--red);
 }
 
 .input,
 .select,
 .textarea {
   padding: 9px 12px;
-  border: 1.5px solid var(--color-border, #e2e8f0);
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   font-size: 0.875rem;
-  color: var(--color-text, #1e293b);
-  background: var(--color-bg, #fff);
+  color: var(--text);
+  background: var(--bg3);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
   width: 100%;
@@ -111,24 +111,24 @@
 .input:focus,
 .select:focus,
 .textarea:focus {
-  border-color: var(--color-primary, #6366f1);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(26, 102, 68, 0.12);
 }
 
 .input:disabled {
-  background: var(--color-surface, #f8fafc);
-  color: var(--color-text-muted, #94a3b8);
+  background: var(--bg4);
+  color: var(--text3);
   cursor: not-allowed;
 }
 
 .inputError {
-  border-color: #ef4444 !important;
+  border-color: var(--red) !important;
 }
 
 .select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238fa89e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 32px;
@@ -142,7 +142,7 @@
 
 .error {
   font-size: 0.75rem;
-  color: #ef4444;
+  color: var(--red);
 }
 
 .checkRow {
@@ -150,14 +150,14 @@
   align-items: center;
   gap: 8px;
   font-size: 0.875rem;
-  color: var(--color-text, #1e293b);
+  color: var(--text);
   cursor: pointer;
 }
 
 .checkbox {
   width: 16px;
   height: 16px;
-  accent-color: var(--color-primary, #6366f1);
+  accent-color: var(--accent);
   cursor: pointer;
 }
 
@@ -172,24 +172,24 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border: 1.5px solid var(--color-border, #e2e8f0);
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   font-size: 0.85rem;
   cursor: pointer;
-  color: var(--color-text-secondary, #475569);
+  color: var(--text2);
   transition: all 0.15s;
   user-select: none;
 }
 
 .visOption:hover {
-  border-color: var(--color-primary, #6366f1);
-  color: var(--color-primary, #6366f1);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .visOptionActive {
-  border-color: var(--color-primary, #6366f1);
-  background: var(--color-primary-light, #ede9fe);
-  color: var(--color-primary, #6366f1);
+  border-color: var(--accent);
+  background: var(--accent-lt);
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -203,30 +203,30 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid var(--color-border, #e2e8f0);
+  border-top: 1px solid var(--border);
 }
 
 .cancelBtn {
   padding: 9px 18px;
-  border: 1.5px solid var(--color-border, #e2e8f0);
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   background: transparent;
   font-size: 0.875rem;
-  color: var(--color-text-secondary, #475569);
+  color: var(--text2);
   cursor: pointer;
   font-weight: 500;
   transition: all 0.15s;
 }
 
 .cancelBtn:hover {
-  background: var(--color-surface, #f8fafc);
+  background: var(--bg4);
 }
 
 .saveBtn {
   padding: 9px 22px;
   border: none;
   border-radius: 8px;
-  background: var(--color-primary, #6366f1);
+  background: var(--accent);
   color: #fff;
   font-size: 0.875rem;
   font-weight: 600;
