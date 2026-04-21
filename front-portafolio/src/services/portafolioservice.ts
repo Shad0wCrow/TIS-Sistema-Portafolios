@@ -189,3 +189,14 @@ export const removeLogro = async (id: number) => {
   });
   return res.data;
 };
+
+export const addIdioma = async (data: {
+  nombre_idioma: string;
+  nivel: string;
+  visibilidad?: "publico" | "privado";
+}) => {
+  const res = await axios.post(`${API}/idiomas`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+}

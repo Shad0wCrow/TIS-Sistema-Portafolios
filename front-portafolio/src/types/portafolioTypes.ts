@@ -54,15 +54,7 @@ export interface Logro{
   visibilidad: "publico" | "privado";
 }
 
-export interface PortafolioData {
-  perfil: Perfil | null;
-  habilidades_tecnicas: HabilidadItem[];
-  habilidades_blandas: HabilidadItem[];
-  proyectos: Proyecto[];
-  educaciones: Educacion[];
-  cursos: Curso[];
-  logros: Logro[];
-}
+
 export interface Educacion {
   id_educacion: number;
   institucion: string;
@@ -72,4 +64,23 @@ export interface Educacion {
   fecha_fin: string | null;
   descripcion: string | null;
   visibilidad: "publico" | "privado";
+}
+
+export interface Idioma {
+  id_usuario_idioma: number;
+  nombre: string;
+  nivel: "a1" | "a2" | "b1" | "b2" | "c1" | "c2" | "nativo";
+  visibilidad: "publico" | "privado";
+}
+
+
+export interface PortafolioData {
+  perfil: Perfil | null;
+  habilidades_tecnicas: HabilidadItem[];
+  habilidades_blandas: HabilidadItem[];
+  proyectos: Proyecto[];
+  educaciones: Educacion[];
+  cursos: Curso[];
+  logros: Logro[];
+  idiomas: Idioma[];
 }
