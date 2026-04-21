@@ -84,3 +84,16 @@ export interface PortafolioData {
   logros: Logro[];
   idiomas: Idioma[];
 }
+
+export interface Experiencia {
+  id_experiencia: number;
+  nombre_empresa: string;
+  puesto: string;
+  tipo?: string | null;
+  descripcion?: string | null;
+  fecha_inicio: string;       
+  fecha_fin?: string | null;
+  es_actual?: boolean;
+  ubicacion?: string | null;
+  visibilidad?: "publico" | "privado";
+}

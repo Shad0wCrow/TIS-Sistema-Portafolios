@@ -40,6 +40,11 @@ export const IconFolder = () => (
   </svg>
 );
 
+export const IconBriefcase = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20 7h-3V5c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-9-2h2v2h-2V5zm-6 4h14v3H4V9zm0 9v-4h14v4H4z" />
+  </svg>
+);
 export const IconGraduate = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm-7 9.25V16l7 3.85L19 16v-3.75l-7 3.85-7-3.85z" />
@@ -49,5 +54,6 @@ export const IconGraduate = () => (
 export const IconBook = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M19 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 16H5V4h14v14zM8.5 11.5l2.5 3 3.5-4.5L19 17H5l3.5-4.5z" />
+
   </svg>
 );

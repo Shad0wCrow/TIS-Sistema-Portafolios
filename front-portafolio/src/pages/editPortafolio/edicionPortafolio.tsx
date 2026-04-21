@@ -13,6 +13,9 @@ import {
   addProyecto,
   updateProyecto,
   removeProyecto,
+  addExperiencia,
+  removeExperiencia,
+  getExperiencias,
   addEducacion,
   removeEducacion,
   addCurso,
@@ -26,6 +29,7 @@ import type {
   PortafolioData,
   HabilidadCatalogo,
   Proyecto,
+  Experiencia,
   Educacion,
   Curso,
   Logro,
@@ -36,9 +40,11 @@ import type {
 import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
 import ProjectRowList from "./components/projectRowList";
+import ExperienciaRowList from "./components/experienciaRowList";
 import ModalEditarPerfil from "./components/modalEditarPerfil";
 import ModalAgregarHabilidad from "./components/modalAgregarHabilidad";
 import ModalProyecto from "./components/modalProyecto";
+import ModalExperiencia from "./components/modalExperiencia";
 import ModalEducacion from "./components/modalEducacion";
 import ModalCurso from "./components/modalCurso";
 import EducacionCard from "./components/educacionCard";
@@ -52,12 +58,14 @@ import IdiomaCard from "./components/idiomaCard";
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas";
+type ModalExperienciaState = Experiencia | null | "nueva";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas" | "experiencia";
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
   habilidades: "Habilidades",
   proyectos: "Proyectos",
+  experiencia: "Experiencia Laboral",
   educacion: "Educación",
   cursos: "Cursos",
   logros: "Logros",
@@ -75,31 +83,45 @@ export default function EdicionPortafolio() {
   const [modalPerfil, setModalPerfil] = useState(false);
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
+  const [modalExp, setModalExp] = useState<ModalExperienciaState>(null);
+  const [modalAlert, setModalAlert] = useState<AlertState>(null);
+  const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [modalEducacion, setModalEducacion] = useState(false);
   const [modalCurso, setModalCurso] = useState(false);
-  const [modalAlert, setModalAlert] = useState<AlertState>(null);
   const [modalLogro, setModalLogro] = useState(false);
   const [modalIdioma, setModalIdioma] = useState(false);
 
-  const refreshData = async () => setData(await getPortafolio());
+const refreshData = async () => {
+  const [portafolioRes, experienciasRes] = await Promise.all([
+    getPortafolio(),
+    getExperiencias(),
+  ]);
 
-  useEffect(() => {
-    const cargar = async () => {
-      try {
-        const [portafolioRes, catalogoRes] = await Promise.all([
-          getPortafolio(),
-          getCatalogoHabilidades(),
-        ]);
-        setData(portafolioRes);
-        setCatalogo(catalogoRes.habilidades ?? []);
-      } catch {
-        setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
-      } finally {
-        setLoadingPage(false);
-      }
-    };
-    cargar();
-  }, []);
+  setData(portafolioRes);
+  setExperiencias(experienciasRes);
+};
+
+useEffect(() => {
+  const cargar = async () => {
+    try {
+      const [portafolioRes, catalogoRes, experienciasRes] = await Promise.all([
+        getPortafolio(),
+        getCatalogoHabilidades(),
+        getExperiencias(),
+      ]);
+
+      setData(portafolioRes);
+      setCatalogo(catalogoRes.habilidades ?? []);
+      setExperiencias(experienciasRes);
+    } catch {
+      setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
+    } finally {
+      setLoadingPage(false);
+    }
+  };
+  cargar();
+}, []);
+
 
   const perfil             = data?.perfil ?? null;
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
@@ -159,10 +181,34 @@ export default function EdicionPortafolio() {
     });
   };
 
-  const handleSaveEducacion = async (formData: Parameters<typeof addEducacion>[0]) => {
-    await addEducacion(formData);
+  // ── Experiencia handlers ──────────────────────────────────────────────────
+
+  const handleSaveExperiencia = async (formData: Parameters<typeof addExperiencia>[0]) => {
+    if (modalExp && modalExp !== "nueva") {
+      await updateExperiencia(modalExp.id_experiencia, formData);
+    } else {
+      await addExperiencia(formData);
+    }
     await refreshData();
   };
+
+  const handleRemoveExperiencia = async (id: number) => {
+  setModalAlert({
+    mensaje: "Esta experiencia laboral será eliminada permanentemente.",
+    onConfirm: async () => {
+      setModalAlert(null);
+      await removeExperiencia(id);
+      await refreshData();
+    },
+  });
+};
+
+const handleSaveEducacion = async (
+  formData: Parameters<typeof addEducacion>[0]
+) => {
+  await addEducacion(formData);
+  await refreshData();
+};
 
   const handleRemoveEducacion = async (id: number) => {
     setModalAlert({
@@ -337,6 +383,23 @@ export default function EdicionPortafolio() {
             </div>
           )}
 
+          {activeSection === "experiencia" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Experiencia Laboral</span>
+                <span className={styles.sectionMeta}>
+                  {experiencias.length} entrada{experiencias.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <ExperienciaRowList
+                experiencias={experiencias}
+                onEdit={(e) => setModalExp(e)}
+                onRemove={handleRemoveExperiencia}
+                onAdd={() => setModalExp("nueva")}
+              />
+            </div>
+          )}
+
           {activeSection === "educacion" && (
             <div className={styles.section}>
               <div className={styles.sectionHeader}>
@@ -402,7 +465,6 @@ export default function EdicionPortafolio() {
               />
             </div>
           )}  
-
         </div>
       </main>
 
@@ -419,12 +481,21 @@ export default function EdicionPortafolio() {
           onSave={handleSaveProyecto}
         />
       )}
+      {modalExp !== null && (
+        <ModalExperiencia
+          experiencia={modalExp === "nueva" ? null : modalExp}
+          onClose={() => setModalExp(null)}
+          onSave={handleSaveExperiencia}
+        />
+      )}
+
       {modalEducacion && (
         <ModalEducacion
           onClose={() => setModalEducacion(false)}
           onSave={handleSaveEducacion}
         />
       )}
+
       {modalCurso && (
         <ModalCurso
           onClose={() => setModalCurso(false)}

@@ -6,7 +6,6 @@ const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,
 });
 
-// ── Portafolio completo ───────────────────────────────────────────────────────
 export const getPortafolio = async () => {
   const res = await axios.get(`${API}/portafolio`, { headers: authHeaders() });
   return res.data;
@@ -102,19 +101,19 @@ export const addCurso = async (data: {
   descripcion?: string;
   visibilidad?: "publico" | "privado";
 }) => {
-  const res = await axios.post(`${API}/cursos`, data, { headers: authHeaders() });
+  const res = await axios.post(`${API}/cursos`, data, {
+    headers: authHeaders(),
+  });
   return res.data;
 };
 
 export const removeCurso = async (id: number) => {
-  const res = await axios.delete(`${API}/cursos/${id}`, { headers: authHeaders() });
+  const res = await axios.delete(`${API}/cursos/${id}`, {
+    headers: authHeaders(),
+  });
   return res.data;
 };
 
-/**
- * Sugerencias de instituciones de cursos desde la BD (CA #13).
- * Requiere mínimo 3 caracteres.
- */
 export const getSugerenciasCurso = async (q: string): Promise<string[]> => {
   if (q.trim().length < 3) return [];
   const res = await axios.get(`${API}/cursos/sugerencias`, {
@@ -123,13 +122,18 @@ export const getSugerenciasCurso = async (q: string): Promise<string[]> => {
   });
   return res.data.sugerencias ?? [];
 };
+
 // ── Educación ─────────────────────────────────────────────────────────────────
 export const getEducaciones = async () => {
-  const res = await axios.get(`${API}/educacion`, { headers: authHeaders() });
+  const res = await axios.get(`${API}/educacion`, {
+    headers: authHeaders(),
+  });
   return res.data;
 };
 
-export const getSugerenciasInstitucion = async (q: string): Promise<string[]> => {
+export const getSugerenciasInstitucion = async (
+  q: string
+): Promise<string[]> => {
   if (q.trim().length < 3) return [];
   const res = await axios.get(`${API}/educacion/sugerencias`, {
     headers: authHeaders(),
@@ -147,25 +151,31 @@ export const addEducacion = async (data: {
   descripcion?: string;
   visibilidad?: "publico" | "privado";
 }) => {
-  const res = await axios.post(`${API}/educacion`, data, { headers: authHeaders() });
+  const res = await axios.post(`${API}/educacion`, data, {
+    headers: authHeaders(),
+  });
   return res.data;
 };
 
 export const removeEducacion = async (id: number) => {
-  const res = await axios.delete(`${API}/educacion/${id}`, { headers: authHeaders() });
+  const res = await axios.delete(`${API}/educacion/${id}`, {
+    headers: authHeaders(),
+  });
   return res.data;
 };
 
 // ── Logros ───────────────────────────────────────────────────────────────────
 export const getCatalogoEntidades = async () => {
   const res = await axios.get(`${API}/catalogo/entidades`, {
-    headers: authHeaders(), 
+    headers: authHeaders(),
   });
   return res.data;
 };
 
 export const getLogros = async () => {
-  const res = await axios.get(`${API}/logros`, { headers: authHeaders() });
+  const res = await axios.get(`${API}/logros`, {
+    headers: authHeaders(),
+  });
   return res.data;
 };
 
@@ -178,6 +188,47 @@ export const addLogro = async (data: {
   visibilidad?: "publico" | "privado";
 }) => {
   const res = await axios.post(`${API}/logros`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+// ── Experiencia ───────────────────────────────────────────────────────────────
+type ExperienciaPayload = {
+  nombre_empresa: string;
+  puesto: string;
+  tipo?: string;
+  descripcion?: string;
+  fecha_inicio: string;
+  fecha_fin?: string;
+  es_actual?: boolean;
+  ubicacion?: string;
+  visibilidad?: string;
+};
+
+export const addExperiencia = async (data: ExperienciaPayload) => {
+  const res = await axios.post(`${API}/experiencias`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const getExperiencias = async () => {
+  const res = await axios.get(`${API}/experiencias`, {
+    headers: authHeaders(),
+  });
+  return res.data.experiencias;
+};
+
+export const getExperiencia = async (id: number) => {
+  const res = await axios.get(`${API}/experiencias/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.data.experiencia;
+};
+
+export const removeExperiencia = async (id: number) => {
+  const res = await axios.delete(`${API}/experiencias/${id}`, {
     headers: authHeaders(),
   });
   return res.data;
@@ -199,4 +250,4 @@ export const addIdioma = async (data: {
     headers: authHeaders(),
   });
   return res.data;
-}
+};

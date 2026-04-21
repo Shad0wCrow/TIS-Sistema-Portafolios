@@ -1,10 +1,11 @@
 import styles from "./sidebarEdicion.module.css";
-import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconBook, IconGraduate } from "./icons";
+import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconBook, IconGraduate, IconBriefcase } from "./icons";
 import type { PortafolioData } from "../../../types/portafolioTypes";
 
 
 
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas" | "experiencia";
+
 
 interface SidebarEdicionProps {
   perfil: PortafolioData["perfil"] | null;
@@ -39,6 +40,7 @@ export default function SidebarEdicion({
     { key: "cursos",      label: "Cursos",      icon: <IconBook />     },
     { key: "logros",      label: "Logros",      icon: <IconStar />     },
     { key: "idiomas",     label: "Idiomas",     icon: <IconStar />     },
+    { key: "experiencia", label: "Experiencia Laboral", icon: <IconBriefcase /> },
   ];
 
   const badgeCount: Partial<Record<ActiveSection, number>> = {
