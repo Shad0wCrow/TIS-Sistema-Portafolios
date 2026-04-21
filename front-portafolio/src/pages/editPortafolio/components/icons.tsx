@@ -39,3 +39,9 @@ export const IconFolder = () => (
     <path d="M20 6h-1V4c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h1v3l4-3h7l4 3v-3h2c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-9 8H5v-2h6v2zm6-4H5V8h12v2z" />
   </svg>
 );
+
+export const IconBriefcase = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20 7h-3V5c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-9-2h2v2h-2V5zm-6 4h14v3H4V9zm0 9v-4h14v4H4z" />
+  </svg>
+);

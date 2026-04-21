@@ -1,8 +1,8 @@
 import styles from "./sidebarEdicion.module.css";
-import { IconPersona, IconStar, IconFolder, IconArrowLeft } from "./icons";
-import type { PortafolioData } from "../../types/portafolioTypes";
+import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconBriefcase } from "./icons";
+import type { PortafolioData } from "../../../types/portafolioTypes";
 
-type ActiveSection = "perfil" | "habilidades" | "proyectos";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "experiencia";
 
 interface SidebarEdicionProps {
   perfil: PortafolioData["perfil"] | null;
@@ -25,6 +25,7 @@ export default function SidebarEdicion({
     { key: "perfil", label: "Perfil", icon: <IconPersona /> },
     { key: "habilidades", label: "Habilidades", icon: <IconStar /> },
     { key: "proyectos", label: "Proyectos", icon: <IconFolder /> },
+    { key: "experiencia", label: "Experiencia Laboral", icon: <IconBriefcase /> },
   ];
 
   return (

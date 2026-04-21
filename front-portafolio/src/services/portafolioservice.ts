@@ -6,7 +6,6 @@ const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,
 });
 
-// ── Portafolio completo ───────────────────────────────────────────────────────
 export const getPortafolio = async () => {
   const res = await axios.get(`${API}/portafolio`, { headers: authHeaders() });
   return res.data;
@@ -87,6 +86,50 @@ export const updateProyecto = async (
 
 export const removeProyecto = async (id: number) => {
   const res = await axios.delete(`${API}/portafolio/proyectos/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+// ── Experiencia ───────────────────────────────────────────────────────────────
+
+// Tipo reutilizable (para no vivir en el caos)
+type ExperienciaPayload = {
+  nombre_empresa: string;
+  puesto: string;
+  tipo?: string;
+  descripcion?: string;
+  fecha_inicio: string;
+  fecha_fin?: string;
+  es_actual?: boolean;
+  ubicacion?: string;
+  visibilidad?: string;
+};
+
+export const addExperiencia = async (data: ExperienciaPayload) => {
+  const res = await axios.post(`${API}/experiencias`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+
+export const getExperiencias = async () => {
+  const res = await axios.get(`${API}/experiencias`, {
+    headers: authHeaders(),
+  });
+  return res.data.experiencias;
+};
+
+export const getExperiencia = async (id: number) => {
+  const res = await axios.get(`${API}/experiencias/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.data.experiencia;
+};
+
+export const removeExperiencia = async (id: number) => {
+  const res = await axios.delete(`${API}/experiencias/${id}`, {
     headers: authHeaders(),
   });
   return res.data;
