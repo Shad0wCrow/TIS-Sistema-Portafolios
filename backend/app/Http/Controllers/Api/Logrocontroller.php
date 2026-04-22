@@ -75,6 +75,22 @@ class LogroController extends Controller
         return response()->json(['message' => 'Logro eliminado correctamente']);
     }
 
+    public function sugerencias(Request $request)
+    {
+        $q = $request->query('q', '');
+
+        if (strlen(trim($q)) < 3) {
+            return response()->json(['sugerencias' => []]);
+        }
+
+        $sugerencias = EntidadEmisora::where('nombre', 'like', '%' . $q . '%')
+            ->orderBy('nombre')
+            ->limit(8)
+            ->pluck('nombre');
+
+        return response()->json(['sugerencias' => $sugerencias]);
+    }
+
     public function index(Request $request)
 {
     $user = $request->user();

@@ -314,3 +314,23 @@ export const getSugerenciasEntidad = async (q: string): Promise<string[]> => {
   });
   return res.data.sugerencias ?? [];
 };
+
+// ── Sugerencias de Idioma ─────────────────────────────────────────────────────
+export const getSugerenciasIdioma = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 2) return [];
+  const res = await axios.get(`${API}/idiomas/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+
+// ── Sugerencias de Profesión ──────────────────────────────────────────────────
+export const getSugerenciasProfecion = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 2) return [];
+  const res = await axios.get(`${API}/perfil/sugerencias-profesion`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};

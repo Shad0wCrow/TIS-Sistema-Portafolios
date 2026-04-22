@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
-import { addLogro } from "../../../services/portafolioservice";
+import { addLogro, getSugerenciasEntidad } from "../../../services/portafolioservice";
+import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
 
 interface ModalLogroProps {
   onClose: () => void;
@@ -131,11 +132,14 @@ export default function ModalLogro({ onClose, onSave }: ModalLogroProps) {
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Entidad emisora *</label>
-                <input
+                <AutocompleteInput
                   name="nombre_entidad"
                   value={form.nombre_entidad}
-                  onChange={handleChange}
-                  style={errors.nombre_entidad ? errStyle : {}}
+                  onChange={(v) => setForm((prev) => ({ ...prev, nombre_entidad: v }))}
+                  placeholder="Ej: Universidad, Organización..."
+                  fetchSuggestions={getSugerenciasEntidad}
+                  hasError={!!errors.nombre_entidad}
+                  minChars={2}
                 />
                 {errMsg(errors.nombre_entidad)}
               </div>

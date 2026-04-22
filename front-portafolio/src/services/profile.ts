@@ -8,6 +8,7 @@ export const createProfile = async (data: {
   profesion: string;
   celular: string;
   descripcion: string;
+  foto_url?: string;
 }) => {
   const token = localStorage.getItem("token");
 

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import type { Experiencia } from "../../../types/portafolioTypes";
 import styles from "./modalExperiencia.module.css";
+import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
+import { getSugerenciasEmpresa } from "../../../services/portafolioservice";
 
 type FormData = {
   nombre_empresa: string;
@@ -110,12 +112,14 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
           <div className={styles.row}>
             <div className={styles.field}>
               <label className={styles.label}>Empresa <span className={styles.req}>*</span></label>
-              <input
-                className={`${styles.input} ${errors.nombre_empresa ? styles.inputError : ""}`}
+              <AutocompleteInput
+                name="nombre_empresa"
                 value={form.nombre_empresa}
-                onChange={(e) => set("nombre_empresa", e.target.value)}
+                onChange={(v) => set("nombre_empresa", v)}
                 placeholder="Nombre de la empresa"
-                maxLength={150}
+                fetchSuggestions={getSugerenciasEmpresa}
+                hasError={!!errors.nombre_empresa}
+                minChars={2}
               />
               {errors.nombre_empresa && <span className={styles.error}>{errors.nombre_empresa}</span>}
             </div>
