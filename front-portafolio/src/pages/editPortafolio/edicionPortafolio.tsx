@@ -56,6 +56,7 @@ import EducacionCard from "./components/educacionCard";
 import CursoCard from "./components/cursoCard";
 import { IconPersona, IconPencil } from "./components/icons";
 import ModalAlert from "./components/modalAlert";
+import ModalSuccess from "./components/modalSuccess";
 import ModalLogro from "./components/modalLogro";
 import LogroCard from "./components/logroCard";
 import ModalIdioma from "./components/modalIdioma";
@@ -96,6 +97,7 @@ export default function EdicionPortafolio() {
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
   const [modalExp, setModalExp] = useState<ModalExperienciaState>(null);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [modalEducacion, setModalEducacion] = useState(false);
   const [modalCurso, setModalCurso] = useState(false);
@@ -178,6 +180,7 @@ useEffect(() => {
         setModalAlert(null);
         await removeHabilidad(id);
         await refreshData();
+        setSuccessMessage("La habilidad ha sido eliminada de tu perfil.");
       },
     });
   };
@@ -198,6 +201,7 @@ useEffect(() => {
         setModalAlert(null);
         await removeProyecto(id);
         await refreshData();
+        setSuccessMessage("El proyecto ha sido eliminado correctamente.");
       },
     });
   };
@@ -220,6 +224,7 @@ useEffect(() => {
       setModalAlert(null);
       await removeExperiencia(id);
       await refreshData();
+      setSuccessMessage("La experiencia laboral ha sido eliminada correctamente.");
     },
   });
 };
@@ -238,6 +243,7 @@ const handleSaveEducacion = async (
         setModalAlert(null);
         await removeEducacion(id);
         await refreshData();
+        setSuccessMessage("El registro de educación ha sido eliminado correctamente.");
       },
     });
   };
@@ -254,6 +260,7 @@ const handleSaveEducacion = async (
         setModalAlert(null);
         await removeCurso(id);
         await refreshData();
+        setSuccessMessage("El curso ha sido eliminado correctamente.");
       },
     });
   };
@@ -265,6 +272,7 @@ const handleSaveEducacion = async (
         setModalAlert(null);
         await removeLogro(id);
         await refreshData();
+        setSuccessMessage("El logro ha sido eliminado correctamente.");
       },
     });
   };
@@ -303,6 +311,7 @@ const handleRemoveCertificacion = async (id: number) => {
       delete stored[id];
       localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
       await refreshData();
+      setSuccessMessage("La certificación ha sido eliminada correctamente.");
     },
   });
 };
@@ -589,6 +598,13 @@ const handleRemoveCertificacion = async (id: number) => {
           message={modalAlert.mensaje}
           onConfirm={modalAlert.onConfirm}
           onCancel={() => setModalAlert(null)}
+        />
+      )}
+
+      {successMessage && (
+        <ModalSuccess
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
         />
       )}
 
