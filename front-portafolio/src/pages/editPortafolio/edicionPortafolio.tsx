@@ -8,7 +8,6 @@ import {
   getPortafolio,
   getCatalogoHabilidades,
   addHabilidad,
-  updateHabilidad,
   removeHabilidad,
   addProyecto,
   updateProyecto,

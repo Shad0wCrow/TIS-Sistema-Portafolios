@@ -1,5 +1,5 @@
 import styles from "./sidebarEdicion.module.css";
-import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconBook, IconGraduate, IconBriefcase } from "./icons";
+import { IconPersona, IconStar, IconFolder, IconArrowLeft, IconBook, IconGraduate, IconBriefcase , IconHabilidades, IconIdiomas, IconCertificacion} from "./icons";
 import type { PortafolioData } from "../../../types/portafolioTypes";
 
 
@@ -38,14 +38,14 @@ export default function SidebarEdicion({
 }: SidebarEdicionProps) {
   const navItems: { key: ActiveSection; label: string; icon: React.ReactNode }[] = [
     { key: "perfil",      label: "Perfil",      icon: <IconPersona />  },
-    { key: "habilidades", label: "Habilidades", icon: <IconStar />     },
+    { key: "habilidades", label: "Habilidades", icon: <IconHabilidades />     },
     { key: "proyectos",   label: "Proyectos",   icon: <IconFolder />   },
     { key: "educacion",   label: "Educación",   icon: <IconGraduate /> },
     { key: "cursos",      label: "Cursos",      icon: <IconBook />     },
     { key: "logros",      label: "Logros",      icon: <IconStar />     },
-    { key: "idiomas",     label: "Idiomas",     icon: <IconStar />     },
+    { key: "idiomas",     label: "Idiomas",     icon: <IconIdiomas />     },
     { key: "experiencia", label: "Experiencia Laboral", icon: <IconBriefcase /> },
-    { key: "certificaciones", label: "Certificaciones", icon: <IconStar />     },
+    { key: "certificaciones", label: "Certificaciones", icon: <IconCertificacion />     },
   ];
 
   const badgeCount: Partial<Record<ActiveSection, number>> = {
