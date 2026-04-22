@@ -252,6 +252,13 @@ export const addIdioma = async (data: {
   return res.data;
 };
 
+export const removeIdioma = async (id: number) => {
+  const res = await axios.delete(`${API}/idiomas/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
 // ── Certificaciones ───────────────────────────────────────────────────────────────
 export const getCertificaciones = async () => {
   const res = await axios.get(`${API}/certificaciones`, { headers: authHeaders() });

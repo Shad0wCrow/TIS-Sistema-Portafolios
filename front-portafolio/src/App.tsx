@@ -9,7 +9,6 @@ import EdicionPortafolio from "./pages/editPortafolio/edicionPortafolio";
 import Portafolio from "./pages/portafolio/Portafolio";
 
 
-import ProfileRoute from "./components/ProfileRoute";
 import CreateAccountRoute from "./components/CreateAccountRoute";
 import PortafolioRoute from "./components/PortafolioRoute";
 
@@ -34,29 +33,23 @@ function App() {
       
       <Route
         path="/dashboard"
-        element={
-          <ProfileRoute>
-            <Dashboard />
-          </ProfileRoute>
-        }
+        element={<Dashboard />}
       />
       <Route
       path="/portafolio"
       element={
-        <ProfileRoute>
+        <PortafolioRoute>
           <Portafolio />
-        </ProfileRoute>
+        </PortafolioRoute>
       }
      />
      
       <Route
         path="/portafolio/editar"
         element={
-          <ProfileRoute>
-            <PortafolioRoute>
-              <EdicionPortafolio />
-            </PortafolioRoute>
-          </ProfileRoute>
+          <PortafolioRoute>
+            <EdicionPortafolio />
+          </PortafolioRoute>
         }
       />
     </Routes>

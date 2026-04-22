@@ -85,7 +85,7 @@ export default function CreateAccount() {
     }
 
     const handleCancelar = () => {
-        navigate("/")
+        navigate("/dashboard")
     }
 
     async function handleGuardar() {
@@ -110,6 +110,7 @@ export default function CreateAccount() {
                     celular: values.celular,
                     descripcion: values.descripcion,
                 })
+                localStorage.setItem("hasProfile", "true")
                 navigate("/dashboard")
             } catch (error) {
                 console.error("Error al guardar perfil:", error)
@@ -310,9 +311,9 @@ export default function CreateAccount() {
                 <div className={styles.greenAccent} />
 
                 <div className={styles.actions}>
-                    <span className={styles.actionsHint}>Todos los campos son requeridos</span>
+                    <span className={styles.actionsHint}>Puedes omitir este paso y crear tu perfil despues</span>
                     <div className={styles.actionsRight}>
-                        <Button text="Cancelar" className={styles.cancel} onClick={handleCancelar} />
+                        <Button text="Omitir" className={styles.cancel} onClick={handleCancelar} />
                         <Button
                             text="Guardar perfil →"
                             loadingText="Guardando..."

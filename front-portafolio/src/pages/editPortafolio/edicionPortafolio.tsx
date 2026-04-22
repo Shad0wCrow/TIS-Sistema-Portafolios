@@ -24,6 +24,7 @@ import {
   addLogro,
   removeLogro,
   addIdioma,
+  removeIdioma,
   getCertificaciones,
   addCertificacion,
   removeCertificacion
@@ -371,6 +372,25 @@ const handleSaveEducacion = async (
     setData((prev) => prev ? { ...prev, idiomas: [...prev.idiomas, idioma] } : prev);
   } 
 
+  const handleRemoveIdioma = async (id: number) => {
+    setModalAlert({
+      mensaje: "Este idioma será eliminado permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        try {
+          await removeIdioma(id);
+          setData((prev) => prev
+            ? { ...prev, idiomas: prev.idiomas.filter((idioma) => idioma.id_usuario_idioma !== id) }
+            : prev
+          );
+          setSuccessMessage("El idioma ha sido eliminado correctamente.");
+        } catch (error) {
+          setErrorMessage("Error al eliminar el idioma. Intenta de nuevo.");
+        }
+      },
+    });
+  };
+
   const handleSaveCertificacion = async (
   formData: Parameters<typeof addCertificacion>[0],
   imagenBase64: string | null
@@ -613,7 +633,7 @@ const handleRemoveCertificacion = async (id: number) => {
               <IdiomaCard
                 idiomas={idiomas}
                 onAdd={() => setModalIdioma(true)}
-                
+                onRemove={handleRemoveIdioma}
               />
             </div>
           )}  

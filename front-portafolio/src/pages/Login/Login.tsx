@@ -21,6 +21,7 @@ function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.removeItem("hasPortafolio"); 
+      localStorage.removeItem("hasProfile");
       
       window.location.href = "/dashboard";
     } catch (err: any) {
