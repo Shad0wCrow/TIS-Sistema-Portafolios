@@ -68,7 +68,7 @@ export default function CursoCard({ cursos, onAdd, onRemove }: CursoCardProps) {
                     onClick={() => onRemove(curso.id_educacion)}
                     title="Eliminar"
                   >
-                    ×
+                    Eliminar
                   </button>
                 </div>
               </li>

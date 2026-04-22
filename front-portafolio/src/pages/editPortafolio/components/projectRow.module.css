@@ -62,8 +62,7 @@
 }
 
 .projBtn {
-  width: 26px;
-  height: 26px;
+padding: 5px 10px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
