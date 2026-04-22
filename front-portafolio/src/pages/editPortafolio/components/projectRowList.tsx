@@ -1,6 +1,6 @@
 import styles from "./projectRow.module.css";
 import { IconPencil, IconPlus, IconImagen } from "./icons";
-import type { Proyecto } from "../../types/portafolioTypes";
+import type { Proyecto } from "../../../types/portafolioTypes";
 
 interface ProjectRowListProps {
   proyectos: Proyecto[];
@@ -32,7 +32,7 @@ export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: P
                       onClick={() => onRemove(p.id_proyecto)}
                       title="Eliminar"
                     >
-                      ×
+                      Eliminar
                     </button>
                     <button
                       className={`${styles.projBtn} ${styles.projBtnEdit}`}

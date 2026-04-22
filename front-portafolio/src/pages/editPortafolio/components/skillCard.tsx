@@ -1,10 +1,10 @@
 import styles from "./skillCard.module.css";
 import { IconPlus, IconPencil } from "./icons";
-import type { HabilidadUsuario } from "../../types/portafolioTypes";
+import type { HabilidadItem } from "../../../types/portafolioTypes";
 
 interface SkillCardProps {
   tipo: "tecnica" | "blanda";
-  lista: HabilidadUsuario[];
+  lista: HabilidadItem[];
   onAdd: () => void;
   onRemove: (id: number) => void;
 }
@@ -32,7 +32,7 @@ export default function SkillCard({ tipo, lista, onAdd, onRemove }: SkillCardPro
                     onClick={() => onRemove(h.id_usuario_habilidad)}
                     title="Eliminar"
                   >
-                    ×
+                    
                   </button>
                 </div>
               ))}

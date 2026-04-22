@@ -60,7 +60,7 @@ export default function EducacionCard({ educaciones, onAdd, onRemove }: Educacio
                   onClick={() => onRemove(edu.id_educacion)}
                   title="Eliminar"
                 >
-                  ×
+                  Eliminar
                 </button>
               </div>
             </li>

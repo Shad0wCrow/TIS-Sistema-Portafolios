@@ -71,21 +71,25 @@
 }
 
 .skillTagDel {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
+  padding: 2px 7px;
+  border-radius: 4px;
   background: var(--red-lt);
   color: var(--red);
   border: 1px solid #f5c6c2;
-  font-size: 12px;
+  font-size: 10px;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  line-height: 1;
+  letter-spacing: 0.03em;
   flex-shrink: 0;
-  padding: 0;
   transition: background 0.15s, color 0.15s;
+}
+
+.skillTagDel:hover {
+  background: var(--red);
+  color: #ffffff;
+  border-color: var(--red);
 }
 
 .skillTagDel:hover {
