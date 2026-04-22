@@ -2,7 +2,17 @@ import { useState, useEffect } from "react";
 import type { Experiencia } from "../../../types/portafolioTypes";
 import styles from "./modalExperiencia.module.css";
 
-type FormData = Omit<Experiencia, "id_experiencia">;
+type FormData = {
+  nombre_empresa: string;
+  puesto: string;
+  tipo?: string | undefined;
+  descripcion?: string | null;
+  fecha_inicio: string;
+  fecha_fin?: string | null;
+  es_actual?: boolean;
+  ubicacion?: string | null;
+  visibilidad?: "publico" | "privado";
+};
 
 interface Props {
   experiencia: Experiencia | null;
@@ -15,7 +25,7 @@ const TIPOS = ["Tiempo completo", "Medio tiempo", "Freelance", "Prácticas", "Vo
 const INITIAL: FormData = {
   nombre_empresa: "",
   puesto: "",
-  tipo: "",
+  tipo: undefined,
   descripcion: "",
   fecha_inicio: "",
   fecha_fin: "",
@@ -34,7 +44,7 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
       setForm({
         nombre_empresa: experiencia.nombre_empresa ?? "",
         puesto: experiencia.puesto ?? "",
-        tipo: experiencia.tipo ?? "",
+        tipo: experiencia.tipo ?? undefined,
         descripcion: experiencia.descripcion ?? "",
         fecha_inicio: experiencia.fecha_inicio ?? "",
         fecha_fin: experiencia.fecha_fin ?? "",
@@ -70,7 +80,7 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
     try {
       const payload: FormData = {
         ...form,
-        tipo: form.tipo || null,
+        tipo: form.tipo || undefined,
         descripcion: form.descripcion || null,
         fecha_fin: form.es_actual ? null : form.fecha_fin || null,
         ubicacion: form.ubicacion || null,
@@ -122,14 +132,13 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
             </div>
           </div>
 
-          {/* Tipo y ubicación */}
           <div className={styles.row}>
             <div className={styles.field}>
               <label className={styles.label}>Tipo de empleo</label>
               <select
                 className={styles.select}
                 value={form.tipo ?? ""}
-                onChange={(e) => set("tipo", e.target.value || null)}
+                onChange={(e) => set("tipo", e.target.value || undefined)}
               >
                 <option value="">Sin especificar</option>
                 {TIPOS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -147,7 +156,6 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
             </div>
           </div>
 
-          {/* Fechas */}
           <div className={styles.row}>
             <div className={styles.field}>
               <label className={styles.label}>Fecha de inicio <span className={styles.req}>*</span></label>
@@ -173,7 +181,6 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
             </div>
           </div>
 
-          {/* Es actual */}
           <label className={styles.checkRow}>
             <input
               type="checkbox"
@@ -184,7 +191,6 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
             <span>Trabajo aquí actualmente</span>
           </label>
 
-          {/* Descripción */}
           <div className={styles.field}>
             <label className={styles.label}>Descripción</label>
             <textarea
@@ -196,7 +202,6 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
             />
           </div>
 
-          {/* Visibilidad */}
           <div className={styles.field}>
             <label className={styles.label}>Visibilidad</label>
             <div className={styles.visibilidadGroup}>

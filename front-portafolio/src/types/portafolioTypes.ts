@@ -36,24 +36,24 @@ export interface Proyecto {
 export interface Curso {
   id_educacion: number;
   institucion: string;
-  titulo: string;        // almacena nombre_curso
+  titulo: string;
   area_estudio: "curso";
   fecha_inicio: string;
   fecha_fin: string | null;
   descripcion: string | null;
   visibilidad: "publico" | "privado";
 }
-export interface Logro{
+
+export interface Logro {
   id_logro: number;
   titulo: string;
   descripcion: string | null;
   fecha_obtencion: string | null;
-  entidad_nombre?: string | null; 
+  entidad_nombre?: string | null;
   url_credencial?: string | null;
   identificador?: string | null;
   visibilidad: "publico" | "privado";
 }
-
 
 export interface Educacion {
   id_educacion: number;
@@ -73,6 +73,29 @@ export interface Idioma {
   visibilidad: "publico" | "privado";
 }
 
+export interface Certificacion {
+  id_certificacion: number;
+  nombre: string;
+  nombre_entidad: string;
+  fecha_obtencion: string;
+  fecha_expiracion: string | null;
+  url_certificado: string | null;
+  imagen_url: string | null;
+  visibilidad: "publico" | "privado";
+}
+
+export interface Experiencia {
+  id_experiencia: number;
+  nombre_empresa: string;
+  puesto: string;
+  tipo?: string;
+  descripcion?: string | null;
+  fecha_inicio: string;
+  fecha_fin?: string | null;
+  es_actual?: boolean;
+  ubicacion?: string | null;
+  visibilidad?: "publico" | "privado";
+}
 
 export interface PortafolioData {
   perfil: Perfil | null;
@@ -83,17 +106,5 @@ export interface PortafolioData {
   cursos: Curso[];
   logros: Logro[];
   idiomas: Idioma[];
-}
-
-export interface Experiencia {
-  id_experiencia: number;
-  nombre_empresa: string;
-  puesto: string;
-  tipo?: string | null;
-  descripcion?: string | null;
-  fecha_inicio: string;       
-  fecha_fin?: string | null;
-  es_actual?: boolean;
-  ubicacion?: string | null;
-  visibilidad?: "publico" | "privado";
+  certificaciones: Certificacion[];
 }
