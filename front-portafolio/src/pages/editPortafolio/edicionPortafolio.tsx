@@ -98,6 +98,7 @@ export default function EdicionPortafolio() {
   const [modalExp, setModalExp] = useState<ModalExperienciaState>(null);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); 
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [modalEducacion, setModalEducacion] = useState(false);
   const [modalCurso, setModalCurso] = useState(false);
@@ -178,9 +179,13 @@ useEffect(() => {
       mensaje: "Esta habilidad será eliminada de tu perfil.",
       onConfirm: async () => {
         setModalAlert(null);
-        await removeHabilidad(id);
-        await refreshData();
-        setSuccessMessage("La habilidad ha sido eliminada de tu perfil.");
+        try {
+          await removeHabilidad(id);
+          await refreshData();
+          setSuccessMessage("La habilidad ha sido eliminada de tu perfil.");
+        } catch (error) {
+          setErrorMessage("Error al eliminar la habilidad. Intenta de nuevo");
+        }
       },
     });
   };
@@ -199,9 +204,13 @@ useEffect(() => {
       mensaje: "Este proyecto será eliminado permanentemente.",
       onConfirm: async () => {
         setModalAlert(null);
+        try {
         await removeProyecto(id);
         await refreshData();
         setSuccessMessage("El proyecto ha sido eliminado correctamente.");
+        } catch (error) {
+          setErrorMessage("Error al eliminar el proyecto. Intenta de nuevo.");
+        }
       },
     });
   };
@@ -222,9 +231,14 @@ useEffect(() => {
     mensaje: "Esta experiencia laboral será eliminada permanentemente.",
     onConfirm: async () => {
       setModalAlert(null);
-      await removeExperiencia(id);
-      await refreshData();
-      setSuccessMessage("La experiencia laboral ha sido eliminada correctamente.");
+      
+      try {
+        await removeExperiencia(id);
+        await refreshData();
+        setSuccessMessage("La experiencia laboral ha sido eliminada correctamente.");
+      } catch (error) {
+        setErrorMessage("Error al eliminar la experiencia laboral. Intenta de nuevo.");
+      }
     },
   });
 };
@@ -241,9 +255,14 @@ const handleSaveEducacion = async (
       mensaje: "Este registro de educación será eliminado permanentemente.",
       onConfirm: async () => {
         setModalAlert(null);
+        try {
         await removeEducacion(id);
         await refreshData();
         setSuccessMessage("El registro de educación ha sido eliminado correctamente.");
+        } catch (error) {
+          setErrorMessage("Error al eliminar el registro de educación. Intenta de nuevo.");
+        }
+
       },
     });
   };
@@ -258,9 +277,14 @@ const handleSaveEducacion = async (
       mensaje: "Este curso será eliminado permanentemente.",
       onConfirm: async () => {
         setModalAlert(null);
+        
+      try {
         await removeCurso(id);
         await refreshData();
         setSuccessMessage("El curso ha sido eliminado correctamente.");
+      } catch (error) {
+        setErrorMessage("Error al eliminar el curso. Intenta de nuevo.");
+      }
       },
     });
   };
@@ -270,9 +294,14 @@ const handleSaveEducacion = async (
       mensaje: "Este logro será eliminado permanentemente.",
       onConfirm: async () => {
         setModalAlert(null);
-        await removeLogro(id);
-        await refreshData();
-        setSuccessMessage("El logro ha sido eliminado correctamente.");
+        
+        try {
+          await removeLogro(id);
+          await refreshData();
+          setSuccessMessage("El logro ha sido eliminado correctamente.");
+        } catch (error) {
+          setErrorMessage("Error al eliminar el logro. Intenta de nuevo.");
+        }
       },
     });
   };
@@ -306,12 +335,17 @@ const handleRemoveCertificacion = async (id: number) => {
     mensaje: "Esta certificación será eliminada permanentemente.",
     onConfirm: async () => {
       setModalAlert(null);
-      await removeCertificacion(id);
-      const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-      delete stored[id];
-      localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
-      await refreshData();
-      setSuccessMessage("La certificación ha sido eliminada correctamente.");
+      
+      try {
+        await removeCertificacion(id);
+        const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+        delete stored[id];
+        localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
+        await refreshData();
+        setSuccessMessage("La certificación ha sido eliminada correctamente.");
+      } catch (error) {
+        setErrorMessage("Error al eliminar la certificación. Intenta de nuevo.");
+      }
     },
   });
 };
@@ -589,6 +623,7 @@ const handleRemoveCertificacion = async (id: number) => {
         <ModalIdioma
           onClose={() => setModalIdioma(false)}
           onSave={handleAddIdioma}
+          
         />
       )}
 
@@ -607,6 +642,54 @@ const handleRemoveCertificacion = async (id: number) => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+
+      {errorMessage && (
+  <div
+    style={{
+      position: "fixed", inset: 0, background: "rgba(15,25,20,0.45)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 1200, padding: 16, backdropFilter: "blur(3px)",
+    }}
+    onClick={() => setErrorMessage(null)}
+  >
+    <div
+      style={{
+        background: "var(--bg3)", border: "1px solid #f5c6c2",
+        borderRadius: 12, padding: "28px 24px", width: "100%",
+        maxWidth: 360, textAlign: "center",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.13)",
+      }}
+      onClick={e => e.stopPropagation()}
+    >
+      <div style={{
+        width: 52, height: 52, borderRadius: "50%", background: "var(--red-lt)",
+        border: "1.5px solid #f5c6c2", display: "flex", alignItems: "center",
+        justifyContent: "center", margin: "0 auto 16px",
+      }}>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      <p style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", margin: "0 0 6px" }}>
+        Error al eliminar
+      </p>
+      <p style={{ fontSize: 13, color: "var(--text2)", margin: "0 0 22px", lineHeight: 1.6 }}>
+        {errorMessage}
+      </p>
+      <button
+        onClick={() => setErrorMessage(null)}
+        style={{
+          background: "var(--red)", border: "1.5px solid var(--red)", color: "#fff",
+          padding: "9px 24px", borderRadius: 7, fontSize: 13, fontWeight: 700,
+          cursor: "pointer", fontFamily: "inherit",
+        }}
+      >
+        Aceptar
+      </button>
+    </div>
+  </div>
+)}
+
 
       {modalCertificacion && (
         <ModalCertificacion
