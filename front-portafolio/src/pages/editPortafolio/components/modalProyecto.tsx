@@ -72,7 +72,12 @@ export default function ModalProyecto({ proyecto, onClose, onSave }: ModalProyec
         <div className={styles.modalActions}>
           <button className={styles.btnCancel} onClick={onClose}>Cancelar</button>
           <button className={styles.btnSave} onClick={submit} disabled={loading || !form.titulo.trim()}>
-            {loading ? "Guardando..." : "Guardar proyecto"}
+            {loading ? (
+              <span className={styles.loadingContent}>
+                <span className={styles.spinner} aria-hidden="true" />
+                Guardando...
+              </span>
+            ) : "Guardar proyecto"}
           </button>
         </div>
       </div>

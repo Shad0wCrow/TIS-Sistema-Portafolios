@@ -70,6 +70,10 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -81,6 +85,28 @@
 .login-button:active {
   transform: translateY(0);
   box-shadow: none;
+}
+
+.login-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+  transform: none;
+  box-shadow: none;
+}
+
+.login-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #111111;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: login-spin 0.75s linear infinite;
+}
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .login-link-text {

@@ -81,6 +81,10 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -92,6 +96,28 @@
 .register-button:active {
   transform: translateY(0);
   box-shadow: none;
+}
+
+.register-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+  transform: none;
+  box-shadow: none;
+}
+
+.register-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #111111;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: register-spin 0.75s linear infinite;
+}
+
+@keyframes register-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .register-link {

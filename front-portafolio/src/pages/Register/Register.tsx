@@ -12,10 +12,12 @@ function Register() {
   const [errorCorreo, setErrorCorreo] = useState("");
   const [errorContrasenia, setErrorContrasenia] = useState("");
   const [errorGeneral, setErrorGeneral] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
 
     setErrorCorreo("");
     setErrorContrasenia("");
@@ -35,6 +37,7 @@ function Register() {
 
     if (hasError) return;
 
+    setLoading(true);
     try {
       const data = await registerUser({
         nombre_usuario,
@@ -56,6 +59,8 @@ function Register() {
       } else {
         setErrorGeneral("No se pudo crear la cuenta");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,8 +114,9 @@ function Register() {
             </p>
           )}
 
-          <button type="submit" className="register-button">
-            crear cuenta
+          <button type="submit" className="register-button" disabled={loading} aria-busy={loading}>
+            {loading && <span className="register-spinner" aria-hidden="true" />}
+            <span>{loading ? "Creando..." : "crear cuenta"}</span>
           </button>
 
           <Link to="/login" className="register-link">

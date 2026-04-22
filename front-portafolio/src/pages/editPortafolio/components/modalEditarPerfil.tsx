@@ -111,7 +111,12 @@ export default function ModalEditarPerfil({ perfil, onClose, onSave }: ModalEdit
         <div className={styles.modalActions}>
           <button className={styles.btnCancel} onClick={onClose}>Cancelar</button>
           <button className={styles.btnSave} onClick={submit} disabled={loading}>
-            {loading ? "Guardando..." : "Guardar cambios"}
+            {loading ? (
+              <span className={styles.loadingContent}>
+                <span className={styles.spinner} aria-hidden="true" />
+                Guardando...
+              </span>
+            ) : "Guardar cambios"}
           </button>
         </div>
       </div>

@@ -129,7 +129,12 @@ export default function ModalIdioma({ onClose, onSave }: ModalIdiomaProps) {
                 Cancelar
               </button>
               <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
-                Guardar
+                {loading ? (
+                  <span className={styles.loadingContent}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Guardando...
+                  </span>
+                ) : "Guardar"}
               </button>
             </div>
           </>
