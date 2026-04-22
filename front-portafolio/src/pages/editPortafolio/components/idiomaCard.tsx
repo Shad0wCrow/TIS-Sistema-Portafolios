@@ -7,7 +7,7 @@ interface IdiomaCardProps {
   onRemove?: (id: number) => void;
 }
 
-export default function IdiomaCard({ idiomas, onAdd, onRemove }: IdiomaCardProps) {
+export default function IdiomaCard({ idiomas, onAdd }: IdiomaCardProps) {
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>

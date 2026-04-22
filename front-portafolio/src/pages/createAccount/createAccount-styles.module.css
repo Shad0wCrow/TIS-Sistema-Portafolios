@@ -592,3 +592,14 @@
 .save:active {
   transform: scale(0.98) !important;
 }
+
+.save:disabled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.save:disabled:hover {
+  opacity: 0.65 !important;
+  transform: none !important;
+}

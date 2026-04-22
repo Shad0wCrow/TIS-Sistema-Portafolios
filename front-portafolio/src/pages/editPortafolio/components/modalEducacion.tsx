@@ -291,7 +291,12 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
               </button>
               
               <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
-                {loading ? "Guardando..." : "Guardar"}
+                {loading ? (
+                  <span className={styles.loadingContent}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Guardando...
+                  </span>
+                ) : "Guardar"}
               </button>
             </div>
           </>

@@ -14,7 +14,7 @@ function formatFecha(fecha: string) {
   return `${meses[parseInt(month, 10) - 1]} ${year}`;
 }
 
-export default function ExperienciaRowList({ experiencias, onEdit, onRemove, onAdd }: Props) {
+export default function ExperienciaRowList({ experiencias, onRemove, onAdd }: Props) {
   return (
     <div className={styles.container}>
       {experiencias.length === 0 && (

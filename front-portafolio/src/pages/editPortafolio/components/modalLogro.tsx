@@ -190,7 +190,12 @@ export default function ModalLogro({ onClose, onSave }: ModalLogroProps) {
                 Cancelar
               </button>
               <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
-                Guardar
+                {loading ? (
+                  <span className={styles.loadingContent}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Guardando...
+                  </span>
+                ) : "Guardar"}
               </button>
             </div>
           </>

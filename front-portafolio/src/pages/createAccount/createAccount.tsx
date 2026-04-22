@@ -65,6 +65,7 @@ export default function CreateAccount() {
 
     const [errors, setErrors] = useState<FormErrors>({})
     const [touched, setTouched] = useState<Partial<Record<keyof FormValues, boolean>>>({})
+    const [saving, setSaving] = useState(false)
 
     function handleChange(field: keyof FormValues) {
         return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -88,6 +89,8 @@ export default function CreateAccount() {
     }
 
     async function handleGuardar() {
+        if (saving) return
+
         const allTouched = Object.fromEntries(
             (Object.keys(values) as (keyof FormValues)[]).map((k) => [k, true])
         ) as Record<keyof FormValues, boolean>
@@ -98,6 +101,7 @@ export default function CreateAccount() {
         setErrors(currentErrors)
 
         if (Object.keys(currentErrors).length === 0) {
+            setSaving(true)
             try {
                 await createProfile({
                     nombre_perfil: values.nombre,
@@ -109,6 +113,8 @@ export default function CreateAccount() {
                 navigate("/dashboard")
             } catch (error) {
                 console.error("Error al guardar perfil:", error)
+            } finally {
+                setSaving(false)
             }
         }
     }
@@ -307,7 +313,13 @@ export default function CreateAccount() {
                     <span className={styles.actionsHint}>Todos los campos son requeridos</span>
                     <div className={styles.actionsRight}>
                         <Button text="Cancelar" className={styles.cancel} onClick={handleCancelar} />
-                        <Button text="Guardar perfil →" className={styles.save} onClick={handleGuardar} />
+                        <Button
+                            text="Guardar perfil →"
+                            loadingText="Guardando..."
+                            className={styles.save}
+                            onClick={handleGuardar}
+                            loading={saving}
+                        />
                     </div>
                 </div>
 

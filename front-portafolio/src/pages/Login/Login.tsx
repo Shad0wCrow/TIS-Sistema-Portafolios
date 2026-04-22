@@ -9,10 +9,13 @@ function Login() {
   const [correo, setCorreo] = useState("");
   const [contrasenia, setContrasenia] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError("");
+    setLoading(true);
     try {
       const data = await loginUser({ correo, contrasenia });
       localStorage.setItem("token", data.token);
@@ -22,6 +25,8 @@ function Login() {
       window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err?.response?.data?.message || "Error al iniciar sesión");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,7 +54,10 @@ function Login() {
             />
           </div>
           {error && <p className="login-error">{error}</p>}
-          <button type="submit" className="login-button">Entrar</button>
+          <button type="submit" className="login-button" disabled={loading} aria-busy={loading}>
+            {loading && <span className="login-spinner" aria-hidden="true" />}
+            <span>{loading ? "Entrando..." : "Entrar"}</span>
+          </button>
           <p className="login-link-text">¿Olvidaste tu contraseña?</p>
           <Link to="/register" className="login-link">¿No tienes una cuenta?</Link>
         </form>

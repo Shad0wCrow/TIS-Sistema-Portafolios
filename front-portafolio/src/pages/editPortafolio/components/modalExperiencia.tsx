@@ -238,7 +238,12 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
             Cancelar
           </button>
           <button className={styles.saveBtn} onClick={handleSubmit} disabled={saving}>
-            {saving ? "Guardando..." : experiencia ? "Guardar cambios" : "Agregar experiencia"}
+            {saving ? (
+              <span className={styles.loadingContent}>
+                <span className={styles.spinner} aria-hidden="true" />
+                Guardando...
+              </span>
+            ) : experiencia ? "Guardar cambios" : "Agregar experiencia"}
           </button>
         </div>
       </div>

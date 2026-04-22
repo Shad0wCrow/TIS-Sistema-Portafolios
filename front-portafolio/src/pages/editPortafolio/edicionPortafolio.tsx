@@ -165,13 +165,24 @@ useEffect(() => {
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
   const handleSavePerfil = async (formData: Parameters<typeof updatePerfil>[0]) => {
-    await updatePerfil(formData);
-    await refreshData();
+    const res = await updatePerfil(formData);
+    setData((prev) => prev ? { ...prev, perfil: res.perfil } : prev);
   };
 
   const handleAddHabilidad = async (habilidadId: number, nivel: string) => {
-    await addHabilidad({ habilidad_id: habilidadId, nivel });
-    await refreshData();
+    const res = await addHabilidad({ habilidad_id: habilidadId, nivel });
+    const habilidad = res.habilidad;
+    const item = {
+      id_usuario_habilidad: habilidad.id_usuario_habilidad,
+      nombre: habilidad.habilidad?.nombre ?? "",
+      nivel: habilidad.nivel ?? null,
+    };
+
+    setData((prev) => {
+      if (!prev) return prev;
+      const key = habilidad.habilidad?.tipo === "tecnica" ? "habilidades_tecnicas" : "habilidades_blandas";
+      return { ...prev, [key]: [...prev[key], item] };
+    });
   };
 
   const handleRemoveHabilidad = async (id: number) => {
@@ -181,7 +192,14 @@ useEffect(() => {
         setModalAlert(null);
         try {
           await removeHabilidad(id);
-          await refreshData();
+          setData((prev) => prev
+            ? {
+                ...prev,
+                habilidades_tecnicas: prev.habilidades_tecnicas.filter((habilidad) => habilidad.id_usuario_habilidad !== id),
+                habilidades_blandas: prev.habilidades_blandas.filter((habilidad) => habilidad.id_usuario_habilidad !== id),
+              }
+            : prev
+          );
           setSuccessMessage("La habilidad ha sido eliminada de tu perfil.");
         } catch (error) {
           setErrorMessage("Error al eliminar la habilidad. Intenta de nuevo");
@@ -192,11 +210,23 @@ useEffect(() => {
 
   const handleSaveProyecto = async (formData: Parameters<typeof addProyecto>[0]) => {
     if (modalProy && modalProy !== "nuevo") {
-      await updateProyecto(modalProy.id_proyecto, formData);
+      const res = await updateProyecto(modalProy.id_proyecto, formData);
+      setData((prev) => prev
+        ? {
+            ...prev,
+            proyectos: prev.proyectos.map((proyecto) =>
+              proyecto.id_proyecto === modalProy.id_proyecto ? res.proyecto : proyecto
+            ),
+          }
+        : prev
+      );
     } else {
-      await addProyecto(formData);
+      const res = await addProyecto(formData);
+      setData((prev) => prev
+        ? { ...prev, proyectos: [res.proyecto, ...prev.proyectos] }
+        : prev
+      );
     }
-    await refreshData();
   };
 
   const handleRemoveProyecto = async (id: number) => {
@@ -206,7 +236,10 @@ useEffect(() => {
         setModalAlert(null);
         try {
         await removeProyecto(id);
-        await refreshData();
+        setData((prev) => prev
+          ? { ...prev, proyectos: prev.proyectos.filter((proyecto) => proyecto.id_proyecto !== id) }
+          : prev
+        );
         setSuccessMessage("El proyecto ha sido eliminado correctamente.");
         } catch (error) {
           setErrorMessage("Error al eliminar el proyecto. Intenta de nuevo.");
@@ -220,10 +253,15 @@ useEffect(() => {
   const handleSaveExperiencia = async (formData: Parameters<typeof addExperiencia>[0]) => {
     if (modalExp && modalExp !== "nueva") {
       await updateExperiencia(modalExp.id_experiencia, formData);
+      await refreshData();
     } else {
-      await addExperiencia(formData);
+      const res = await addExperiencia(formData);
+      const experiencia = {
+        ...res.experiencia,
+        nombre_empresa: formData.nombre_empresa,
+      };
+      setExperiencias((prev) => [experiencia, ...prev]);
     }
-    await refreshData();
   };
 
   const handleRemoveExperiencia = async (id: number) => {
@@ -231,10 +269,9 @@ useEffect(() => {
     mensaje: "Esta experiencia laboral será eliminada permanentemente.",
     onConfirm: async () => {
       setModalAlert(null);
-      
       try {
         await removeExperiencia(id);
-        await refreshData();
+        setExperiencias((prev) => prev.filter((experiencia) => experiencia.id_experiencia !== id));
         setSuccessMessage("La experiencia laboral ha sido eliminada correctamente.");
       } catch (error) {
         setErrorMessage("Error al eliminar la experiencia laboral. Intenta de nuevo.");
@@ -246,8 +283,8 @@ useEffect(() => {
 const handleSaveEducacion = async (
   formData: Parameters<typeof addEducacion>[0]
 ) => {
-  await addEducacion(formData);
-  await refreshData();
+  const res = await addEducacion(formData);
+  setData((prev) => prev ? { ...prev, educaciones: [res.educacion, ...prev.educaciones] } : prev);
 };
 
   const handleRemoveEducacion = async (id: number) => {
@@ -257,7 +294,10 @@ const handleSaveEducacion = async (
         setModalAlert(null);
         try {
         await removeEducacion(id);
-        await refreshData();
+        setData((prev) => prev
+          ? { ...prev, educaciones: prev.educaciones.filter((educacion) => educacion.id_educacion !== id) }
+          : prev
+        );
         setSuccessMessage("El registro de educación ha sido eliminado correctamente.");
         } catch (error) {
           setErrorMessage("Error al eliminar el registro de educación. Intenta de nuevo.");
@@ -268,8 +308,8 @@ const handleSaveEducacion = async (
   };
 
   const handleSaveCurso = async (formData: Parameters<typeof addCurso>[0]) => {
-    await addCurso(formData);
-    await refreshData();
+    const res = await addCurso(formData);
+    setData((prev) => prev ? { ...prev, cursos: [res.curso, ...prev.cursos] } : prev);
   };
 
   const handleRemoveCurso = async (id: number) => {
@@ -280,7 +320,10 @@ const handleSaveEducacion = async (
         
       try {
         await removeCurso(id);
-        await refreshData();
+        setData((prev) => prev
+          ? { ...prev, cursos: prev.cursos.filter((curso) => curso.id_educacion !== id) }
+          : prev
+        );
         setSuccessMessage("El curso ha sido eliminado correctamente.");
       } catch (error) {
         setErrorMessage("Error al eliminar el curso. Intenta de nuevo.");
@@ -294,10 +337,12 @@ const handleSaveEducacion = async (
       mensaje: "Este logro será eliminado permanentemente.",
       onConfirm: async () => {
         setModalAlert(null);
-        
         try {
           await removeLogro(id);
-          await refreshData();
+          setData((prev) => prev
+            ? { ...prev, logros: prev.logros.filter((logro) => logro.id_logro !== id) }
+            : prev
+          );
           setSuccessMessage("El logro ha sido eliminado correctamente.");
         } catch (error) {
           setErrorMessage("Error al eliminar el logro. Intenta de nuevo.");
@@ -307,13 +352,23 @@ const handleSaveEducacion = async (
   };
 
   const handleAddLogro = async (formData: Parameters<typeof addLogro>[0]) => {
-    await addLogro(formData);
-    await refreshData();
+    const res = await addLogro(formData);
+    const logro = {
+      ...res.logro,
+      entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
+    };
+    setData((prev) => prev ? { ...prev, logros: [logro, ...prev.logros] } : prev);
   };
 
   const handleAddIdioma = async (formData: Parameters<typeof addIdioma>[0]) => {
-    await addIdioma(formData);
-    await refreshData();
+    const res = await addIdioma(formData);
+    const idioma = {
+      id_usuario_idioma: res.idioma.id_usuario_idioma,
+      nombre: res.idioma.idioma?.nombre ?? formData.nombre_idioma,
+      nivel: res.idioma.nivel,
+      visibilidad: res.idioma.visibilidad,
+    };
+    setData((prev) => prev ? { ...prev, idiomas: [...prev.idiomas, idioma] } : prev);
   } 
 
   const handleSaveCertificacion = async (
@@ -327,7 +382,12 @@ const handleSaveEducacion = async (
     stored[id] = imagenBase64;
     localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
   }
-  await refreshData();
+  const certificacion = {
+    ...res.certificacion,
+    nombre_entidad: formData.nombre_entidad,
+    imagen_url: imagenBase64,
+  };
+  setCertificaciones((prev) => [certificacion, ...prev]);
 };
 
 const handleRemoveCertificacion = async (id: number) => {
@@ -335,16 +395,15 @@ const handleRemoveCertificacion = async (id: number) => {
     mensaje: "Esta certificación será eliminada permanentemente.",
     onConfirm: async () => {
       setModalAlert(null);
-      
       try {
         await removeCertificacion(id);
         const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
         delete stored[id];
         localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
-        await refreshData();
-        setSuccessMessage("La certificación ha sido eliminada correctamente.");
+        setCertificaciones((prev) => prev.filter((certificacion) => certificacion.id_certificacion !== id));
+        setSuccessMessage("La certificacion ha sido eliminada correctamente.");
       } catch (error) {
-        setErrorMessage("Error al eliminar la certificación. Intenta de nuevo.");
+        setErrorMessage("Error al eliminar la certificacion. Intenta de nuevo.");
       }
     },
   });

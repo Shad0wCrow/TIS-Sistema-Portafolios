@@ -52,7 +52,12 @@ export default function ModalAgregarHabilidad({ tipo, catalogo, onClose, onSave 
         <div className={styles.modalActions}>
           <button className={styles.btnCancel} onClick={onClose}>Cancelar</button>
           <button className={styles.btnSave} onClick={submit} disabled={loading || !habilidadId}>
-            {loading ? "Guardando..." : "Agregar"}
+            {loading ? (
+              <span className={styles.loadingContent}>
+                <span className={styles.spinner} aria-hidden="true" />
+                Guardando...
+              </span>
+            ) : "Agregar"}
           </button>
         </div>
       </div>
