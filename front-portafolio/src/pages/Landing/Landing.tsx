@@ -6,7 +6,7 @@ import LandingHeader from "../../components/layout/LandingHeader";
 
 function Landing() {
   const navigate = useNavigate();
-const handleEmpezar = async () => {
+const handleEmpezar = () => {
   const token = localStorage.getItem("token");
 
   if (!token) {
@@ -14,25 +14,7 @@ const handleEmpezar = async () => {
     return;
   }
 
-  try {
-    const res = await fetch("http://localhost:8000/api/perfil/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-
-    if (data.has_profile) {
-      navigate("/dashboard");
-    } else {
-      navigate("/createAccount");
-    }
-
-  } catch (error) {
-    console.error("Error verificando perfil:", error);
-    navigate("/login");
-  }
+  navigate("/dashboard");
 };
   return (
     <div className="landing-page">

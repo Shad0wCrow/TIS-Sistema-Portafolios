@@ -7,7 +7,7 @@ interface IdiomaCardProps {
   onRemove?: (id: number) => void;
 }
 
-export default function IdiomaCard({ idiomas, onAdd }: IdiomaCardProps) {
+export default function IdiomaCard({ idiomas, onAdd, onRemove }: IdiomaCardProps) {
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -34,11 +34,24 @@ export default function IdiomaCard({ idiomas, onAdd }: IdiomaCardProps) {
             <li key={idioma.id_usuario_idioma} className={styles.item}>
               <div className={styles.itemIcon}>🌐</div>
 
+              <div className={styles.itemInfo}>
                 <span className={styles.itemTitle}>{idioma.nombre}</span>
                 {idioma.nivel && (
                   <span className={styles.itemSub}>{idioma.nivel}</span>
                 )}
-              
+              </div>
+
+              {onRemove && (
+                <button
+                  type="button"
+                  className={styles.btnRemove}
+                  onClick={() => onRemove(idioma.id_usuario_idioma)}
+                  title="Eliminar idioma"
+                  aria-label={`Eliminar ${idioma.nombre}`}
+                >
+                  ×
+                </button>
+              )}
             </li>
           ))}
         </ul>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import HomeIcon from '../../assets/icons/Home.svg';
@@ -28,6 +28,48 @@ const Sidebar: React.FC = () => {
     { id: 'salir', name: 'Salir', icon: LogoutIcon },
   ];
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      return;
+    }
+
+    const syncProfileState = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/api/perfil/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        localStorage.setItem('hasProfile', data.has_profile ? 'true' : 'false');
+      } catch (error) {
+        console.error('Error verificando perfil:', error);
+      }
+    };
+
+    void syncProfileState();
+  }, []);
+
+  const handlePerfil = (): void => {
+    const token = localStorage.getItem('token');
+    const hasProfile = localStorage.getItem('hasProfile') === 'true';
+
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    if (hasProfile) {
+      localStorage.setItem('hasPortafolio', 'true');
+      navigate('/portafolio/editar');
+    } else {
+      navigate('/createAccount');
+    }
+  };
+
   const handleNavigation = (id: string): void => {
     switch (id) {
       case 'inicio':
@@ -35,7 +77,7 @@ const Sidebar: React.FC = () => {
         break;
 
       case 'perfil':
-        navigate('/dashboard');
+        void handlePerfil();
         break;
 
       case 'portafolio': {
@@ -57,6 +99,7 @@ const Sidebar: React.FC = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('hasPortafolio');
+        localStorage.removeItem('hasProfile');
         navigate('/login');
         break;
 
