@@ -2,10 +2,26 @@ import { useState } from "react"
 import styles from "./createAccount-styles.module.css"
 import Input from "../../components/ui/Input/input"
 import ErrorMessage from "../../components/ui/ErrorMessage/ErrorMessage"
-import perfilIcon from "../../assets/icons/icon-perfil.svg"
 import Button from "../../components/ui/Button/button"
 import { createProfile } from "../../services/profile"
 import { useNavigate } from "react-router-dom"
+import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput"
+
+// 🔥 FUENTE ÚNICA DE PROFESIONES
+const PROFESIONES = [
+    "Ingeniero de Software",
+    "Desarrollador Full Stack",
+    "Desarrollador Frontend",
+    "Desarrollador Backend",
+    "Ingeniero en Informática",
+    "Ingeniero en Sistemas",
+    "Analista de Sistemas",
+    "Arquitecto de Software",
+    "Ingeniero DevOps",
+    "Especialista en Ciberseguridad",
+]
+
+const URL_VALIDA = /^https?:\/\/.+\..+/;
 
 interface FormValues {
     nombre: string
@@ -21,6 +37,7 @@ interface FormErrors {
     profesion?: string
     celular?: string
     descripcion?: string
+    foto?: string
 }
 
 function validate(values: FormValues): FormErrors {
@@ -52,6 +69,21 @@ function validate(values: FormValues): FormErrors {
     return errors
 }
 
+function validarFotoUrl(url: string): string | undefined {
+    const limpia = url.trim()
+    if (!limpia) return undefined
+    if (!URL_VALIDA.test(limpia)) return "Ingresa una URL válida que comience con http:// o https://"
+    if (limpia.length > 300) return "La URL no puede superar 300 caracteres"
+    return undefined
+}
+
+// 🔥 FILTRO FRONTEND (sin backend)
+async function fetchProfesiones(q: string): Promise<string[]> {
+    return PROFESIONES.filter((p) =>
+        p.toLowerCase().includes(q.toLowerCase())
+    )
+}
+
 export default function CreateAccount() {
     const navigate = useNavigate()
 
@@ -66,6 +98,8 @@ export default function CreateAccount() {
     const [errors, setErrors] = useState<FormErrors>({})
     const [touched, setTouched] = useState<Partial<Record<keyof FormValues, boolean>>>({})
     const [saving, setSaving] = useState(false)
+    const [fotoUrl, setFotoUrl] = useState("")
+    const [fotoError, setFotoError] = useState<string | undefined>(undefined)
 
     function handleChange(field: keyof FormValues) {
         return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -84,6 +118,18 @@ export default function CreateAccount() {
         }
     }
 
+    function handleFotoUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const next = e.target.value
+        setFotoUrl(next)
+        const error = validarFotoUrl(next)
+        setFotoError(error)
+    }
+
+    function handleQuitarFoto() {
+        setFotoUrl("")
+        setFotoError(undefined)
+    }
+
     const handleCancelar = () => {
         navigate("/dashboard")
     }
@@ -99,8 +145,10 @@ export default function CreateAccount() {
 
         const currentErrors = validate(values)
         setErrors(currentErrors)
+        const fotoUrlError = validarFotoUrl(fotoUrl)
+        setFotoError(fotoUrlError)
 
-        if (Object.keys(currentErrors).length === 0) {
+        if (Object.keys(currentErrors).length === 0 && !fotoUrlError) {
             setSaving(true)
             try {
                 await createProfile({
@@ -109,6 +157,7 @@ export default function CreateAccount() {
                     profesion: values.profesion,
                     celular: values.celular,
                     descripcion: values.descripcion,
+                    foto_url: fotoUrl.trim() || undefined,
                 })
                 localStorage.setItem("hasProfile", "true")
                 navigate("/dashboard")
@@ -119,7 +168,6 @@ export default function CreateAccount() {
             }
         }
     }
-
     return (
         <main className={styles.page}>
 
@@ -136,12 +184,44 @@ export default function CreateAccount() {
                     <span className={styles.avatarZoneLabel}>Foto de perfil</span>
                     <div className={styles.avatarRow}>
                         <div className={styles.avatar}>
-                            <img src={perfilIcon} alt="Avatar" className={styles.avatarIcon} />
-                            <Button text="Subir" className={styles.addPhoto} />
+                            {fotoUrl.trim() ? (
+                                <img
+                                    src={fotoUrl.trim()}
+                                    alt="Foto de perfil"
+                                    className={styles.avatarPreview}
+                                    onError={() => setFotoError("La URL no pudo cargarse. Revisa el enlace.")}
+                                />
+                            ) : (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.avatarIconSvg}>
+                                    <circle cx="12" cy="8" r="4" />
+                                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                                </svg>
+                            )}
                         </div>
                         <div className={styles.avatarInfo}>
-                            <span className={styles.avatarHint}>Agregar foto</span>
-                            <span className={styles.avatarLabel}>JPG o PNG · máx 5MB</span>
+                            <span className={styles.avatarZoneLabel}>URL de foto</span>
+                            <input
+                                className={styles.input}
+                                type="url"
+                                placeholder="https://..."
+                                value={fotoUrl}
+                                onChange={handleFotoUrlChange}
+                            />
+                            {fotoUrl ? (
+                                <button
+                                    type="button"
+                                    className={styles.quitarFoto}
+                                    onClick={handleQuitarFoto}
+                                >
+                                    × Quitar foto
+                                </button>
+                            ) : (
+                                <span className={styles.avatarLabel}>Pega un enlace público de imagen</span>
+                            )}
+                            <span className={styles.avatarLabel}>JPG, PNG, WEBP o GIF por URL</span>
+                            {fotoError && (
+                                <span className={styles.avatarError}>{fotoError}</span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -264,14 +344,20 @@ export default function CreateAccount() {
                             <div className={styles.grid}>
                                 <div className={styles.fieldGroup}>
                                     <label className={styles.label}>Profesión</label>
-                                    <Input
-                                        type="text"
-                                        placeholder=""
-                                        classname={styles.input}
+                                    <AutocompleteInput
+                                        name="profesion"
                                         value={values.profesion}
-                                        onChange={handleChange("profesion")}
+                                        onChange={(v) => {
+                                            const updated = { ...values, profesion: v }
+                                            setValues(updated)
+                                            if (touched.profesion) setErrors(validate(updated))
+                                        }}
                                         onBlur={handleBlur("profesion")}
-                                        error={!!errors.profesion && touched.profesion}
+                                        placeholder="Ej: Ingeniero de Software"
+                                        fetchSuggestions={fetchProfesiones}
+                                        staticOptions={PROFESIONES}
+                                        hasError={!!errors.profesion && touched.profesion}
+                                        minChars={1}
                                     />
                                     <ErrorMessage message={touched.profesion ? errors.profesion : undefined} />
                                 </div>
@@ -311,7 +397,7 @@ export default function CreateAccount() {
                 <div className={styles.greenAccent} />
 
                 <div className={styles.actions}>
-                    <span className={styles.actionsHint}>Puedes omitir este paso y crear tu perfil despues</span>
+                    <span className={styles.actionsHint}>Puedes omitir este paso y crear tu perfil después</span>
                     <div className={styles.actionsRight}>
                         <Button text="Omitir" className={styles.cancel} onClick={handleCancelar} />
                         <Button

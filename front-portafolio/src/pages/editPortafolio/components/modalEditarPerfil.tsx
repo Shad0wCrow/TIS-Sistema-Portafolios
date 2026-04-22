@@ -1,7 +1,8 @@
 import { useState, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
-import { updatePerfil } from "../../../services/portafolioservice";
+import { updatePerfil, getSugerenciasProfecion } from "../../../services/portafolioservice";
 import type { PortafolioData } from "../../../types/portafolioTypes";
+import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
 
 interface ModalEditarPerfilProps {
   perfil: PortafolioData["perfil"] | null;
@@ -84,15 +85,19 @@ export default function ModalEditarPerfil({ perfil, onClose, onSave }: ModalEdit
         <div className={styles.modalGrid}>
           <div className={styles.modalField}>
             <label>Nombre</label>
-            <input name="nombre_perfil" value={form.nombre_perfil} onChange={handle} />
+            <input name="nombre_perfil" value={form.nombre_perfil} onChange={handle} disabled />
           </div>
           <div className={styles.modalField}>
             <label>Apellido</label>
-            <input name="apellido_perfil" value={form.apellido_perfil} onChange={handle} />
+            <input name="apellido_perfil" value={form.apellido_perfil} onChange={handle} disabled />
           </div>
           <div className={styles.modalField}>
             <label>Profesión</label>
-            <input name="profesion" value={form.profesion} onChange={handle} />
+              <input
+              name="profesion"
+              value={form.profesion}
+              disabled
+            />
           </div>
           <div className={styles.modalField}>
             <label>Teléfono</label>

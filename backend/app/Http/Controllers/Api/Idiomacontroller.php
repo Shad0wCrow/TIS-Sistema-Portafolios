@@ -66,30 +66,47 @@ class IdiomaController extends Controller
     }
 
     public function index(Request $request)
-{
-    $user = $request->user();
+    {
+        $user = $request->user();
 
-    $idiomas = Idioma::where('usuario_id', $user->id_usuario)
-        ->where('eliminado', false)
-        ->orderBy('idioma')
-        ->get();
+        $idiomas = UsuarioIdioma::where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->with('idioma')
+            ->get();
 
-    return response()->json(['idiomas' => $idiomas]);
-}
-
-public function show(Request $request, $id)
-{
-    $user = $request->user();
-
-    $idioma = Idioma::where('id_idioma', $id)
-        ->where('usuario_id', $user->id_usuario)
-        ->where('eliminado', false)
-        ->first();
-
-    if (!$idioma) {
-        return response()->json(['message' => 'Idioma no encontrado'], 404);
+        return response()->json(['idiomas' => $idiomas]);
     }
 
-    return response()->json(['idioma' => $idioma]);
-}
+    public function show(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $usuarioIdioma = UsuarioIdioma::where('id_usuario_idioma', $id)
+            ->where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->with('idioma')
+            ->first();
+
+        if (!$usuarioIdioma) {
+            return response()->json(['message' => 'Idioma no encontrado'], 404);
+        }
+
+        return response()->json(['idioma' => $usuarioIdioma]);
+    }
+
+    public function sugerencias(Request $request)
+    {
+        $q = $request->query('q', '');
+
+        if (strlen(trim($q)) < 2) {
+            return response()->json(['sugerencias' => []]);
+        }
+
+        $sugerencias = Idioma::where('nombre', 'like', '%' . $q . '%')
+            ->orderBy('nombre')
+            ->limit(10)
+            ->pluck('nombre');
+
+        return response()->json(['sugerencias' => $sugerencias]);
+    }
 }

@@ -30,12 +30,6 @@ const ModalCrearPortafolio: React.FC<Props> = ({ onCrear, onOmitir }) => {
           proyectos, habilidades y más — en un solo lugar.
         </p>
 
-        <ul className={styles.list}>
-          <li>Proyectos</li>
-          <li>Habilidades técnicas</li>
-          <li>Habilidades blandas</li>
-        </ul>
-
         <div className={styles.actions}>
           <button className={styles.btnOmitir} onClick={onOmitir}>
             Omitir

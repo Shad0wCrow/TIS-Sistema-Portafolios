@@ -106,5 +106,22 @@ class PerfilController extends Controller
     ]);
     }
 
-    
+    public function sugerenciasProfecion(Request $request)
+    {
+        $q = $request->query('q', '');
+
+        if (strlen(trim($q)) < 2) {
+            return response()->json(['sugerencias' => []]);
+        }
+
+        $sugerencias = Perfil::where('eliminado', false)
+            ->where('profesion', 'like', '%' . $q . '%')
+            ->distinct()
+            ->orderBy('profesion')
+            ->limit(8)
+            ->pluck('profesion');
+
+        return response()->json(['sugerencias' => $sugerencias]);
+    }
+
 }

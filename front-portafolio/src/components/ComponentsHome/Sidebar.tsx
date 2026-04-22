@@ -7,7 +7,6 @@ import BriefcaseIcon from '../../assets/icons/Briefcase.svg';
 import BookmarkIcon from '../../assets/icons/Bookmark.svg';
 import LogoutIcon from '../../assets/icons/Logout.svg';
 
-
 import ModalCrearPortafolio from '../portafolio/ModalCrearPortafolio';
 
 export interface MenuItem {
@@ -21,28 +20,22 @@ const Sidebar: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
 
   const menuItems: MenuItem[] = [
-    { id: 'inicio', name: 'Inicio', icon: HomeIcon },
-    { id: 'perfil', name: 'Perfil', icon: UserIcon },
+    { id: 'inicio',     name: 'Inicio',    icon: HomeIcon      },
+    { id: 'perfil',     name: 'Perfil',    icon: UserIcon      },
     { id: 'portafolio', name: 'Portafolio', icon: BriefcaseIcon },
-    { id: 'bookmarks', name: 'Guardados', icon: BookmarkIcon },
-    { id: 'salir', name: 'Salir', icon: LogoutIcon },
+    { id: 'bookmarks',  name: 'Guardados', icon: BookmarkIcon  },
+    { id: 'salir',      name: 'Salir',     icon: LogoutIcon    },
   ];
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-
-    if (!token) {
-      return;
-    }
+    if (!token) return;
 
     const syncProfileState = async () => {
       try {
         const res = await fetch('http://localhost:8000/api/perfil/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await res.json();
         localStorage.setItem('hasProfile', data.has_profile ? 'true' : 'false');
       } catch (error) {
@@ -53,43 +46,35 @@ const Sidebar: React.FC = () => {
     void syncProfileState();
   }, []);
 
-  const handlePerfil = (): void => {
+  const handleNavigation = (id: string): void => {
     const token = localStorage.getItem('token');
     const hasProfile = localStorage.getItem('hasProfile') === 'true';
+    const hasPortafolio = localStorage.getItem('hasPortafolio') === 'true';
 
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    if (hasProfile) {
-      localStorage.setItem('hasPortafolio', 'true');
-      navigate('/portafolio/editar');
-    } else {
-      navigate('/createAccount');
-    }
-  };
-
-  const handleNavigation = (id: string): void => {
     switch (id) {
       case 'inicio':
         navigate('/dashboard');
         break;
 
       case 'perfil':
-        void handlePerfil();
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        if (hasProfile) {
+          navigate('/perfil/editar');
+        } else {
+          navigate('/createAccount');
+        }
         break;
 
-      case 'portafolio': {
-        const hasPortafolio = localStorage.getItem('hasPortafolio') === 'true';
-
+      case 'portafolio':
         if (hasPortafolio) {
           navigate('/portafolio');
         } else {
           setShowModal(true);
         }
         break;
-      }
 
       case 'bookmarks':
         navigate('/dashboard');
@@ -108,13 +93,11 @@ const Sidebar: React.FC = () => {
     }
   };
 
- 
   const handleCrear = () => {
     localStorage.setItem('hasPortafolio', 'true');
     setShowModal(false);
     navigate('/portafolio/editar');
   };
-
 
   const handleOmitir = () => {
     setShowModal(false);
@@ -142,7 +125,6 @@ const Sidebar: React.FC = () => {
         </nav>
       </aside>
 
-      
       {showModal && (
         <ModalCrearPortafolio
           onCrear={handleCrear}
