@@ -17,6 +17,7 @@ interface SidebarEdicionProps {
   logrosCount: number;
   IdiomasCount: number;
   certificacionesCount: number;
+  experienciaCount: number;
   onSectionChange: (section: ActiveSection) => void;
   onBack: () => void;
 }
@@ -31,6 +32,7 @@ export default function SidebarEdicion({
   logrosCount,
   IdiomasCount,
   certificacionesCount,
+  experienciaCount,
   onSectionChange,
   onBack,
 }: SidebarEdicionProps) {
@@ -53,6 +55,7 @@ export default function SidebarEdicion({
     logros: logrosCount,
     idiomas: IdiomasCount,
     certificaciones: certificacionesCount,
+    experiencia: experienciaCount,
     
   };
 

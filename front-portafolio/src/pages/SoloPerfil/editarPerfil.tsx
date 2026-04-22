@@ -44,7 +44,7 @@ function validar(form: FormState, fotoUrl: string): FormErrors {
     else if (form.profesion.trim().length > 100) errs.profesion = "Máximo 100 caracteres.";
 
     if (!form.celular.trim()) errs.celular = "El teléfono es obligatorio.";
-    else if (!SOLO_NUMEROS.test(form.celular.trim())) errs.celular = "Solo números, espacios, +, - o paréntesis (7-20 dígitos).";
+    else if (!SOLO_NUMEROS.test(form.celular.trim())) errs.celular = "Ingrese un número válido (7-14 dígitos).";
 
     if (!form.descripcion.trim()) errs.descripcion = "La descripción es obligatoria.";
     else if (CARACTERES_PELIGROSOS.test(form.descripcion)) errs.descripcion = "Caracteres no permitidos.";

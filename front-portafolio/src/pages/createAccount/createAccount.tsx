@@ -6,8 +6,8 @@ import Button from "../../components/ui/Button/button"
 import { createProfile } from "../../services/profile"
 import { useNavigate } from "react-router-dom"
 import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput"
+import SuccessModal from "../../components/ui/SuccessModal/SuccessModal";
 
-// 🔥 FUENTE ÚNICA DE PROFESIONES
 const PROFESIONES = [
     "Ingeniero de Software",
     "Desarrollador Full Stack",
@@ -22,6 +22,7 @@ const PROFESIONES = [
 ]
 
 const URL_VALIDA = /^https?:\/\/.+\..+/;
+
 
 interface FormValues {
     nombre: string
@@ -86,7 +87,7 @@ async function fetchProfesiones(q: string): Promise<string[]> {
 
 export default function CreateAccount() {
     const navigate = useNavigate()
-
+    
     const [values, setValues] = useState<FormValues>({
         nombre: "",
         apellido: "",
@@ -100,6 +101,8 @@ export default function CreateAccount() {
     const [saving, setSaving] = useState(false)
     const [fotoUrl, setFotoUrl] = useState("")
     const [fotoError, setFotoError] = useState<string | undefined>(undefined)
+    const [showSuccess, setShowSuccess] = useState(false);
+
 
     function handleChange(field: keyof FormValues) {
         return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -160,7 +163,7 @@ export default function CreateAccount() {
                     foto_url: fotoUrl.trim() || undefined,
                 })
                 localStorage.setItem("hasProfile", "true")
-                navigate("/dashboard")
+                setShowSuccess(true)
             } catch (error) {
                 console.error("Error al guardar perfil:", error)
             } finally {
@@ -411,7 +414,13 @@ export default function CreateAccount() {
                 </div>
 
             </div>
-
+            <SuccessModal
+                open={showSuccess}
+                onClose={() => {
+                    setShowSuccess(false)
+                    navigate("/dashboard")
+                }}
+            />
         </main>
     )
 }

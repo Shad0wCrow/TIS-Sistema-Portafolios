@@ -15,7 +15,37 @@ const ESTADO_LABEL: Record<Proyecto["estado"], string> = {
   pausado: "Pausado",
 };
 
-export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: ProjectRowListProps) {
+function formatFecha(fecha: string | null): string {
+  if (!fecha) return "Actualidad";
+  return fecha;
+}
+
+function ProjectIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M7 8h10" />
+      <path d="M7 12h6" />
+      <path d="M7 16h8" />
+    </svg>
+  );
+}
+
+export default function ProjectRowList({
+  proyectos,
+  onEdit,
+  onRemove,
+  onAdd,
+}: ProjectRowListProps) {
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -25,7 +55,8 @@ export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: P
             {proyectos.length} registro{proyectos.length !== 1 ? "s" : ""}
           </span>
         </div>
-        <button className={styles.btnAdd} onClick={onAdd}>
+
+        <button type="button" className={styles.btnAdd} onClick={onAdd}>
           <span>+</span> Agregar
         </button>
       </div>
@@ -42,6 +73,10 @@ export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: P
         <ul className={styles.list}>
           {proyectos.map((p) => (
             <li key={p.id_proyecto} className={styles.item}>
+              <div className={styles.itemIcon}>
+                <ProjectIcon />
+              </div>
+
               <div className={styles.itemInfo}>
                 <div className={styles.itemTitleRow}>
                   <span className={styles.itemTitle}>{p.titulo}</span>
@@ -50,38 +85,54 @@ export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: P
                   </span>
                 </div>
 
-                {(p.fecha_inicio || p.fecha_fin) && (
-                  <span className={styles.itemDates}>
-                    {p.fecha_inicio ?? "—"} — {p.fecha_fin ?? "Actualidad"}
-                  </span>
-                )}
+                <span className={styles.itemSub}>
+                  {formatFecha(p.fecha_inicio)} — {formatFecha(p.fecha_fin)}
+                </span>
 
                 {p.descripcion && (
                   <span className={styles.itemDesc}>{p.descripcion}</span>
                 )}
 
-                {p.roles.length > 0 && (
+                {p.roles?.length > 0 && (
                   <div className={styles.roleList}>
                     {p.roles.map((r, i) => (
-                      <span key={i} className={styles.rolePill}>{r}</span>
+                      <span key={i} className={styles.rolePill}>
+                        {r}
+                      </span>
                     ))}
                   </div>
                 )}
 
-                {p.demo_url && (
-                  <a
-                    href={p.demo_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={styles.demoLink}
-                  >
-                    Ver proyecto ↗
-                  </a>
+                {(p.demo_url || p.repositorio_url) && (
+                  <div className={styles.linkRow}>
+                    {p.demo_url && (
+                      <a
+                        href={p.demo_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.demoLink}
+                      >
+                        Ver demo ↗
+                      </a>
+                    )}
+
+                    {p.repositorio_url && (
+                      <a
+                        href={p.repositorio_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.repoLink}
+                      >
+                        Repositorio ↗
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
 
               <div className={styles.itemActions}>
                 <button
+                  type="button"
                   className={styles.btnEdit}
                   onClick={() => onEdit(p)}
                   title="Editar"
@@ -89,7 +140,9 @@ export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: P
                   <IconPencil />
                   Editar
                 </button>
+
                 <button
+                  type="button"
                   className={styles.btnRemove}
                   onClick={() => onRemove(p.id_proyecto)}
                   title="Eliminar"
@@ -103,7 +156,7 @@ export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: P
       )}
 
       <div className={styles.cardFooter}>
-        <button className={styles.addBtn} onClick={onAdd}>
+        <button type="button" className={styles.addBtn} onClick={onAdd}>
           <IconPlus />
           Agregar proyecto
         </button>
