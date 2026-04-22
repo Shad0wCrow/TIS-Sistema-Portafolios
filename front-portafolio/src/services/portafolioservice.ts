@@ -287,3 +287,23 @@ export const updateExperiencia = async (id: number, data: ExperienciaPayload) =>
   const res = await axios.put(`${API}/experiencias/${id}`, data, { headers: authHeaders() });
   return res.data;
 };
+
+// ── Sugerencias de Empresa (Experiencia) ─────────────────────────────────────
+export const getSugerenciasEmpresa = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 3) return [];
+  const res = await axios.get(`${API}/experiencias/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+
+// ── Sugerencias de Entidad 
+export const getSugerenciasEntidad = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 3) return [];
+  const res = await axios.get(`${API}/logros/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};

@@ -1,153 +1,223 @@
+/* ── Wrapper grid (used in edicionPortafolio) ─────────────────────── */
 .skillsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.skillCard {
+/* ── Card shell ───────────────────────────────────────────────────── */
+.card {
   background: var(--bg3);
   border: 1px solid var(--border2);
-  border-radius: 10px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  border-radius: 12px;
+  padding: 20px;
 }
 
-.skillCardHead {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg4);
+/* ── Header ───────────────────────────────────────────────────────── */
+.cardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
 }
 
-.skillCardTitle {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.skillCountBadge {
-  font-size: 10px;
-  background: var(--accent-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent-md);
-  padding: 2px 9px;
-  border-radius: 20px;
+.cardTitle {
+  font-size: 14px;
   font-weight: 700;
+  color: var(--text);
+  display: block;
 }
 
-.skillBody {
-  padding: 14px 16px;
-  flex: 1;
-  min-height: 80px;
+.cardCount {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+  display: block;
+  margin-top: 2px;
 }
 
-.skillTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.skillTag {
+.btnAdd {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--bg4);
-  border: 1px solid var(--border2);
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 11px;
+  gap: 5px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.btnAdd:hover {
+  opacity: 0.85;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────── */
+.emptyState {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.emptyIcon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.emptyText {
+  font-size: 13px;
   color: var(--text2);
   font-weight: 600;
-  transition: border-color 0.15s;
+  margin: 0 0 4px;
 }
 
-.skillTag:hover {
-  border-color: var(--border2);
-}
-
-.skillTagDel {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: var(--red-lt);
-  color: var(--red);
-  border: 1px solid #f5c6c2;
-  font-size: 12px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  flex-shrink: 0;
-  padding: 0;
-  transition: background 0.15s, color 0.15s;
-}
-
-.skillTagDel:hover {
-  background: var(--red);
-  color: #ffffff;
-  border-color: var(--red);
-}
-
-.skillEmpty {
+.emptySubText {
   font-size: 12px;
   color: var(--text3);
   margin: 0;
 }
 
-.skillFooter {
-  padding: 10px 16px;
-  border-top: 1px solid var(--border);
+/* ── List ─────────────────────────────────────────────────────────── */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
-  gap: 8px;
-  background: var(--bg4);
+  flex-direction: column;
+  gap: 10px;
 }
 
-.btnSm {
-  display: inline-flex;
+.item {
+  display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 13px;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  transition: border-color 0.15s;
+}
+
+.item:hover {
+  border-color: var(--border2);
+}
+
+/* ── Icon ─────────────────────────────────────────────────────────── */
+.itemIconWrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--accent-lt);
+  border: 1px solid var(--accent-md);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.itemIconWrap svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Info ─────────────────────────────────────────────────────────── */
+.itemInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemSub {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* ── Actions (badge + button) ─────────────────────────────────────── */
+.itemActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* nivel badges */
+.badgeNivel_basico {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.badgeNivel_intermedio {
+  background: var(--accent-lt);
+  color: var(--accent);
+}
+
+.badgeNivel_avanzado {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badgeNivel_experto {
+  background: #fde8f0;
+  color: #9d174d;
+}
+
+.badgeDefault {
+  background: var(--bg2);
+  color: var(--text3);
+}
+
+.btnRemove {
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text3);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  letter-spacing: 0.02em;
-  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.btnSm svg {
-  width: 11px;
-  height: 11px;
-  fill: currentColor;
+.btnRemove:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
 }
 
-.btnSmAccent {
-  background: var(--accent);
-  color: #ffffff;
-  border: 1px solid var(--accent);
-}
-
-.btnSmAccent:hover {
-  opacity: 0.88;
-}
-
-.btnSmGhost {
-  background: var(--bg3);
-  color: var(--text2);
-  border: 1px solid var(--border2);
-}
-
-.btnSmGhost:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
+/* ── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .skillsGrid {
     grid-template-columns: 1fr;

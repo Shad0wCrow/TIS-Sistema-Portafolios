@@ -86,7 +86,7 @@ export default function LogroCard({ logros, onAdd, onRemove }: LogroCardProps) {
                   onClick={() => onRemove(logro.id_logro)}
                   title="Eliminar"
                 >
-                  ×
+                  Eliminar
                 </button>
               </div>
             </li>

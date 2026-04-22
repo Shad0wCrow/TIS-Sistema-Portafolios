@@ -2,6 +2,8 @@ import { useState, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
 import { addIdioma } from "../../../services/portafolioservice";
 
+
+
 interface ModalIdiomaProps {
   onClose: () => void;
   onSave: (data: Parameters<typeof addIdioma>[0]) => Promise<void>;

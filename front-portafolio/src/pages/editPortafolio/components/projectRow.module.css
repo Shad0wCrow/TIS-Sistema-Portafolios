@@ -1,132 +1,153 @@
-.projectsCard {
+/* ── Card shell ───────────────────────────────────────────────────── */
+.card {
   background: var(--bg3);
   border: 1px solid var(--border2);
-  border-radius: 10px;
-  overflow: hidden;
+  border-radius: 12px;
+  padding: 20px;
 }
 
-.projectsList {
+/* ── Header ───────────────────────────────────────────────────────── */
+.cardHeader {
   display: flex;
-  flex-direction: column;
-}
-
-.projectRow {
-  display: grid;
-  grid-template-columns: 1fr 1.1fr 130px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
 }
 
-.projectRow:last-child {
-  border-bottom: none;
+.cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
 }
 
-.projectRow:hover {
-  background: var(--bg4);
+.cardCount {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+  display: block;
+  margin-top: 2px;
 }
 
-.projMain {
-  padding: 16px 20px;
-  border-right: 1px solid var(--border);
+.btnAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.btnAdd:hover {
+  opacity: 0.85;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────── */
+.emptyState {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.emptyIcon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.emptyText {
+  font-size: 13px;
+  color: var(--text2);
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.emptySubText {
+  font-size: 12px;
+  color: var(--text3);
+  margin: 0;
+}
+
+/* ── List ─────────────────────────────────────────────────────────── */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-.projTitleRow {
+.item {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  transition: border-color 0.15s;
 }
 
-.projTitle {
-  margin: 0;
+.item:hover {
+  border-color: var(--border2);
+}
+
+/* ── Info block ───────────────────────────────────────────────────── */
+.itemInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.itemTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.itemTitle {
   font-size: 13px;
   font-weight: 700;
   color: var(--text);
-  line-height: 1.3;
 }
 
-.projDates {
-  margin: 3px 0 0;
-  font-size: 10px;
+.itemDates {
+  font-size: 11px;
   color: var(--text3);
-  letter-spacing: 0.02em;
+  font-style: italic;
 }
 
-.projActions {
-  display: flex;
-  gap: 5px;
-  flex-shrink: 0;
+.itemDesc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.projBtn {
-  width: 26px;
-  height: 26px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: background 0.15s, color 0.15s;
-  font-size: 14px;
-  line-height: 1;
-}
-
-.projBtnDel {
-  background: var(--red-lt);
-  color: var(--red);
-  border: 1px solid #f5c6c2;
-}
-
-.projBtnDel:hover {
-  background: var(--red);
-  color: #ffffff;
-  border-color: var(--red);
-}
-
-.projBtnEdit {
-  background: var(--accent-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent-md);
-}
-
-.projBtnEdit:hover {
-  background: var(--accent);
-  color: #ffffff;
-  border-color: var(--accent);
-}
-
-.projBtnEdit svg {
-  width: 11px;
-  height: 11px;
-  fill: currentColor;
-}
-
-.projRoles {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.projRolesLabel {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text3);
-}
-
-.projRoleList {
+/* ── Roles ────────────────────────────────────────────────────────── */
+.roleList {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-.projRolePill {
+.rolePill {
   font-size: 10px;
   background: var(--accent-bg);
   color: var(--accent);
@@ -136,133 +157,137 @@
   font-weight: 600;
 }
 
-.projRoleEmpty {
+/* ── Demo link ────────────────────────────────────────────────────── */
+.demoLink {
   font-size: 11px;
-  color: var(--text3);
-}
-
-.projDesc {
-  border-right: 1px solid var(--border);
-  padding: 16px 18px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--text2);
-}
-
-.projMedia {
-  padding: 14px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.projImgBox {
-  width: 72px;
-  height: 60px;
-  background: var(--bg4);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.projImgBox svg {
-  width: 24px;
-  height: 24px;
-  fill: var(--text3);
-}
-
-.projImgBox img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.projLink {
-  font-size: 10px;
   color: var(--accent);
   text-decoration: none;
-  text-align: center;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  width: fit-content;
 }
 
-.projLink:hover {
+.demoLink:hover {
   text-decoration: underline;
 }
 
-.projEmpty {
-  padding: 36px 24px;
-  text-align: center;
-  font-size: 13px;
+/* ── Estado badges ────────────────────────────────────────────────── */
+.estadoBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.estado_finalizado {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.estado_en_progreso {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.estado_pausado {
+  background: var(--bg2);
   color: var(--text3);
 }
 
-.projEmpty p { margin: 0; }
-
-.projectsFooter {
-  padding: 12px 20px;
-  border-top: 1px solid var(--border);
-  background: var(--bg4);
+/* ── Actions ──────────────────────────────────────────────────────── */
+.itemActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.addProjBtn {
+.btnEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-md);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btnEdit:hover {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.btnEdit svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+
+.btnRemove {
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btnRemove:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────── */
+.cardFooter {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.addBtn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: var(--bg3);
-  border: 1.5px solid var(--border2);
-  color: var(--text);
+  background: var(--bg4);
+  border: 1.5px dashed var(--border2);
+  color: var(--text2);
   padding: 8px 16px;
   border-radius: 7px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  font-family: inherit;
   letter-spacing: 0.02em;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
-.addProjBtn:hover {
+.addBtn:hover {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-bg);
 }
 
-.addProjBtn svg {
+.addBtn svg {
   width: 13px;
   height: 13px;
   fill: currentColor;
-}
-
-@media (max-width: 900px) {
-  .projectRow {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .projDesc {
-    grid-column: 1 / -1;
-    border-right: none;
-    border-top: 1px solid var(--border);
-  }
-}
-
-@media (max-width: 640px) {
-  .projectRow {
-    grid-template-columns: 1fr;
-  }
-
-  .projMain {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .projMedia {
-    border-top: 1px solid var(--border);
-    flex-direction: row;
-    justify-content: flex-start;
-  }
 }

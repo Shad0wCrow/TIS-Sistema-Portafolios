@@ -1,6 +1,6 @@
 import styles from "./projectRow.module.css";
-import { IconPencil, IconPlus, IconImagen } from "./icons";
-import type { Proyecto } from "../../types/portafolioTypes";
+import { IconPencil, IconPlus } from "./icons";
+import type { Proyecto } from "../../../types/portafolioTypes";
 
 interface ProjectRowListProps {
   proyectos: Proyecto[];
@@ -9,72 +9,101 @@ interface ProjectRowListProps {
   onAdd: () => void;
 }
 
+const ESTADO_LABEL: Record<Proyecto["estado"], string> = {
+  en_progreso: "En progreso",
+  finalizado: "Finalizado",
+  pausado: "Pausado",
+};
+
 export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: ProjectRowListProps) {
   return (
-    <div className={styles.projectsCard}>
-      <div className={styles.projectsList}>
-        {proyectos.length === 0 ? (
-          <div className={styles.projEmpty}>
-            <p>No hay proyectos aún. ¡Agrega tu primer proyecto!</p>
-          </div>
-        ) : (
-          proyectos.map((p) => (
-            <article key={p.id_proyecto} className={styles.projectRow}>
-              <div className={styles.projMain}>
-                <div className={styles.projTitleRow}>
-                  <div>
-                    <p className={styles.projTitle}>{p.titulo}</p>
-                    <p className={styles.projDates}>{p.fecha_inicio ?? "año ini"} — {p.fecha_fin ?? "año fin"}</p>
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div>
+          <span className={styles.cardTitle}>Proyectos</span>
+          <span className={styles.cardCount}>
+            {proyectos.length} registro{proyectos.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+        <button className={styles.btnAdd} onClick={onAdd}>
+          <span>+</span> Agregar
+        </button>
+      </div>
+
+      {proyectos.length === 0 ? (
+        <div className={styles.emptyState}>
+          <span className={styles.emptyIcon}>🗂️</span>
+          <p className={styles.emptyText}>No hay proyectos registrados.</p>
+          <p className={styles.emptySubText}>
+            Agrega proyectos personales, académicos o profesionales.
+          </p>
+        </div>
+      ) : (
+        <ul className={styles.list}>
+          {proyectos.map((p) => (
+            <li key={p.id_proyecto} className={styles.item}>
+              <div className={styles.itemInfo}>
+                <div className={styles.itemTitleRow}>
+                  <span className={styles.itemTitle}>{p.titulo}</span>
+                  <span className={`${styles.estadoBadge} ${styles[`estado_${p.estado}`]}`}>
+                    {ESTADO_LABEL[p.estado]}
+                  </span>
+                </div>
+
+                {(p.fecha_inicio || p.fecha_fin) && (
+                  <span className={styles.itemDates}>
+                    {p.fecha_inicio ?? "—"} — {p.fecha_fin ?? "Actualidad"}
+                  </span>
+                )}
+
+                {p.descripcion && (
+                  <span className={styles.itemDesc}>{p.descripcion}</span>
+                )}
+
+                {p.roles.length > 0 && (
+                  <div className={styles.roleList}>
+                    {p.roles.map((r, i) => (
+                      <span key={i} className={styles.rolePill}>{r}</span>
+                    ))}
                   </div>
-                  <div className={styles.projActions}>
-                    <button
-                      className={`${styles.projBtn} ${styles.projBtnDel}`}
-                      onClick={() => onRemove(p.id_proyecto)}
-                      title="Eliminar"
-                    >
-                      ×
-                    </button>
-                    <button
-                      className={`${styles.projBtn} ${styles.projBtnEdit}`}
-                      onClick={() => onEdit(p)}
-                      title="Editar"
-                    >
-                      <IconPencil />
-                    </button>
-                  </div>
-                </div>
-                <div className={styles.projRoles}>
-                  <span className={styles.projRolesLabel}>Roles</span>
-                  {p.roles.length === 0
-                    ? <span className={styles.projRoleEmpty}>Sin roles</span>
-                    : (
-                      <div className={styles.projRoleList}>
-                        {p.roles.map((r, i) => (
-                          <span key={i} className={styles.projRolePill}>{r}</span>
-                        ))}
-                      </div>
-                    )}
-                </div>
-              </div>
-              <div className={styles.projDesc}>{p.descripcion || "Sin descripción"}</div>
-              <div className={styles.projMedia}>
-                <div className={styles.projImgBox}>
-                  {p.imagen_principal_url
-                    ? <img src={p.imagen_principal_url} alt={p.titulo} />
-                    : <IconImagen />}
-                </div>
+                )}
+
                 {p.demo_url && (
-                  <a href={p.demo_url} target="_blank" rel="noreferrer" className={styles.projLink}>
-                    Ver proyecto
+                  <a
+                    href={p.demo_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.demoLink}
+                  >
+                    Ver proyecto ↗
                   </a>
                 )}
               </div>
-            </article>
-          ))
-        )}
-      </div>
-      <div className={styles.projectsFooter}>
-        <button className={styles.addProjBtn} onClick={onAdd}>
+
+              <div className={styles.itemActions}>
+                <button
+                  className={styles.btnEdit}
+                  onClick={() => onEdit(p)}
+                  title="Editar"
+                >
+                  <IconPencil />
+                  Editar
+                </button>
+                <button
+                  className={styles.btnRemove}
+                  onClick={() => onRemove(p.id_proyecto)}
+                  title="Eliminar"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className={styles.cardFooter}>
+        <button className={styles.addBtn} onClick={onAdd}>
           <IconPlus />
           Agregar proyecto
         </button>
