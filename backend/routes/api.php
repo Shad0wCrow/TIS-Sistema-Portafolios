@@ -66,34 +66,37 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/educacion/{id}', [EducacionController::class, 'destroy']);
 
 
+    Route::get('/cursos/sugerencias', [CursoController::class, 'sugerencias']);
     Route::get('/cursos', [CursoController::class, 'index']);
     Route::get('/cursos/{id}', [CursoController::class, 'show']);
     Route::post('/cursos', [CursoController::class, 'store']);
     Route::delete('/cursos/{id}', [CursoController::class, 'destroy']);
 
-
+    Route::get('/logros/sugerencias', [LogroController::class, 'sugerencias']);
     Route::get('/logros', [LogroController::class, 'index']);
     Route::get('/logros/{id}', [LogroController::class, 'show']);
     Route::post('/logros', [LogroController::class, 'store']);
     Route::delete('/logros/{id}', [LogroController::class, 'destroy']);
 
-
+    Route::get('/experiencias/sugerencias', [ExperienciaController::class, 'sugerencias']);
     Route::get('/experiencias', [ExperienciaController::class, 'index']);
     Route::get('/experiencias/{id}', [ExperienciaController::class, 'show']);
+    Route::put('/experiencias/{id}', [ExperienciaController::class, 'update']);
     Route::post('/experiencias', [ExperienciaController::class, 'store']);
-    Route::delete('/experiencias/{id}', [ExperienciaController::class, 'destroy']);     
+    Route::delete('/experiencias/{id}', [ExperienciaController::class, 'destroy']);
 
-
+    Route::get('/certificaciones/sugerencias', [CertificacionController::class, 'sugerencias']);
     Route::get('/certificaciones', [CertificacionController::class, 'index']);
     Route::get('/certificaciones/{id}', [CertificacionController::class, 'show']);
     Route::post('/certificaciones', [CertificacionController::class, 'store']);
-    Route::delete('/certificaciones/{id}', [CertificacionController::class, 'destroy']);        
+    Route::delete('/certificaciones/{id}', [CertificacionController::class, 'destroy']);
 
-
-
+    Route::get('/idiomas/sugerencias', [IdiomaController::class, 'sugerencias']);
     Route::get('/idiomas', [IdiomaController::class, 'index']);
     Route::get('/idiomas/{id}', [IdiomaController::class, 'show']);
     Route::post('/idiomas', [IdiomaController::class, 'store']);
     Route::delete('/idiomas/{id}', [IdiomaController::class, 'destroy']);
+
+    Route::get('/perfil/sugerencias-profesion', [PerfilController::class, 'sugerenciasProfecion']);
 
     });

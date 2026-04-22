@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
 import { addEducacion, getSugerenciasInstitucion } from "../../../services/portafolioservice";
+import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
 
 interface ModalEducacionProps {
   onClose: () => void;
@@ -28,29 +29,6 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  
-  const [sugerencias, setSugerencias] = useState<string[]>([]);
-  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (form.institucion.trim().length < 3) {
-      setSugerencias([]);
-      setMostrarSugerencias(false);
-      return;
-    }
-    debounceRef.current = setTimeout(async () => {
-      const res = await getSugerenciasInstitucion(form.institucion);
-      setSugerencias(res);
-      setMostrarSugerencias(res.length > 0);
-    }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [form.institucion]);
-
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -61,20 +39,13 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
     }
   };
 
-  const seleccionarSugerencia = (inst: string) => {
-    setForm((prev) => ({ ...prev, institucion: inst }));
-    setSugerencias([]);
-    setMostrarSugerencias(false);
-    if (errors.institucion) setErrors((prev) => ({ ...prev, institucion: undefined }));
-  };
-
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
-    
+
     if (!form.institucion.trim()) newErrors.institucion = "La institución es obligatoria.";
-    if (!form.titulo.trim())      newErrors.titulo      = "El título o carrera es obligatorio.";
-    if (!form.fecha_inicio)       newErrors.fecha_inicio = "La fecha de inicio es obligatoria.";
-    
+    if (!form.titulo.trim()) newErrors.titulo = "El título o carrera es obligatorio.";
+    if (!form.fecha_inicio) newErrors.fecha_inicio = "La fecha de inicio es obligatoria.";
+
     if (form.fecha_inicio && form.fecha_fin && form.fecha_inicio > form.fecha_fin) {
       newErrors.fecha_fin = "La fecha de fin no puede ser anterior a la fecha de inicio.";
     }
@@ -87,15 +58,15 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
     setLoading(true);
     try {
       await onSave({
-        institucion:  form.institucion.trim(),
-        titulo:       form.titulo.trim(),
+        institucion: form.institucion.trim(),
+        titulo: form.titulo.trim(),
         area_estudio: form.area_estudio.trim() || undefined,
         fecha_inicio: form.fecha_inicio,
-        fecha_fin:    form.fecha_fin    || undefined,
-        descripcion:  form.descripcion.trim() || undefined,
-        visibilidad:  form.visibilidad,
+        fecha_fin: form.fecha_fin || undefined,
+        descripcion: form.descripcion.trim() || undefined,
+        visibilidad: form.visibilidad,
       });
-     
+
       setSuccessMsg("¡Educación registrada correctamente!");
       setTimeout(() => onClose(), 1200);
     } catch {
@@ -105,7 +76,6 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
     }
   };
 
-  
   const handleCancel = () => onClose();
 
   return (
@@ -137,72 +107,27 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
           <>
             <div className={styles.modalGrid}>
 
-              
-              <div
-                className={`${styles.modalField} ${styles.modalFieldFull}`}
-                style={{ position: "relative" }}
-              >
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Institución / Universidad *</label>
-                <input
+                <AutocompleteInput
                   name="institucion"
                   value={form.institucion}
-                  onChange={handleChange}
-                  onBlur={() => setTimeout(() => setMostrarSugerencias(false), 150)}
+                  onChange={(v) => {
+                    setForm((prev) => ({ ...prev, institucion: v }));
+                    if (errors.institucion) setErrors((prev) => ({ ...prev, institucion: undefined }));
+                  }}
                   placeholder="Ej: Universidad Mayor de San Simón"
-                  autoComplete="off"
-                  style={errors.institucion ? { borderColor: "var(--red, #e53e3e)" } : {}}
+                  fetchSuggestions={getSugerenciasInstitucion}
+                  hasError={!!errors.institucion}
+                  minChars={3}
                 />
                 {errors.institucion && (
                   <span style={{ fontSize: 11, color: "var(--red, #e53e3e)", marginTop: 2 }}>
                     {errors.institucion}
                   </span>
                 )}
-                
-                {mostrarSugerencias && (
-                  <ul
-                    style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      background: "var(--bg3)",
-                      border: "1px solid var(--border2)",
-                      borderRadius: 7,
-                      zIndex: 50,
-                      margin: 0,
-                      padding: 0,
-                      listStyle: "none",
-                      maxHeight: 200,
-                      overflowY: "auto",
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                    }}
-                  >
-                    {sugerencias.map((s) => (
-                      <li
-                        key={s}
-                        onMouseDown={() => seleccionarSugerencia(s)}
-                        style={{
-                          padding: "9px 12px",
-                          fontSize: 13,
-                          cursor: "pointer",
-                          color: "var(--text)",
-                          borderBottom: "1px solid var(--border)",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = "var(--bg4)")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "transparent")
-                        }
-                      >
-                        {s}
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
 
-              
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Título / Carrera *</label>
                 <input
@@ -219,7 +144,6 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
                 )}
               </div>
 
-              
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Facultad / Área de estudio</label>
                 <input
@@ -230,7 +154,6 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
                 />
               </div>
 
-              
               <div className={styles.modalField}>
                 <label>Fecha de inicio *</label>
                 <input
@@ -263,7 +186,6 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
                 )}
               </div>
 
-
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Descripción</label>
                 <textarea
@@ -274,7 +196,6 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
                 />
               </div>
 
-              
               <div className={styles.modalField}>
                 <label>Visibilidad</label>
                 <select name="visibilidad" value={form.visibilidad} onChange={handleChange}>
@@ -285,13 +206,16 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
             </div>
 
             <div className={styles.modalActions}>
-              
               <button className={styles.btnCancel} onClick={handleCancel} disabled={loading}>
                 Cancelar
               </button>
-              
               <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
-                {loading ? "Guardando..." : "Guardar"}
+                {loading ? (
+                  <span className={styles.loadingContent}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Guardando...
+                  </span>
+                ) : "Guardar"}
               </button>
             </div>
           </>

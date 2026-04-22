@@ -69,7 +69,7 @@ class CertificacionController extends Controller
     $certificaciones = Certificacion::with('entidadEmisora')
         ->where('usuario_id', $user->id_usuario)
         ->where('eliminado', false)
-        ->orderByDesc('fecha_emision')
+        ->orderByDesc('fecha_obtencion')
         ->get();
 
     return response()->json(['certificaciones' => $certificaciones]);
@@ -91,4 +91,15 @@ public function show(Request $request, $id)
 
     return response()->json(['certificacion' => $certificacion]);
 }
+
+public function sugerencias(Request $request)
+{
+    $q = $request->query('q', '');
+    $sugerencias = EntidadEmisora::where('nombre', 'like', "%{$q}%")
+        ->limit(8)
+        ->pluck('nombre');
+    return response()->json(['sugerencias' => $sugerencias]);
+}
+
+
 }

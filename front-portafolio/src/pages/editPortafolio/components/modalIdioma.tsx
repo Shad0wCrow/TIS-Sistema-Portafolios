@@ -1,6 +1,12 @@
 import { useState, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
-import { addIdioma } from "../../../services/portafolioservice";
+import { addIdioma, getSugerenciasIdioma } from "../../../services/portafolioservice";
+import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
+
+const IDIOMAS_COMUNES = [
+  "Español", "Inglés", "Portugués", "Francés", "Alemán", "Italiano",
+  "Chino", "Japonés", "Coreano", "Ruso", "Árabe", "Hindi", "Quechua",
+];
 
 interface ModalIdiomaProps {
   onClose: () => void;
@@ -81,12 +87,18 @@ export default function ModalIdioma({ onClose, onSave }: ModalIdiomaProps) {
             <div className={styles.modalGrid}>
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Idioma *</label>
-                <input
+                <AutocompleteInput
                   name="nombre"
                   value={form.nombre}
-                  onChange={handleChange}
-                  placeholder="Ej: Inglés, Francés"
-                  style={errors.nombre ? errStyle : {}}
+                  onChange={(v) => {
+                    setForm((prev) => ({ ...prev, nombre: v }));
+                    if (errors.nombre) setErrors((prev) => ({ ...prev, nombre: undefined }));
+                  }}
+                  placeholder="Ej: Inglés, Francés, Portugués"
+                  fetchSuggestions={getSugerenciasIdioma}
+                  staticOptions={IDIOMAS_COMUNES}
+                  hasError={!!errors.nombre}
+                  minChars={1}
                 />
                 {errMsg(errors.nombre)}
               </div>
@@ -129,7 +141,12 @@ export default function ModalIdioma({ onClose, onSave }: ModalIdiomaProps) {
                 Cancelar
               </button>
               <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
-                Guardar
+                {loading ? (
+                  <span className={styles.loadingContent}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Guardando...
+                  </span>
+                ) : "Guardar"}
               </button>
             </div>
           </>

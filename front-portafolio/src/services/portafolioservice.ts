@@ -198,11 +198,11 @@ type ExperienciaPayload = {
   nombre_empresa: string;
   puesto: string;
   tipo?: string;
-  descripcion?: string;
+  descripcion?: string | null;
   fecha_inicio: string;
-  fecha_fin?: string;
+  fecha_fin?: string | null;
   es_actual?: boolean;
-  ubicacion?: string;
+  ubicacion?: string | null;
   visibilidad?: string;
 };
 
@@ -250,4 +250,87 @@ export const addIdioma = async (data: {
     headers: authHeaders(),
   });
   return res.data;
+};
+
+export const removeIdioma = async (id: number) => {
+  const res = await axios.delete(`${API}/idiomas/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+// ── Certificaciones ───────────────────────────────────────────────────────────────
+export const getCertificaciones = async () => {
+  const res = await axios.get(`${API}/certificaciones`, { headers: authHeaders() });
+  return res.data.certificaciones;
+};
+
+export const addCertificacion = async (data: {
+  nombre: string;
+  nombre_entidad: string;
+  fecha_obtencion: string;
+  fecha_expiracion?: string;
+  url_certificado?: string;
+  visibilidad?: "publico" | "privado";
+}) => {
+  const res = await axios.post(`${API}/certificaciones`, data, { headers: authHeaders() });
+  return res.data;
+};
+
+export const removeCertificacion = async (id: number) => {
+  const res = await axios.delete(`${API}/certificaciones/${id}`, { headers: authHeaders() });
+  return res.data;
+};
+
+export const getSugerenciasEntidadEmisora = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 3) return [];
+  const res = await axios.get(`${API}/certificaciones/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+export const updateExperiencia = async (id: number, data: ExperienciaPayload) => {
+  const res = await axios.put(`${API}/experiencias/${id}`, data, { headers: authHeaders() });
+  return res.data;
+};
+
+// ── Sugerencias de Empresa (Experiencia) ─────────────────────────────────────
+export const getSugerenciasEmpresa = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 3) return [];
+  const res = await axios.get(`${API}/experiencias/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+
+// ── Sugerencias de Entidad 
+export const getSugerenciasEntidad = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 3) return [];
+  const res = await axios.get(`${API}/logros/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+
+// ── Sugerencias de Idioma ─────────────────────────────────────────────────────
+export const getSugerenciasIdioma = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 2) return [];
+  const res = await axios.get(`${API}/idiomas/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+
+// ── Sugerencias de Profesión ──────────────────────────────────────────────────
+export const getSugerenciasProfecion = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 2) return [];
+  const res = await axios.get(`${API}/perfil/sugerencias-profesion`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
 };
