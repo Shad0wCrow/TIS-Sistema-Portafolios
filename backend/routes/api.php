@@ -88,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/certificaciones/{id}', [CertificacionController::class, 'show']);
     Route::post('/certificaciones', [CertificacionController::class, 'store']);
     Route::delete('/certificaciones/{id}', [CertificacionController::class, 'destroy']);        
-
+    Route::get('/certificaciones/sugerencias', [CertificacionController::class, 'sugerencias']);
 
 
     Route::get('/idiomas', [IdiomaController::class, 'index']);

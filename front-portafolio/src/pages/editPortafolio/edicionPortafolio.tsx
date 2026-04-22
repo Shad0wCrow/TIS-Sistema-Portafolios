@@ -16,6 +16,7 @@ import {
   addExperiencia,
   removeExperiencia,
   getExperiencias,
+  updateExperiencia,
   addEducacion,
   removeEducacion,
   addCurso,
@@ -23,6 +24,9 @@ import {
   addLogro,
   removeLogro,
   addIdioma,
+  getCertificaciones,
+  addCertificacion,
+  removeCertificacion
 } from "../../services/portafolioservice";
 
 import type {
@@ -33,7 +37,8 @@ import type {
   Educacion,
   Curso,
   Logro,
-  Idioma
+  Idioma,
+  Certificacion
 } from "../../types/portafolioTypes";
 
 
@@ -55,11 +60,16 @@ import ModalLogro from "./components/modalLogro";
 import LogroCard from "./components/logroCard";
 import ModalIdioma from "./components/modalIdioma";
 import IdiomaCard from "./components/idiomaCard";
+import CertificacionCard from "./components/certificacionCard";
+import ModalCertificacion from "./components/modalCertificacion";   
+
+
+
 
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
 type ModalExperienciaState = Experiencia | null | "nueva";
-type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas" | "experiencia";
+type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas" | "experiencia" | "certificaciones";
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
@@ -70,6 +80,7 @@ const SECTION_LABELS: Record<ActiveSection, string> = {
   cursos: "Cursos",
   logros: "Logros",
   idiomas: "Idiomas",
+  certificaciones: "Certificaciones"
 };
 
 export default function EdicionPortafolio() {
@@ -90,29 +101,36 @@ export default function EdicionPortafolio() {
   const [modalCurso, setModalCurso] = useState(false);
   const [modalLogro, setModalLogro] = useState(false);
   const [modalIdioma, setModalIdioma] = useState(false);
+const [modalCertificacion, setModalCertificacion] = useState(false);
+const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
+
 
 const refreshData = async () => {
-  const [portafolioRes, experienciasRes] = await Promise.all([
+  const [portafolioRes, experienciasRes, certRes] = await Promise.all([
     getPortafolio(),
     getExperiencias(),
+    getCertificaciones(),
   ]);
 
   setData(portafolioRes);
   setExperiencias(experienciasRes);
+  setCertificaciones(certRes);
 };
 
 useEffect(() => {
   const cargar = async () => {
     try {
-      const [portafolioRes, catalogoRes, experienciasRes] = await Promise.all([
+      const [portafolioRes, catalogoRes, experienciasRes, certRes] = await Promise.all([
         getPortafolio(),
         getCatalogoHabilidades(),
         getExperiencias(),
+        getCertificaciones(),
       ]);
 
       setData(portafolioRes);
       setCatalogo(catalogoRes.habilidades ?? []);
       setExperiencias(experienciasRes);
+      setCertificaciones(certRes);
     } catch {
       setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
     } finally {
@@ -131,8 +149,11 @@ useEffect(() => {
   const cursos              = (data?.cursos ?? []) as Curso[];
   const logros              = (data?.logros ?? []) as Logro[];
   const idiomas             = (data?.idiomas ?? []) as Idioma[];
-
-
+  
+  const certConImagenes = certificaciones.map((c) => {
+  const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+  return { ...c, imagen_url: stored[c.id_certificacion] ?? null };
+});
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Nombre completo";
@@ -258,6 +279,34 @@ const handleSaveEducacion = async (
     await refreshData();
   } 
 
+  const handleSaveCertificacion = async (
+  formData: Parameters<typeof addCertificacion>[0],
+  imagenBase64: string | null
+) => {
+  const res = await addCertificacion(formData);
+  const id = res.certificacion?.id_certificacion;
+  if (imagenBase64 && id) {
+    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+    stored[id] = imagenBase64;
+    localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
+  }
+  await refreshData();
+};
+
+const handleRemoveCertificacion = async (id: number) => {
+  setModalAlert({
+    mensaje: "Esta certificación será eliminada permanentemente.",
+    onConfirm: async () => {
+      setModalAlert(null);
+      await removeCertificacion(id);
+      const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+      delete stored[id];
+      localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
+      await refreshData();
+    },
+  });
+};
+
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
   if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
   if (!data)       return null;
@@ -274,6 +323,7 @@ const handleSaveEducacion = async (
         cursosCount={cursos.length}
         logrosCount={logros.length}
         IdiomasCount={idiomas.length}
+        certificacionesCount={certConImagenes.length}
         onSectionChange={setActiveSection}
         onBack={() => navigate(-1)}
       />
@@ -465,6 +515,22 @@ const handleSaveEducacion = async (
               />
             </div>
           )}  
+
+          {activeSection === "certificaciones" && (
+            <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.sectionTitle}>Certificaciones</span>
+                  <span className={styles.sectionMeta}>
+                    {certConImagenes.length} registro{certConImagenes.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <CertificacionCard
+                  certificaciones={certConImagenes}
+                  onAdd={() => setModalCertificacion(true)}
+                  onRemove={handleRemoveCertificacion}
+                />
+              </div>
+            )}
         </div>
       </main>
 
@@ -525,6 +591,13 @@ const handleSaveEducacion = async (
           onCancel={() => setModalAlert(null)}
         />
       )}
+
+      {modalCertificacion && (
+        <ModalCertificacion
+          onClose={() => setModalCertificacion(false)}
+          onSave={handleSaveCertificacion}
+        />
+      )}      
     </div>
   );
 }

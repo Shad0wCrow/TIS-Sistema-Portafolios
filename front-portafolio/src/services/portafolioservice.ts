@@ -198,11 +198,11 @@ type ExperienciaPayload = {
   nombre_empresa: string;
   puesto: string;
   tipo?: string;
-  descripcion?: string;
+  descripcion?: string | null;
   fecha_inicio: string;
-  fecha_fin?: string;
+  fecha_fin?: string | null;
   es_actual?: boolean;
-  ubicacion?: string;
+  ubicacion?: string | null;
   visibilidad?: string;
 };
 
@@ -249,5 +249,41 @@ export const addIdioma = async (data: {
   const res = await axios.post(`${API}/idiomas`, data, {
     headers: authHeaders(),
   });
+  return res.data;
+};
+
+// ── Certificaciones ───────────────────────────────────────────────────────────────
+export const getCertificaciones = async () => {
+  const res = await axios.get(`${API}/certificaciones`, { headers: authHeaders() });
+  return res.data.certificaciones;
+};
+
+export const addCertificacion = async (data: {
+  nombre: string;
+  nombre_entidad: string;
+  fecha_obtencion: string;
+  fecha_expiracion?: string;
+  url_certificado?: string;
+  visibilidad?: "publico" | "privado";
+}) => {
+  const res = await axios.post(`${API}/certificaciones`, data, { headers: authHeaders() });
+  return res.data;
+};
+
+export const removeCertificacion = async (id: number) => {
+  const res = await axios.delete(`${API}/certificaciones/${id}`, { headers: authHeaders() });
+  return res.data;
+};
+
+export const getSugerenciasEntidadEmisora = async (q: string): Promise<string[]> => {
+  if (q.trim().length < 3) return [];
+  const res = await axios.get(`${API}/certificaciones/sugerencias`, {
+    headers: authHeaders(),
+    params: { q },
+  });
+  return res.data.sugerencias ?? [];
+};
+export const updateExperiencia = async (id: number, data: ExperienciaPayload) => {
+  const res = await axios.put(`${API}/experiencias/${id}`, data, { headers: authHeaders() });
   return res.data;
 };
