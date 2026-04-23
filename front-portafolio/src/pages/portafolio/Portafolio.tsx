@@ -212,7 +212,7 @@ export default function Portafolio() {
         {/* Cursos */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Cursos y Certificados</h2>
+            <h2 className={styles.sectionTitle}>Cursos</h2>
             <span className={styles.sectionCount}>{cursos.length}</span>
           </div>
           <div className={styles.sectionBody}>

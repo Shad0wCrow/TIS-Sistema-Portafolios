@@ -6,6 +6,7 @@ import AutocompleteInput from "../../../components/ui/AutocompleteInput/Autocomp
 interface ModalLogroProps {
   onClose: () => void;
   onSave: (data: Parameters<typeof addLogro>[0]) => Promise<void>;
+  logrosExistentes?: { identificador?: string | null }[];
 }
 
 interface FormErrors {
@@ -16,7 +17,7 @@ interface FormErrors {
   descripcion?: string;
 }
 
-export default function ModalLogro({ onClose, onSave }: ModalLogroProps) {
+export default function ModalLogro({ onClose, onSave, logrosExistentes = [] }: ModalLogroProps) {
   const [form, setForm] = useState({
     titulo: "",
     nombre_entidad: "",
@@ -63,6 +64,14 @@ export default function ModalLogro({ onClose, onSave }: ModalLogroProps) {
 
     if (form.identificador.trim().length > 50) {
       newErrors.identificador = "Máximo 50 caracteres.";
+    } else if (form.identificador.trim()) {
+      const idNormalizado = form.identificador.trim().toLowerCase();
+      const duplicado = logrosExistentes.some(
+        (l) => l.identificador && l.identificador.trim().toLowerCase() === idNormalizado
+      );
+      if (duplicado) {
+        newErrors.identificador = "Este ID de credencial ya está registrado en otro logro.";
+      }
     }
 
     if (form.descripcion.trim().length > 255) {
@@ -108,7 +117,7 @@ export default function ModalLogro({ onClose, onSave }: ModalLogroProps) {
       <div className={`${styles.modal} ${styles.modalLg}`} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHead}>
           <span className={styles.modalTitle}>Registrar Logro</span>
-          <button className={styles.modalClose} onClick={onClose}>×</button>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar formulario de logro">×</button>
         </div>
 
         {successMsg ? (
@@ -157,12 +166,18 @@ export default function ModalLogro({ onClose, onSave }: ModalLogroProps) {
               </div>
 
               <div className={styles.modalField}>
-                <label>ID Credencial</label>
+                <label htmlFor="logro-id">ID Credencial</label>
                 <input
+                  id="logro-id"
                   name="identificador"
                   value={form.identificador}
                   onChange={handleChange}
+                  aria-describedby={errors.identificador ? "logro-id-err" : undefined}
+                  style={errors.identificador ? errStyle : {}}
                 />
+                {errors.identificador && (
+                  <span id="logro-id-err">{errMsg(errors.identificador)}</span>
+                )}
               </div>
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
