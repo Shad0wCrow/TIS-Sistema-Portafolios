@@ -25,7 +25,7 @@ export default function CursoCard({ cursos, onAdd, onRemove }: CursoCardProps) {
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <div>
-          <span className={styles.cardTitle}>Cursos y Certificados</span>
+          <span className={styles.cardTitle}>Cursos</span>
           <span className={styles.cardCount}>{cursos.length} registro{cursos.length !== 1 ? "s" : ""}</span>
         </div>
         <button className={styles.btnAdd} onClick={onAdd}>

@@ -6,6 +6,7 @@ interface SkillCardProps {
   lista: HabilidadItem[];
   onAdd: () => void;
   onRemove: (id: number) => void;
+  onEdit: (habilidad: HabilidadItem) => void;
 }
 
 const IconTecnica = () => (
@@ -31,7 +32,7 @@ const NIVEL_LABEL: Record<string, string> = {
   experto: "Experto",
 };
 
-export default function SkillCard({ tipo, lista, onAdd, onRemove }: SkillCardProps) {
+export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: SkillCardProps) {
   const titulo = tipo === "tecnica" ? "Habilidades Técnicas" : "Habilidades Blandas";
   const emptyLabel = tipo === "tecnica" ? "habilidades técnicas" : "habilidades blandas";
   const emptySubLabel =
@@ -84,6 +85,13 @@ export default function SkillCard({ tipo, lista, onAdd, onRemove }: SkillCardPro
                     {NIVEL_LABEL[h.nivel] ?? h.nivel}
                   </span>
                 )}
+                <button
+                  className={styles.btnEdit}
+                  onClick={() => onEdit(h)}
+                  title="Editar nivel"
+                >
+                  Editar
+                </button>
                 <button
                   className={styles.btnRemove}
                   onClick={() => onRemove(h.id_usuario_habilidad)}

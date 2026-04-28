@@ -9,6 +9,11 @@ interface ModalProyectoProps {
   onSave: (data: Parameters<typeof addProyecto>[0]) => Promise<void>;
 }
 
+interface FormErrors {
+  titulo?: string;
+  fecha_fin?: string;
+}
+
 export default function ModalProyecto({ proyecto, onClose, onSave }: ModalProyectoProps) {
   const [form, setForm] = useState({
     titulo: proyecto?.titulo ?? "",
@@ -19,13 +24,31 @@ export default function ModalProyecto({ proyecto, onClose, onSave }: ModalProyec
     repositorio_url: proyecto?.repositorio_url ?? "",
     rolesStr: proyecto?.roles?.join(", ") ?? "",
   });
+  const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
 
-  const handle = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handle = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {};
+    if (!form.titulo.trim()) {
+      newErrors.titulo = "El título del proyecto es obligatorio.";
+    }
+    if (form.fecha_inicio && form.fecha_fin && form.fecha_inicio > form.fecha_fin) {
+      newErrors.fecha_fin = "La fecha de fin no puede ser anterior a la fecha de inicio.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const submit = async () => {
-    if (!form.titulo.trim()) return;
+    if (!validate()) return;
     setLoading(true);
     const roles = form.rolesStr.split(",").map((r) => r.trim()).filter(Boolean);
     try { await onSave({ ...form, roles }); onClose(); }
@@ -47,20 +70,30 @@ return (
 
         {/* TÍTULO */}
         <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-          <label>Título *</label>
+          <label htmlFor="proj-titulo">Título *</label>
           <input
+            id="proj-titulo"
             name="titulo"
             value={form.titulo}
             onChange={handle}
             placeholder="Nombre del proyecto"
-            disabled={!!proyecto} // 🔒 bloqueado en edición
+            disabled={!!proyecto}
+            aria-required="true"
+            aria-describedby={errors.titulo ? "proj-titulo-err" : undefined}
+            style={errors.titulo ? { borderColor: "var(--red, #e53e3e)" } : {}}
           />
+          {errors.titulo && (
+            <span id="proj-titulo-err" style={{ fontSize: 11, color: "var(--red, #e53e3e)", marginTop: 2 }}>
+              {errors.titulo}
+            </span>
+          )}
         </div>
 
         {/* DESCRIPCIÓN */}
         <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-          <label>Descripción</label>
+          <label htmlFor="proj-desc">Descripción</label>
           <textarea
+            id="proj-desc"
             name="descripcion"
             value={form.descripcion}
             onChange={handle}
@@ -70,44 +103,55 @@ return (
 
         {/* FECHA INICIO */}
         <div className={styles.modalField}>
-          <label>Fecha inicio</label>
+          <label htmlFor="proj-finicio">Fecha inicio</label>
           <input
+            id="proj-finicio"
             type="date"
             name="fecha_inicio"
             value={form.fecha_inicio}
             onChange={handle}
-            disabled={!!proyecto} // 🔒 bloqueado en edición
+            disabled={!!proyecto}
           />
         </div>
 
         {/* FECHA FIN */}
         <div className={styles.modalField}>
-          <label>Fecha fin</label>
+          <label htmlFor="proj-ffin">Fecha fin</label>
           <input
+            id="proj-ffin"
             type="date"
             name="fecha_fin"
             value={form.fecha_fin}
             onChange={handle}
-            disabled={!!proyecto} // 🔒 bloqueado en edición
+            disabled={!!proyecto}
+            aria-describedby={errors.fecha_fin ? "proj-ffin-err" : undefined}
+            style={errors.fecha_fin ? { borderColor: "var(--red, #e53e3e)" } : {}}
           />
+          {errors.fecha_fin && (
+            <span id="proj-ffin-err" style={{ fontSize: 11, color: "var(--red, #e53e3e)", marginTop: 2 }}>
+              {errors.fecha_fin}
+            </span>
+          )}
         </div>
 
         {/* ROLES */}
         <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-          <label>Roles trabajados (separados por coma)</label>
+          <label htmlFor="proj-roles">Roles trabajados (separados por coma)</label>
           <input
+            id="proj-roles"
             name="rolesStr"
             value={form.rolesStr}
             onChange={handle}
             placeholder="Frontend, Backend, DevOps"
-            disabled={!!proyecto} // 🔒 bloqueado en edición
+            disabled={!!proyecto}
           />
         </div>
 
         {/* DEMO */}
         <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-          <label>URL Demo / Enlace</label>
+          <label htmlFor="proj-demo">URL Demo / Enlace</label>
           <input
+            id="proj-demo"
             name="demo_url"
             value={form.demo_url}
             onChange={handle}
@@ -117,8 +161,9 @@ return (
 
         {/* REPO */}
         <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-          <label>URL Repositorio</label>
+          <label htmlFor="proj-repo">URL Repositorio</label>
           <input
+            id="proj-repo"
             name="repositorio_url"
             value={form.repositorio_url}
             onChange={handle}
@@ -136,7 +181,7 @@ return (
         <button
           className={styles.btnSave}
           onClick={submit}
-          disabled={loading || !form.titulo.trim()}
+          disabled={loading}
         >
           {loading ? (
             <span className={styles.loadingContent}>
