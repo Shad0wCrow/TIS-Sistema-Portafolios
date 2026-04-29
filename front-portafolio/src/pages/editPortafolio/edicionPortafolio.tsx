@@ -10,6 +10,7 @@ import {
   getCatalogoHabilidades,
   addHabilidad,
   removeHabilidad,
+  updateHabilidad,
   addProyecto,
   updateProyecto,
   removeProyecto,
