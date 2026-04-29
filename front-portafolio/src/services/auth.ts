@@ -1,13 +1,11 @@
-import axios from "axios";
-
-const API = "http://localhost:8000/api";
+import apiClient from "../lib/apiClient";
 
 export const registerUser = async (data: {
   nombre_usuario: string;
   correo: string;
   contrasenia: string;
 }) => {
-  const response = await axios.post(`${API}/register`, data);
+  const response = await apiClient.post("/register", data);
   return response.data;
 };
 
@@ -15,6 +13,6 @@ export const loginUser = async (data: {
   correo: string;
   contrasenia: string;
 }) => {
-  const response = await axios.post(`${API}/login`, data);
+  const response = await apiClient.post("/login", data);
   return response.data;
 };
