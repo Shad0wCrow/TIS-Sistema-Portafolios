@@ -1,6 +1,4 @@
-import axios from "axios";
-
-const API = "http://localhost:8000/api";
+import apiClient from "../lib/apiClient";
 
 export const createProfile = async (data: {
   nombre_perfil: string;
@@ -10,13 +8,7 @@ export const createProfile = async (data: {
   descripcion: string;
   foto_url?: string;
 }) => {
-  const token = localStorage.getItem("token");
-
-  const response = await axios.post(`${API}/perfil`, data, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
+  
+  const response = await apiClient.post("/perfil", data);
   return response.data;
 };
