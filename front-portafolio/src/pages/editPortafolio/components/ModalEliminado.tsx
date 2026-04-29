@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import styles from "./modalSuccess.module.css";
+import styles from "./modalEliminado.module.css";
 
 const IconCheck = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">

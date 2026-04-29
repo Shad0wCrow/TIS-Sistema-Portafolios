@@ -11,6 +11,8 @@ import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
 
 import CreateAccountRoute from "./components/CreateAccountRoute";
 import PortafolioRoute from "./components/PortafolioRoute";
+import PerfilRoute from "./components/PerfilRoute";
+
 
 function App() {
   return (
@@ -33,9 +35,9 @@ function App() {
       <Route
         path="/perfil/editar"
         element={
-          <PortafolioRoute>
+          <PerfilRoute>
             <EditarPerfil />
-          </PortafolioRoute>
+          </PerfilRoute>
         }
       />
 

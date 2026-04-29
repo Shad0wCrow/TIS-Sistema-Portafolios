@@ -1,8 +1,5 @@
 import apiClient from "../lib/apiClient";
 
-// El token Bearer es inyectado automáticamente en todas las llamadas
-// por el interceptor configurado en apiClient.ts
-
 export const getPortafolio = async () => {
   const res = await apiClient.get("/portafolio");
   return res.data;
@@ -93,6 +90,22 @@ export const addCurso = async (data: {
   return res.data;
 };
 
+export const updateCurso = async (
+  id: number,
+  data: {
+    nombre_curso?: string;
+    institucion?: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    es_actual?: boolean;
+    descripcion?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await apiClient.put(`/cursos/${id}`, data);
+  return res.data;
+};
+
 export const removeCurso = async (id: number) => {
   const res = await apiClient.delete(`/cursos/${id}`);
   return res.data;
@@ -110,9 +123,7 @@ export const getEducaciones = async () => {
   return res.data;
 };
 
-export const getSugerenciasInstitucion = async (
-  q: string
-): Promise<string[]> => {
+export const getSugerenciasInstitucion = async (q: string): Promise<string[]> => {
   if (q.trim().length < 3) return [];
   const res = await apiClient.get("/educacion/sugerencias", { params: { q } });
   return res.data.sugerencias ?? [];
@@ -128,6 +139,22 @@ export const addEducacion = async (data: {
   visibilidad?: "publico" | "privado";
 }) => {
   const res = await apiClient.post("/educacion", data);
+  return res.data;
+};
+
+export const updateEducacion = async (
+  id: number,
+  data: {
+    institucion?: string;
+    titulo?: string;
+    area_estudio?: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    descripcion?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await apiClient.put(`/educacion/${id}`, data);
   return res.data;
 };
 
@@ -151,6 +178,21 @@ export const addLogro = async (data: {
   visibilidad?: "publico" | "privado";
 }) => {
   const res = await apiClient.post("/logros", data);
+  return res.data;
+};
+
+export const updateLogro = async (
+  id: number,
+  data: {
+    titulo?: string;
+    nombre_entidad?: string;
+    fecha_obtencion?: string;
+    identificador?: string;
+    descripcion?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await apiClient.put(`/logros/${id}`, data);
   return res.data;
 };
 
@@ -207,6 +249,17 @@ export const addIdioma = async (data: {
   return res.data;
 };
 
+export const updateIdioma = async (
+  id: number,
+  data: {
+    nivel?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await apiClient.put(`/idiomas/${id}`, data);
+  return res.data;
+};
+
 export const removeIdioma = async (id: number) => {
   const res = await apiClient.delete(`/idiomas/${id}`);
   return res.data;
@@ -227,6 +280,21 @@ export const addCertificacion = async (data: {
   visibilidad?: "publico" | "privado";
 }) => {
   const res = await apiClient.post("/certificaciones", data);
+  return res.data;
+};
+
+export const updateCertificacion = async (
+  id: number,
+  data: {
+    nombre?: string;
+    nombre_entidad?: string;
+    fecha_obtencion?: string;
+    fecha_expiracion?: string;
+    url_certificado?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await apiClient.put(`/certificaciones/${id}`, data);
   return res.data;
 };
 

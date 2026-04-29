@@ -8,7 +8,7 @@ export const createProfile = async (data: {
   descripcion: string;
   foto_url?: string;
 }) => {
-  // El token es inyectado automáticamente por el interceptor de apiClient
+  
   const response = await apiClient.post("/perfil", data);
   return response.data;
 };

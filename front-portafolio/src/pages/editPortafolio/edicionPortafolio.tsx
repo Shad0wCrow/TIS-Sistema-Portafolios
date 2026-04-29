@@ -49,7 +49,6 @@ import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
 import ProjectRowList from "./components/projectRowList";
 import ExperienciaRowList from "./components/experienciaRowList";
-import ModalEditarPerfil from "./components/modalEditarPerfil";
 import ModalAgregarHabilidad from "./components/modalAgregarHabilidad";
 import ModalEditarHabilidad from "./components/ModalEditarHabilidad";
 import ModalProyecto from "./components/modalProyecto";
@@ -58,15 +57,15 @@ import ModalEducacion from "./components/modalEducacion";
 import ModalCurso from "./components/modalCurso";
 import EducacionCard from "./components/educacionCard";
 import CursoCard from "./components/cursoCard";
-import { IconPersona, IconPencil } from "./components/icons";
+import { IconPersona } from "./components/icons";
 import ModalAlert from "./components/modalAlert";
-import ModalSuccess from "./components/modalSuccess";
 import ModalLogro from "./components/modalLogro";
 import LogroCard from "./components/logroCard";
 import ModalIdioma from "./components/modalIdioma";
 import IdiomaCard from "./components/idiomaCard";
 import CertificacionCard from "./components/certificacionCard";
 import ModalCertificacion from "./components/modalCertificacion";   
+import ModalEliminado from "./components/ModalEliminado";
 
 
 
@@ -742,7 +741,7 @@ const handleRemoveCertificacion = async (id: number) => {
       )}
 
       {successMessage && (
-        <ModalSuccess
+        <ModalEliminado
           message={successMessage}
           onClose={() => setSuccessMessage(null)}
         />
