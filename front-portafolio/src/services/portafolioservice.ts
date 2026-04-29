@@ -137,10 +137,6 @@ export const removeEducacion = async (id: number) => {
 };
 
 // ── Logros ────────────────────────────────────────────────────────────────────
-// NOTA: getCatalogoEntidades fue eliminada — el endpoint backend no existía.
-// Para sugerencias de entidad emisora usa getSugerenciasEntidad() que llama
-// a GET /logros/sugerencias, el cual sí está implementado.
-
 export const getLogros = async () => {
   const res = await apiClient.get("/logros");
   return res.data;
