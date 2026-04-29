@@ -8,10 +8,9 @@ use App\Models\UsuarioHabilidad;
 use App\Models\Proyecto;
 use App\Models\ProyectoUsuario;
 use App\Models\Educacion;
+use Illuminate\Http\Request;
 use App\Models\Logro;
 use App\Models\UsuarioIdioma;
-use Illuminate\Http\Request;
-
 class PortafolioController extends Controller
 {
     public function show(Request $request)
@@ -34,7 +33,7 @@ class PortafolioController extends Controller
             ->map(fn($uh) => [
                 'id_usuario_habilidad' => $uh->id_usuario_habilidad,
                 'nombre' => $uh->habilidad->nombre,
-                'nivel'  => $uh->nivel,
+                'nivel' => $uh->nivel,
             ]);
 
         $habilidadesBlandas = $todasHabilidades
@@ -43,7 +42,7 @@ class PortafolioController extends Controller
             ->map(fn($uh) => [
                 'id_usuario_habilidad' => $uh->id_usuario_habilidad,
                 'nombre' => $uh->habilidad->nombre,
-                'nivel'  => $uh->nivel,
+                'nivel' => $uh->nivel,
             ]);
 
         // proyectos
@@ -59,40 +58,30 @@ class PortafolioController extends Controller
                     ->values();
 
                 return [
-                    'id_proyecto'          => $proyecto->id_proyecto,
-                    'titulo'               => $proyecto->titulo,
-                    'descripcion'          => $proyecto->descripcion,
-                    'fecha_inicio'         => $proyecto->fecha_inicio,
-                    'fecha_fin'            => $proyecto->fecha_fin,
-                    'demo_url'             => $proyecto->demo_url,
-                    'repositorio_url'      => $proyecto->repositorio_url,
+                    'id_proyecto' => $proyecto->id_proyecto,
+                    'titulo' => $proyecto->titulo,
+                    'descripcion' => $proyecto->descripcion,
+                    'fecha_inicio' => $proyecto->fecha_inicio,
+                    'fecha_fin' => $proyecto->fecha_fin,
+                    'demo_url' => $proyecto->demo_url,
+                    'repositorio_url' => $proyecto->repositorio_url,
                     'imagen_principal_url' => $proyecto->imagen_principal_url,
-                    'estado'               => $proyecto->estado,
-                    'roles'                => $roles,
+                    'estado' => $proyecto->estado,
+                    'roles' => $roles,
                 ];
             });
 
-        // educaciones — excluye registros con area_estudio = 'curso'
-        // FIX: el filtro anterior usaba orWhere('area_estudio', '!=', 'curso')
-        // que en SQL equivale a WHERE area_estudio IS NULL OR area_estudio != 'curso'
-        // pero en algunos motores el IS NULL se omite cuando area_estudio tiene valor.
-        // El filtro correcto requiere anidar la condición NOT NULL explícitamente.
+        // educaciones
         $educaciones = Educacion::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
-            ->where(function ($q) {
-                $q->whereNull('area_estudio')
-                  ->orWhere(function ($sub) {
-                      $sub->whereNotNull('area_estudio')
-                          ->where('area_estudio', '!=', Educacion::TIPO_CURSO);
-                  });
-            })
+            ->where(function ($q) { $q->whereNull('area_estudio')->orWhere('area_estudio', '!=', 'curso'); })
             ->orderByDesc('fecha_inicio')
             ->get();
 
-        // cursos — solo registros con area_estudio = 'curso'
+        
         $cursos = Educacion::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
-            ->where('area_estudio', Educacion::TIPO_CURSO)
+            ->where('area_estudio', 'curso')
             ->orderByDesc('fecha_inicio')
             ->get();
 
@@ -103,40 +92,40 @@ class PortafolioController extends Controller
             ->get()
             ->map(function ($logro) {
                 return [
-                    'id_logro'           => $logro->id_logro,
-                    'titulo'             => $logro->titulo,
-                    'descripcion'        => $logro->descripcion,
-                    'fecha_obtencion'    => $logro->fecha_obtencion,
+                    'id_logro' => $logro->id_logro,
+                    'titulo' => $logro->titulo,
+                    'descripcion' => $logro->descripcion,
+                    'fecha_obtencion' => $logro->fecha_obtencion,
                     'entidad_emisora_id' => $logro->entidad_emisora_id,
-                    'entidad_nombre'     => $logro->entidadEmisora->nombre ?? null,
-                    'url_credencial'     => $logro->url_credencial,
-                    'identificador'      => $logro->identificador,
-                    'visibilidad'        => $logro->visibilidad,
+                    'entidad_nombre' => $logro->entidadEmisora->nombre ?? null,
+                    'url_credencial' => $logro->url_credencial,
+                    'identificador' => $logro->identificador,
+                    'visibilidad' => $logro->visibilidad,
                 ];
             });
 
-        $idiomas = UsuarioIdioma::with('idioma')
-            ->where('usuario_id', $user->id_usuario)
-            ->where('eliminado', false)
-            ->get()
-            ->map(fn($ui) => [
-                'id_usuario_idioma' => $ui->id_usuario_idioma,
-                'nombre'            => $ui->idioma->nombre ?? null,
-                'nivel'             => $ui->nivel,
-                'visibilidad'       => $ui->visibilidad,
-            ]);
-
+            $idiomas = UsuarioIdioma::with('idioma')
+                ->where('usuario_id', $user->id_usuario)
+                ->where('eliminado', false)
+                ->get()
+                ->map(fn($ui) => [
+                    'id_usuario_idioma' => $ui->id_usuario_idioma,
+                    'nombre'            => $ui->idioma->nombre ?? null,
+                    'nivel'             => $ui->nivel,
+                    'visibilidad'       => $ui->visibilidad,
+                ]);
         return response()->json([
-            'perfil'               => $perfil,
-            'habilidades_tecnicas' => $habilidadesTecnicas,
-            'habilidades_blandas'  => $habilidadesBlandas,
-            'proyectos'            => $proyectos,
-            'educaciones'          => $educaciones,
-            'cursos'               => $cursos,
-            'logros'               => $logros,
-            'idiomas'              => $idiomas,
+            'perfil'                => $perfil,
+            'habilidades_tecnicas'  => $habilidadesTecnicas,
+            'habilidades_blandas'   => $habilidadesBlandas,
+            'proyectos'             => $proyectos,
+            'educaciones'           => $educaciones,
+            'cursos'                => $cursos,
+            'logros'                => $logros,
+            'idiomas'               => $idiomas,
         ]);
     }
+
 
     public function updatePerfil(Request $request)
     {
@@ -172,6 +161,7 @@ class PortafolioController extends Controller
             'nivel'        => 'nullable|in:basico,intermedio,avanzado,experto',
         ]);
 
+        // Evitar duplicados
         $existe = UsuarioHabilidad::where('usuario_id', $user->id_usuario)
             ->where('habilidad_id', $data['habilidad_id'])
             ->where('eliminado', false)
@@ -199,6 +189,7 @@ class PortafolioController extends Controller
         }
     }
 
+    //soft delete
     public function removeHabilidad(Request $request, $id)
     {
         $user = $request->user();
@@ -217,20 +208,21 @@ class PortafolioController extends Controller
         return response()->json(['message' => 'Habilidad eliminada']);
     }
 
+
     public function addProyecto(Request $request)
     {
         $user = $request->user();
 
         $data = $request->validate([
-            'titulo'               => 'required|string|max:255',
-            'descripcion'          => 'nullable|string',
-            'fecha_inicio'         => 'nullable|date',
-            'fecha_fin'            => 'nullable|date',
-            'demo_url'             => 'nullable|string|max:500',
+            'titulo'       => 'required|string|max:255',
+            'descripcion'  => 'nullable|string',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin'    => 'nullable|date',
+            'demo_url'     => 'nullable|string|max:500',
             'repositorio_url'      => 'nullable|string|max:500',
             'imagen_principal_url' => 'nullable|string|max:500',
-            'roles'                => 'nullable|array',
-            'roles.*'              => 'string|max:50',
+            'roles'        => 'nullable|array',
+            'roles.*'      => 'string|max:50',
         ]);
 
         try {
@@ -251,13 +243,14 @@ class PortafolioController extends Controller
             if (!empty($data['roles'])) {
                 foreach ($data['roles'] as $rol) {
                     ProyectoUsuario::create([
-                        'usuario_id'     => $user->id_usuario,
-                        'proyecto_id'    => $proyecto->id_proyecto,
-                        'rol_proyecto'   => $rol,
+                        'usuario_id'    => $user->id_usuario,
+                        'proyecto_id'   => $proyecto->id_proyecto,
+                        'rol_proyecto'  => $rol,
                         'es_propietario' => true,
                     ]);
                 }
             } else {
+
                 ProyectoUsuario::create([
                     'usuario_id'     => $user->id_usuario,
                     'proyecto_id'    => $proyecto->id_proyecto,
@@ -280,6 +273,7 @@ class PortafolioController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
 
     public function updateProyecto(Request $request, $id)
     {
@@ -307,9 +301,12 @@ class PortafolioController extends Controller
             'roles.*'              => 'string|max:50',
         ]);
 
+        // Actualizar campos del proyecto (sin roles)
         $proyecto->update(collect($data)->except('roles')->toArray());
 
+        // Si se enviaron roles, reemplazar todos los registros en proyecto_usuario
         if (isset($data['roles'])) {
+            // Borrar roles anteriores del usuario en este proyecto
             ProyectoUsuario::where('proyecto_id', $proyecto->id_proyecto)
                 ->where('usuario_id', $user->id_usuario)
                 ->delete();
@@ -336,6 +333,7 @@ class PortafolioController extends Controller
         ]);
     }
 
+//sof delete
     public function removeProyecto(Request $request, $id)
     {
         $user = $request->user();
@@ -350,9 +348,6 @@ class PortafolioController extends Controller
         }
 
         $proyecto->update(['eliminado' => true]);
-
-        // Limpia los roles huérfanos en proyecto_usuario
-        ProyectoUsuario::where('proyecto_id', $proyecto->id_proyecto)->delete();
 
         return response()->json(['message' => 'Proyecto eliminado correctamente']);
     }

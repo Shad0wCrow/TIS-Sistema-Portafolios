@@ -8,19 +8,26 @@ use Illuminate\Http\Request;
 
 class CursoController extends Controller
 {
+    /**
+     * Lista todos los cursos del usuario autenticado.
+     */
     public function index(Request $request)
     {
         $user = $request->user();
 
         $cursos = Educacion::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
-            ->where('area_estudio', Educacion::TIPO_CURSO)
+            ->where('area_estudio', 'curso')
             ->orderByDesc('fecha_inicio')
             ->get();
 
         return response()->json(['cursos' => $cursos]);
     }
 
+    /**
+     * Sugerencias de instituciones de cursos ya registrados en la BD.
+     * Requiere mínimo 3 caracteres (CA #13).
+     */
     public function sugerencias(Request $request)
     {
         $q = $request->query('q', '');
@@ -30,7 +37,7 @@ class CursoController extends Controller
         }
 
         $sugerencias = Educacion::where('eliminado', false)
-            ->where('area_estudio', Educacion::TIPO_CURSO)
+            ->where('area_estudio', 'curso')
             ->where('institucion', 'like', '%' . $q . '%')
             ->distinct()
             ->orderBy('institucion')
@@ -40,6 +47,10 @@ class CursoController extends Controller
         return response()->json(['sugerencias' => $sugerencias]);
     }
 
+    /**
+     * Registra un nuevo curso para el usuario autenticado.
+     * Los cursos se almacenan en la tabla educacion con area_estudio='curso'.
+     */
     public function store(Request $request)
     {
         $user = $request->user();
@@ -56,9 +67,10 @@ class CursoController extends Controller
 
         $esActual = filter_var($data['es_actual'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
+        // CA #4: fecha_fin futura solo permitida si es_actual = true
         if (!$esActual && isset($data['fecha_fin']) && $data['fecha_fin'] > now()->toDateString()) {
             return response()->json([
-                'message' => 'La fecha de finalización no puede ser futura si el curso no está en curso.',
+                'message' => 'La fecha de finalización no puede ser futura si el curso no está marcado como en curso.',
                 'errors'  => ['fecha_fin' => ['La fecha de finalización no puede ser futura si el curso no está en curso.']],
             ], 422);
         }
@@ -67,7 +79,7 @@ class CursoController extends Controller
             'usuario_id'   => $user->id_usuario,
             'institucion'  => $data['institucion'],
             'titulo'       => $data['nombre_curso'],
-            'area_estudio' => Educacion::TIPO_CURSO,
+            'area_estudio' => 'curso',
             'fecha_inicio' => $data['fecha_inicio'],
             'fecha_fin'    => $esActual ? null : ($data['fecha_fin'] ?? null),
             'descripcion'  => $data['descripcion'] ?? null,
@@ -81,6 +93,9 @@ class CursoController extends Controller
         ], 201);
     }
 
+    /**
+     * Muestra un curso específico del usuario autenticado.
+     */
     public function show(Request $request, $id)
     {
         $user = $request->user();
@@ -88,7 +103,7 @@ class CursoController extends Controller
         $curso = Educacion::where('id_educacion', $id)
             ->where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
-            ->where('area_estudio', Educacion::TIPO_CURSO)
+            ->where('area_estudio', 'curso')
             ->first();
 
         if (!$curso) {
@@ -98,55 +113,16 @@ class CursoController extends Controller
         return response()->json(['curso' => $curso]);
     }
 
-    public function update(Request $request, $id)
-    {
-        $user = $request->user();
-
-        $curso = Educacion::where('id_educacion', $id)
-            ->where('usuario_id', $user->id_usuario)
-            ->where('eliminado', false)
-            ->where('area_estudio', Educacion::TIPO_CURSO)
-            ->first();
-
-        if (!$curso) {
-            return response()->json(['message' => 'Curso no encontrado'], 404);
-        }
-
-        $data = $request->validate([
-            'nombre_curso' => 'sometimes|string|max:150',
-            'institucion'  => 'sometimes|string|max:150',
-            'fecha_inicio' => 'sometimes|date',
-            'fecha_fin'    => 'sometimes|nullable|date|after_or_equal:fecha_inicio',
-            'es_actual'    => 'sometimes|boolean',
-            'descripcion'  => 'sometimes|nullable|string',
-            'visibilidad'  => 'sometimes|in:publico,privado',
-        ]);
-
-        if (isset($data['nombre_curso'])) {
-            $data['titulo'] = $data['nombre_curso'];
-            unset($data['nombre_curso']);
-        }
-
-        if (isset($data['es_actual']) && $data['es_actual']) {
-            $data['fecha_fin'] = null;
-        }
-        unset($data['es_actual']);
-
-        $curso->update($data);
-
-        return response()->json([
-            'message' => 'Curso actualizado correctamente',
-            'curso'   => $curso,
-        ]);
-    }
-
+    /**
+     * Soft-delete de un curso del usuario autenticado.
+     */
     public function destroy(Request $request, $id)
     {
         $user = $request->user();
 
         $curso = Educacion::where('id_educacion', $id)
             ->where('usuario_id', $user->id_usuario)
-            ->where('area_estudio', Educacion::TIPO_CURSO)
+            ->where('area_estudio', 'curso')
             ->where('eliminado', false)
             ->first();
 

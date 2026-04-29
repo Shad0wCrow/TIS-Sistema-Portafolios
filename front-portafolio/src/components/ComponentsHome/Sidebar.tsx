@@ -8,7 +8,6 @@ import BookmarkIcon from '../../assets/icons/Bookmark.svg';
 import LogoutIcon from '../../assets/icons/Logout.svg';
 
 import ModalCrearPortafolio from '../portafolio/ModalCrearPortafolio';
-import apiClient from '../../lib/apiClient';
 
 export interface MenuItem {
   name: string;
@@ -21,11 +20,11 @@ const Sidebar: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
 
   const menuItems: MenuItem[] = [
-    { id: 'inicio',     name: 'Inicio',     icon: HomeIcon      },
-    { id: 'perfil',     name: 'Perfil',     icon: UserIcon      },
+    { id: 'inicio',     name: 'Inicio',    icon: HomeIcon      },
+    { id: 'perfil',     name: 'Perfil',    icon: UserIcon      },
     { id: 'portafolio', name: 'Portafolio', icon: BriefcaseIcon },
-    { id: 'bookmarks',  name: 'Guardados',  icon: BookmarkIcon  },
-    { id: 'salir',      name: 'Salir',      icon: LogoutIcon    },
+    { id: 'bookmarks',  name: 'Guardados', icon: BookmarkIcon  },
+    { id: 'salir',      name: 'Salir',     icon: LogoutIcon    },
   ];
 
   useEffect(() => {
@@ -34,8 +33,10 @@ const Sidebar: React.FC = () => {
 
     const syncProfileState = async () => {
       try {
-        // apiClient inyecta el token automáticamente via interceptor
-        const { data } = await apiClient.get('/perfil/me');
+        const res = await fetch('http://localhost:8000/api/perfil/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
         localStorage.setItem('hasProfile', data.has_profile ? 'true' : 'false');
       } catch (error) {
         console.error('Error verificando perfil:', error);
