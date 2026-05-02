@@ -9,7 +9,7 @@ import { IconPersona } from "../editPortafolio/components/icons";
 const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
 const SOLO_NUMEROS = /^\+?[0-9\s\-()]{7,20}$/;
 const CARACTERES_PELIGROSOS = /[<>"'`;{}()]/;
-const URL_VALIDA = /^https?:\/\/.+\..+/;
+const URL_VALIDA = /^(https?:\/\/.+\..+|data:image\/.+)/;
 
 interface FormState {
     nombre_perfil: string;
@@ -52,7 +52,7 @@ function validar(form: FormState, fotoUrl: string): FormErrors {
 
     const limpiaFoto = fotoUrl.trim();
     if (limpiaFoto && !URL_VALIDA.test(limpiaFoto)) errs.foto = "La URL de foto debe comenzar con http:// o https://.";
-    else if (limpiaFoto.length > 300) errs.foto = "La URL de foto no puede superar 300 caracteres.";
+    else if (limpiaFoto.length > 100000) errs.foto = "La URL de foto no puede superar 100000 caracteres.";
 
     return errs;
 }
@@ -138,12 +138,15 @@ export default function EditarPerfil() {
     }
 
     function handleModalConfirm() {
-        if (modalTab === "url" && modalUrl.trim()) {
-            setFotoUrl(modalUrl.trim());
-            setErrors(validar(form, modalUrl.trim()));
-        }
-        setModalOpen(false);
+    if (modalTab === "url" && modalUrl.trim()) {
+        setFotoUrl(modalUrl.trim());
+        setErrors(validar(form, modalUrl.trim()));
+    } else if (modalTab === "upload" && modalPreview) {
+        setFotoUrl(modalPreview);
+        setErrors(validar(form, modalPreview));
     }
+    setModalOpen(false);
+}
 
     function handleDragOver(e: React.DragEvent) {
         e.preventDefault();
