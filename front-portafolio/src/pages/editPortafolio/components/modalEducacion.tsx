@@ -86,7 +86,7 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
       >
         <div className={styles.modalHead}>
           <span className={styles.modalTitle}>Registrar Educación</span>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar">
+          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar formulario de educación">
             ×
           </button>
         </div>
@@ -108,7 +108,7 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
             <div className={styles.modalGrid}>
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-                <label>Institución / Universidad *</label>
+                <label htmlFor="edu-institucion">Institución / Universidad *</label>
                 <AutocompleteInput
                   name="institucion"
                   value={form.institucion}
@@ -129,12 +129,14 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
               </div>
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-                <label>Título / Carrera *</label>
+                <label htmlFor="edu-titulo">Título / Carrera *</label>
                 <input
+                  id="edu-titulo"
                   name="titulo"
                   value={form.titulo}
                   onChange={handleChange}
                   placeholder="Ej: Ingeniería de Sistemas"
+                  aria-required="true"
                   style={errors.titulo ? { borderColor: "var(--red, #e53e3e)" } : {}}
                 />
                 {errors.titulo && (
@@ -145,8 +147,9 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
               </div>
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-                <label>Facultad / Área de estudio</label>
+                <label htmlFor="edu-area">Facultad / Área de estudio</label>
                 <input
+                  id="edu-area"
                   name="area_estudio"
                   value={form.area_estudio}
                   onChange={handleChange}
@@ -155,12 +158,14 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
               </div>
 
               <div className={styles.modalField}>
-                <label>Fecha de inicio *</label>
+                <label htmlFor="edu-finicio">Fecha de inicio *</label>
                 <input
+                  id="edu-finicio"
                   type="date"
                   name="fecha_inicio"
                   value={form.fecha_inicio}
                   onChange={handleChange}
+                  aria-required="true"
                   style={errors.fecha_inicio ? { borderColor: "var(--red, #e53e3e)" } : {}}
                 />
                 {errors.fecha_inicio && (
@@ -171,8 +176,9 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
               </div>
 
               <div className={styles.modalField}>
-                <label>Fecha de fin</label>
+                <label htmlFor="edu-ffin">Fecha de fin</label>
                 <input
+                  id="edu-ffin"
                   type="date"
                   name="fecha_fin"
                   value={form.fecha_fin}
@@ -187,8 +193,9 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
               </div>
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-                <label>Descripción</label>
+                <label htmlFor="edu-desc">Descripción</label>
                 <textarea
+                  id="edu-desc"
                   name="descripcion"
                   value={form.descripcion}
                   onChange={handleChange}
@@ -197,8 +204,8 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
               </div>
 
               <div className={styles.modalField}>
-                <label>Visibilidad</label>
-                <select name="visibilidad" value={form.visibilidad} onChange={handleChange}>
+                <label htmlFor="edu-vis">Visibilidad</label>
+                <select id="edu-vis" name="visibilidad" value={form.visibilidad} onChange={handleChange}>
                   <option value="publico">Público</option>
                   <option value="privado">Privado</option>
                 </select>

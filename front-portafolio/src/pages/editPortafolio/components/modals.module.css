@@ -121,6 +121,23 @@
 .modalField textarea:focus {
   border-color: var(--accent);
   background: #ffffff;
+  outline: 3px solid rgba(26, 102, 68, 0.35);
+  outline-offset: 1px;
+}
+
+/* CA11: focus ring visible para navegación por teclado (Tab) */
+.modalClose:focus-visible,
+.btnCancel:focus-visible,
+.btnSave:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Sin outline para mouse, solo para teclado */
+.modalClose:focus:not(:focus-visible),
+.btnCancel:focus:not(:focus-visible),
+.btnSave:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .modalField input::placeholder,
@@ -216,4 +233,38 @@
     max-width: 100%;
     padding: 18px;
   }
+}
+
+/* CA12: zoom al 200% sin scroll horizontal */
+@media (max-width: 400px) {
+  .modal,
+  .modalSm,
+  .modalLg {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .modalGrid {
+    grid-template-columns: 1fr;
+    gap: 10px 0;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .btnCancel,
+  .btnSave {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* CA13: mejoras Lighthouse — contraste y tamaño mínimo de tap target */
+.btnCancel,
+.btnSave,
+.modalClose {
+  min-height: 44px;
+  min-width: 44px;
 }
