@@ -145,37 +145,46 @@
   color: var(--accent);
 }
 
+/* ── Foto card ─────────────────────────────────────────────────────────────── */
+
 .fotoCard {
   background: var(--bg3);
   border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 24px;
+  border-radius: 14px;
+  padding: 28px 28px 24px;
   display: flex;
-  align-items: flex-start;
-  gap: 24px;
+  align-items: center;
+  gap: 28px;
 }
 
 .fotoLeft {
   flex-shrink: 0;
 }
 
+.fotoCircleWrap {
+  position: relative;
+  display: inline-flex;
+}
+
 .fotoCircle {
-  width: 88px;
-  height: 88px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background: var(--accent-lt);
-  border: 2px solid var(--accent-md);
+  border: 2.5px solid var(--accent-md);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  transition: border-color 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 0 4px var(--accent-bg);
 }
 
 .fotoCircle:hover {
   border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-lt);
 }
 
 .fotoCircle:hover .fotoOverlay {
@@ -183,9 +192,10 @@
 }
 
 .fotoCircle svg {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   fill: var(--accent);
+  opacity: 0.55;
 }
 
 .fotoCircle img {
@@ -212,63 +222,57 @@
   fill: #ffffff;
 }
 
+.quitarOverlay {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e05252;
+  border: 2.5px solid var(--bg3);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, transform 0.15s;
+  z-index: 1;
+}
+
+.quitarOverlay:hover {
+  background: #c43c3c;
+  transform: scale(1.12);
+}
+
 .fotoRight {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding-top: 8px;
+  gap: 4px;
 }
 
-.fotoActions {
+.fotoMeta {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 3px;
+  margin-bottom: 14px;
 }
 
-.fotoUploadArea {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.fotoUploadBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--accent);
-  border: none;
-  color: #ffffff;
-  padding: 9px 16px;
-  border-radius: 7px;
-  font-size: 12px;
+.fotoTitle {
+  font-size: 15px;
   font-weight: 700;
-  cursor: pointer;
-  letter-spacing: 0.03em;
-  font-family: inherit;
-  transition: opacity 0.15s;
-  width: fit-content;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
-.fotoUploadBtn:hover {
-  opacity: 0.88;
-}
-
-.fotoCancelBtn {
-  background: none;
-  border: none;
+.fotoSubtitle {
+  font-size: 12px;
   color: var(--text3);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  padding: 0;
-  width: fit-content;
-  transition: color 0.15s;
-}
-
-.fotoCancelBtn:hover {
-  color: var(--text2);
+  margin: 0;
+  line-height: 1.5;
 }
 
 .fotoHint {
@@ -278,59 +282,92 @@
   line-height: 1.5;
 }
 
-.fotoError {
-  font-size: 11px;
-  color: var(--red);
-  font-weight: 500;
+.fotoActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.editBtn {
+.addFotoBtn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  padding: 0 16px;
+  height: 36px;
   background: var(--accent);
+  color: #fff;
   border: none;
-  color: #ffffff;
-  padding: 9px 16px;
-  border-radius: 7px;
-  font-size: 11px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  letter-spacing: 0.03em;
+  white-space: nowrap;
   font-family: inherit;
+  letter-spacing: 0.02em;
   transition: opacity 0.15s, transform 0.15s;
-  width: fit-content;
 }
 
-.editBtn:hover {
+.addFotoBtn:hover {
   opacity: 0.88;
   transform: translateY(-1px);
 }
 
-.editBtn svg {
-  width: 12px;
-  height: 12px;
-  fill: currentColor;
+.addFotoBtn:active {
+  transform: scale(0.98);
 }
 
-.removeBtn {
-  background: none;
+.fotoRemoveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 36px;
+  background: transparent;
   border: 1px solid var(--border2);
   color: var(--red);
-  padding: 7px 14px;
-  border-radius: 7px;
-  font-size: 11px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
   transition: background 0.15s, border-color 0.15s;
-  width: fit-content;
 }
 
-.removeBtn:hover {
+.fotoRemoveBtn:hover {
   background: var(--red-lt);
   border-color: var(--red);
 }
+
+.fotoUrlPreview {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 10px;
+  height: 36px;
+  max-width: 220px;
+  overflow: hidden;
+}
+
+.fotoUrlPreview span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fotoError {
+  font-size: 11px;
+  color: var(--red);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* ── Form card ─────────────────────────────────────────────────────────────── */
 
 .formCard {
   background: var(--bg3);
@@ -426,6 +463,8 @@
   font-weight: 500;
 }
 
+/* ── Footer ────────────────────────────────────────────────────────────────── */
+
 .footer {
   background: var(--bg3);
   border-top: 1px solid var(--border);
@@ -519,6 +558,8 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── State screens ─────────────────────────────────────────────────────────── */
+
 .stateScreen {
   display: flex;
   align-items: center;
@@ -533,6 +574,317 @@
 .stateError {
   color: var(--red);
 }
+
+/* ── Modal overlay ─────────────────────────────────────────────────────────── */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: overlayIn 0.15s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modalBox {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  animation: modalIn 0.18s ease;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.modalTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.modalClose {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.modalClose:hover {
+  background: var(--bg4);
+  color: var(--text);
+}
+
+.modalTabs {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.modalTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+}
+
+.modalTab:hover {
+  color: var(--text2);
+}
+
+.modalTabActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.modalBody {
+  padding: 20px;
+  background: var(--bg);
+}
+
+/* ── Dropzone ──────────────────────────────────────────────────────────────── */
+
+.dropzone {
+  border: 2px dashed var(--border2);
+  border-radius: 10px;
+  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  overflow: hidden;
+  background: var(--bg3);
+}
+
+.dropzone:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.dropzoneDragging {
+  border-color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.dropzoneEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.dropzoneIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--accent-lt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.dropzoneText {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.dropzoneSubtext {
+  font-size: 11px;
+  color: var(--text3);
+  margin: 0;
+}
+
+.dropzonePreview {
+  width: 100%;
+  height: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+}
+
+.dropzonePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dropzoneChange {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 12px;
+  text-align: center;
+  padding: 7px;
+  font-weight: 600;
+}
+
+/* ── Modal URL tab ─────────────────────────────────────────────────────────── */
+
+.modalUrlTab {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modalLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+.modalInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.modalInput:focus {
+  border-color: var(--accent);
+}
+
+.modalUrlPreview {
+  width: 100%;
+  height: 130px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+}
+
+.modalUrlPreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Modal footer ──────────────────────────────────────────────────────────── */
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.modalCancelBtn {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 7px;
+  border: 1.5px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.modalCancelBtn:hover {
+  background: var(--bg4);
+  color: var(--text);
+}
+
+.modalConfirmBtn {
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 7px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.modalConfirmBtn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.modalConfirmBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .grid {
@@ -558,15 +910,26 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 600px) {
   .fotoCard {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    gap: 20px;
+    padding: 24px 20px;
   }
 
-  .fotoActions,
-  .fotoUploadArea {
-    align-items: center;
+  .fotoActions {
+    justify-content: center;
+  }
+
+  .fotoUrlPreview {
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  .modalBox {
+    max-width: 100%;
+    border-radius: 12px;
   }
 }

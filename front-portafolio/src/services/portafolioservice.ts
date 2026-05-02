@@ -19,6 +19,27 @@ export const updatePerfil = async (data: {
   descripcion?: string;
   foto_url?: string;
 }) => {
+  const isDataUrl = data.foto_url?.startsWith("data:image/");
+
+  if (isDataUrl) {
+    const formData = new FormData();
+    formData.append("_method", "PUT");
+    if (data.nombre_perfil !== undefined) formData.append("nombre_perfil", data.nombre_perfil);
+    if (data.apellido_perfil !== undefined) formData.append("apellido_perfil", data.apellido_perfil);
+    if (data.profesion !== undefined) formData.append("profesion", data.profesion);
+    if (data.celular !== undefined) formData.append("celular", data.celular);
+    if (data.descripcion !== undefined) formData.append("descripcion", data.descripcion);
+
+    const blob = dataUrlToBlob(data.foto_url!);
+    const ext = blob.type.split("/")[1] ?? "jpg";
+    formData.append("foto_file", blob, `foto.${ext}`);
+
+    const res = await axios.post(`${API}/portafolio/perfil`, formData, {
+      headers: { ...authHeaders() },
+    });
+    return res.data;
+  }
+
   const res = await axios.put(`${API}/portafolio/perfil`, data, {
     headers: authHeaders(),
   });
@@ -172,6 +193,13 @@ export const removeEducacion = async (id: number) => {
 };
 
 // ── Logros ───────────────────────────────────────────────────────────────────
+export const getCatalogoEntidades = async () => {
+  const res = await axios.get(`${API}/catalogo/entidades`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
 
 export const getLogros = async () => {
   const res = await axios.get(`${API}/logros`, {
@@ -291,6 +319,7 @@ export const getSugerenciasEntidadEmisora = async (q: string): Promise<string[]>
   });
   return res.data.sugerencias ?? [];
 };
+
 export const updateExperiencia = async (id: number, data: ExperienciaPayload) => {
   const res = await axios.put(`${API}/experiencias/${id}`, data, { headers: authHeaders() });
   return res.data;
@@ -306,7 +335,7 @@ export const getSugerenciasEmpresa = async (q: string): Promise<string[]> => {
   return res.data.sugerencias ?? [];
 };
 
-// ── Sugerencias de Entidad 
+// ── Sugerencias de Entidad
 export const getSugerenciasEntidad = async (q: string): Promise<string[]> => {
   if (q.trim().length < 3) return [];
   const res = await axios.get(`${API}/logros/sugerencias`, {
@@ -335,3 +364,15 @@ export const getSugerenciasProfecion = async (q: string): Promise<string[]> => {
   });
   return res.data.sugerencias ?? [];
 };
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function dataUrlToBlob(dataUrl: string): Blob {
+  const [header, base64] = dataUrl.split(",");
+  const mime = header.match(/:(.*?);/)?.[1] ?? "image/jpeg";
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mime });
+}
