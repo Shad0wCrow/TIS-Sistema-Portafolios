@@ -37,6 +37,7 @@ export const updatePerfil = async (data: {
     const res = await axios.post(`${API}/portafolio/perfil`, formData, {
       headers: { ...authHeaders() },
     });
+    console.log("Response:", res.data);
     return res.data;
   }
 
