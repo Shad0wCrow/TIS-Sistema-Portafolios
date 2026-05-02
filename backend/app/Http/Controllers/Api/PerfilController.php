@@ -10,13 +10,7 @@ class PerfilController extends Controller
     
     public function store(Request $request)
     {
-        $user = $request->user();
-
-    if (!$user) {
-        return response()->json([
-            'message' => 'No autenticado'
-        ], 401);
-    }
+     
         $user = $request->user();
         
         //Si ya existe Perfil debe redireccionar a CreateAccount hasta crear un perfil lleno
