@@ -142,7 +142,18 @@ class PortafolioController extends Controller
             'celular'         => 'sometimes|string|max:20',
             'descripcion'     => 'sometimes|string|max:200',
             'foto_url'        => 'sometimes|nullable|string|max:500',
+            'foto_file'       => 'sometimes|nullable|image|max:5120',
         ]);
+
+        if ($request->hasFile('foto_file')) {
+            $resultado = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload(
+                $request->file('foto_file')->getRealPath(),
+                ['folder' => 'portafolios/perfiles']
+            );
+            $data['foto_url'] = $resultado->getSecurePath();
+        }
+
+        unset($data['foto_file']);
 
         $perfil->update($data);
 

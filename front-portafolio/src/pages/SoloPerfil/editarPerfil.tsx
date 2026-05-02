@@ -52,8 +52,8 @@ function validar(form: FormState, fotoUrl: string): FormErrors {
 
     const limpiaFoto = fotoUrl.trim();
     if (limpiaFoto && !URL_VALIDA.test(limpiaFoto)) errs.foto = "La URL de foto debe comenzar con http:// o https://.";
-    else if (limpiaFoto.length > 100000) errs.foto = "La URL de foto no puede superar 100000 caracteres.";
-
+    /*else if (limpiaFoto.length > 100000) errs.foto = "La URL de foto no puede superar 100000 caracteres.";
+*/
     return errs;
 }
 

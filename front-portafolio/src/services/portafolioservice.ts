@@ -200,6 +200,7 @@ export const getCatalogoEntidades = async () => {
   return res.data;
 };
 
+
 export const getLogros = async () => {
   const res = await axios.get(`${API}/logros`, {
     headers: authHeaders(),
