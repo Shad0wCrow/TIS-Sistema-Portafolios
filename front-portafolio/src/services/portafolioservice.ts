@@ -172,15 +172,6 @@ export const removeEducacion = async (id: number) => {
 };
 
 // ── Logros ───────────────────────────────────────────────────────────────────
-// AVISO: el backend no registra la ruta GET /catalogo/entidades.
-// Debe agregarse Route::get('/catalogo/entidades', [...]) en api.php
-// o ajustar esta función al endpoint correcto cuando esté disponible.
-export const getCatalogoEntidades = async () => {
-  const res = await axios.get(`${API}/catalogo/entidades`, {
-    headers: authHeaders(),
-  });
-  return res.data;
-};
 
 export const getLogros = async () => {
   const res = await axios.get(`${API}/logros`, {

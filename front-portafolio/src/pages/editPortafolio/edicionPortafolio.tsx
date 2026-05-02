@@ -6,7 +6,6 @@ import styles from "./edicionPortafolio.module.css";
 import skillStyles from "./components/skillCard.module.css";
 import {
   getPortafolio,
-  updatePerfil,
   getCatalogoHabilidades,
   addHabilidad,
   removeHabilidad,
@@ -49,7 +48,6 @@ import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
 import ProjectRowList from "./components/projectRowList";
 import ExperienciaRowList from "./components/experienciaRowList";
-import ModalEditarPerfil from "./components/modalEditarPerfil";
 import ModalAgregarHabilidad from "./components/modalAgregarHabilidad";
 import ModalEditarHabilidad from "./components/ModalEditarHabilidad";
 import ModalProyecto from "./components/modalProyecto";
@@ -58,7 +56,7 @@ import ModalEducacion from "./components/modalEducacion";
 import ModalCurso from "./components/modalCurso";
 import EducacionCard from "./components/educacionCard";
 import CursoCard from "./components/cursoCard";
-import { IconPersona, IconPencil } from "./components/icons";
+import { IconPersona} from "./components/icons";
 import ModalAlert from "./components/modalAlert";
 import ModalSuccess from "./components/modalSuccess";
 import ModalLogro from "./components/modalLogro";
@@ -96,7 +94,7 @@ export default function EdicionPortafolio() {
   const [errorPage, setErrorPage] = useState("");
   const [activeSection, setActiveSection] = useState<ActiveSection>("perfil");
 
-  const [modalPerfil, setModalPerfil] = useState(false);
+  
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
   const [modalEditarHab, setModalEditarHab] = useState<HabilidadItem | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
@@ -169,10 +167,6 @@ useEffect(() => {
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
-  const handleSavePerfil = async (formData: Parameters<typeof updatePerfil>[0]) => {
-    const res = await updatePerfil(formData);
-    setData((prev) => prev ? { ...prev, perfil: res.perfil } : prev);
-  };
 
   const handleAddHabilidad = async (habilidadId: number, nivel: string) => {
     const res = await addHabilidad({ habilidad_id: habilidadId, nivel });

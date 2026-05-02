@@ -14,7 +14,5 @@ class Idioma extends Model
         'nombre',
     ];
 
-    public function idioma() {
-    return $this->belongsTo(Idioma::class, 'idioma_id', 'id_idioma');
-}
+    
 }
