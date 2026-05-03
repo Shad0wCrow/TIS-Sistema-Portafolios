@@ -5,8 +5,9 @@ import AutocompleteInput from "../../../components/ui/AutocompleteInput/Autocomp
 
 interface ModalLogroProps {
   onClose: () => void;
-  onSave: (data: Parameters<typeof addLogro>[0]) => Promise<void>;
+  onSave: (data: Parameters<typeof addLogro>[0]) => Promise<boolean | void>;
   logrosExistentes?: { identificador?: string | null }[];
+  duplicadoWarning?: string;
 }
 
 interface FormErrors {
@@ -17,7 +18,7 @@ interface FormErrors {
   descripcion?: string;
 }
 
-export default function ModalLogro({ onClose, onSave, logrosExistentes = [] }: ModalLogroProps) {
+export default function ModalLogro({ onClose, onSave, logrosExistentes = [], duplicadoWarning }: ModalLogroProps) {
   const [form, setForm] = useState({
     titulo: "",
     nombre_entidad: "",
@@ -87,7 +88,7 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [] }: M
 
     setLoading(true);
     try {
-      await onSave({
+      const guardado = await onSave({
         titulo: form.titulo.trim(),
         nombre_entidad: form.nombre_entidad.trim(),
         fecha_obtencion: form.fecha_obtencion,
@@ -95,6 +96,7 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [] }: M
         descripcion: form.descripcion.trim() || undefined,
         visibilidad: form.visibilidad,
       });
+      if (guardado === false) return;
 
       setSuccessMsg("¡Logro registrado correctamente!");
       setTimeout(() => onClose(), 1200);
@@ -127,6 +129,16 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [] }: M
         ) : (
           <>
             <div className={styles.modalGrid}>
+              {duplicadoWarning && (
+                <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  {duplicadoWarning}
+                </div>
+              )}
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Título *</label>

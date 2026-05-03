@@ -4,7 +4,8 @@ import { addCertificacion, getSugerenciasEntidadEmisora } from "../../../service
 
 interface ModalCertificacionProps {
   onClose: () => void;
-  onSave: (data: Parameters<typeof addCertificacion>[0], imagen: string | null) => Promise<void>;
+  onSave: (data: Parameters<typeof addCertificacion>[0], imagen: string | null) => Promise<boolean | void>;
+  duplicadoWarning?: string;
 }
 
 interface FormErrors {
@@ -19,7 +20,7 @@ interface FormErrors {
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE_MB = 2;
 
-export default function ModalCertificacion({ onClose, onSave }: ModalCertificacionProps) {
+export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }: ModalCertificacionProps) {
   const [form, setForm] = useState({
     nombre: "",
     nombre_entidad: "",
@@ -98,7 +99,7 @@ export default function ModalCertificacion({ onClose, onSave }: ModalCertificaci
     if (!validate()) return;
     setLoading(true);
     try {
-      await onSave(
+      const guardado = await onSave(
         {
           nombre: form.nombre.trim(),
           nombre_entidad: form.nombre_entidad.trim(),
@@ -109,6 +110,7 @@ export default function ModalCertificacion({ onClose, onSave }: ModalCertificaci
         },
         imagenBase64
       );
+      if (guardado === false) return;
       setSuccessMsg("¡Certificación registrada correctamente!");
       setTimeout(() => onClose(), 1200);
     } catch (error: any) {
@@ -135,6 +137,16 @@ export default function ModalCertificacion({ onClose, onSave }: ModalCertificaci
         ) : (
           <>
             <div className={styles.modalGrid}>
+              {duplicadoWarning && (
+                <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  {duplicadoWarning}
+                </div>
+              )}
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Título *</label>

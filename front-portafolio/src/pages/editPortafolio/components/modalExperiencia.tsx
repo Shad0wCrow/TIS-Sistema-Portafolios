@@ -19,7 +19,8 @@ type FormData = {
 interface Props {
   experiencia: Experiencia | null;
   onClose: () => void;
-  onSave: (data: FormData) => Promise<void>;
+  onSave: (data: FormData) => Promise<boolean | void>;
+  duplicadoWarning?: string;
 }
 
 const TIPOS = ["Tiempo completo", "Medio tiempo", "Freelance", "Prácticas", "Voluntariado", "Contrato"];
@@ -36,7 +37,7 @@ const INITIAL: FormData = {
   visibilidad: "publico",
 };
 
-export default function ModalExperiencia({ experiencia, onClose, onSave }: Props) {
+export default function ModalExperiencia({ experiencia, onClose, onSave, duplicadoWarning }: Props) {
   const [form, setForm] = useState<FormData>(INITIAL);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
@@ -87,7 +88,8 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
         fecha_fin: form.es_actual ? null : form.fecha_fin || null,
         ubicacion: form.ubicacion || null,
       };
-      await onSave(payload);
+      const guardado = await onSave(payload);
+      if (guardado === false) return;
       onClose();
     } finally {
       setSaving(false);
@@ -109,6 +111,17 @@ export default function ModalExperiencia({ experiencia, onClose, onSave }: Props
         </div>
 
         <div className={styles.body}>
+          {duplicadoWarning && (
+            <div className={styles.duplicadoWarning}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              {duplicadoWarning}
+            </div>
+          )}
+
           <div className={styles.row}>
             <div className={styles.field}>
               <label className={styles.label}>Empresa <span className={styles.req}>*</span></label>

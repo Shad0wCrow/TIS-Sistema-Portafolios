@@ -5,7 +5,8 @@ import AutocompleteInput from "../../../components/ui/AutocompleteInput/Autocomp
 
 interface ModalEducacionProps {
   onClose: () => void;
-  onSave: (data: Parameters<typeof addEducacion>[0]) => Promise<void>;
+  onSave: (data: Parameters<typeof addEducacion>[0]) => Promise<boolean | void>;
+  duplicadoWarning?: string;
 }
 
 interface FormErrors {
@@ -15,7 +16,7 @@ interface FormErrors {
   fecha_fin?: string;
 }
 
-export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps) {
+export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: ModalEducacionProps) {
   const [form, setForm] = useState({
     institucion: "",
     titulo: "",
@@ -57,7 +58,7 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
     if (!validate()) return;
     setLoading(true);
     try {
-      await onSave({
+      const guardado = await onSave({
         institucion: form.institucion.trim(),
         titulo: form.titulo.trim(),
         area_estudio: form.area_estudio.trim() || undefined,
@@ -66,6 +67,7 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
         descripcion: form.descripcion.trim() || undefined,
         visibilidad: form.visibilidad,
       });
+      if (guardado === false) return;
 
       setSuccessMsg("¡Educación registrada correctamente!");
       setTimeout(() => onClose(), 1200);
@@ -106,6 +108,16 @@ export default function ModalEducacion({ onClose, onSave }: ModalEducacionProps)
         ) : (
           <>
             <div className={styles.modalGrid}>
+              {duplicadoWarning && (
+                <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  {duplicadoWarning}
+                </div>
+              )}
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label htmlFor="edu-institucion">Institución / Universidad *</label>
