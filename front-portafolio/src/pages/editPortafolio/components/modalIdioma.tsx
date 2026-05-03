@@ -10,7 +10,8 @@ const IDIOMAS_COMUNES = [
 
 interface ModalIdiomaProps {
   onClose: () => void;
-  onSave: (data: Parameters<typeof addIdioma>[0]) => Promise<void>;
+  onSave: (data: Parameters<typeof addIdioma>[0]) => Promise<boolean | void>;
+  duplicadoWarning?: string;
 }
 
 interface FormErrors {
@@ -18,7 +19,7 @@ interface FormErrors {
   nivel?: string;
 }
 
-export default function ModalIdioma({ onClose, onSave }: ModalIdiomaProps) {
+export default function ModalIdioma({ onClose, onSave, duplicadoWarning }: ModalIdiomaProps) {
   const [form, setForm] = useState({
     nombre: "",
     nivel: "",
@@ -53,11 +54,12 @@ export default function ModalIdioma({ onClose, onSave }: ModalIdiomaProps) {
     if (!validate()) return;
     setLoading(true);
     try {
-      await onSave({
+      const guardado = await onSave({
         nombre_idioma: form.nombre.trim(),
         nivel: form.nivel.trim(),
         visibilidad: form.visibilidad,
       });
+      if (guardado === false) return;
       setSuccessMsg("¡Idioma registrado correctamente!");
       setTimeout(() => onClose(), 1200);
     } catch (error: any) {
@@ -85,6 +87,17 @@ export default function ModalIdioma({ onClose, onSave }: ModalIdiomaProps) {
         ) : (
           <>
             <div className={styles.modalGrid}>
+              {duplicadoWarning && (
+                <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  {duplicadoWarning}
+                </div>
+              )}
+
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Idioma *</label>
                 <AutocompleteInput

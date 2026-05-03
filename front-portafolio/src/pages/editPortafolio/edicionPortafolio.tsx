@@ -1,5 +1,3 @@
-//comentario
-
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./edicionPortafolio.module.css";
@@ -43,6 +41,7 @@ import type {
   Certificacion
 } from "../../types/portafolioTypes";
 
+import { detectarDuplicado } from "../../utils/detectarDuplicado";
 
 import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
@@ -73,6 +72,11 @@ type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
 type ModalExperienciaState = Experiencia | null | "nueva";
 type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas" | "experiencia" | "certificaciones";
+type CertificacionApi = Certificacion & {
+  entidad_emisora?: { nombre?: string | null } | null;
+  entidadEmisora?: { nombre?: string | null } | null;
+  nombre_entidad_emisora?: string | null;
+};
 
 const SECTION_LABELS: Record<ActiveSection, string> = {
   perfil: "Perfil",
@@ -86,6 +90,17 @@ const SECTION_LABELS: Record<ActiveSection, string> = {
   certificaciones: "Certificaciones"
 };
 
+const normalizarCertificaciones = (items: CertificacionApi[] = []): Certificacion[] =>
+  items.map((cert) => ({
+    ...cert,
+    nombre_entidad:
+      cert.nombre_entidad ??
+      cert.entidad_emisora?.nombre ??
+      cert.entidadEmisora?.nombre ??
+      cert.nombre_entidad_emisora ??
+      "",
+  }));
+
 export default function EdicionPortafolio() {
   const navigate = useNavigate();
   const [data, setData] = useState<PortafolioData | null>(null);
@@ -94,7 +109,6 @@ export default function EdicionPortafolio() {
   const [errorPage, setErrorPage] = useState("");
   const [activeSection, setActiveSection] = useState<ActiveSection>("perfil");
 
-  
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
   const [modalEditarHab, setModalEditarHab] = useState<HabilidadItem | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
@@ -107,47 +121,55 @@ export default function EdicionPortafolio() {
   const [modalCurso, setModalCurso] = useState(false);
   const [modalLogro, setModalLogro] = useState(false);
   const [modalIdioma, setModalIdioma] = useState(false);
-const [modalCertificacion, setModalCertificacion] = useState(false);
-const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
+  const [modalCertificacion, setModalCertificacion] = useState(false);
+  const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
 
+  const [warningHabilidad, setWarningHabilidad] = useState<string | undefined>();
+  const [warningProyecto, setWarningProyecto] = useState<string | undefined>();
+  const [warningExperiencia, setWarningExperiencia] = useState<string | undefined>();
+  const [warningEducacion, setWarningEducacion] = useState<string | undefined>();
+  const [warningCurso, setWarningCurso] = useState<string | undefined>();
+  const [warningLogro, setWarningLogro] = useState<string | undefined>();
+  const [warningIdioma, setWarningIdioma] = useState<string | undefined>();
+  const [warningCertificacion, setWarningCertificacion] = useState<string | undefined>();
 
-const refreshData = async () => {
-  const [portafolioRes, experienciasRes, certRes] = await Promise.all([
-    getPortafolio(),
-    getExperiencias(),
-    getCertificaciones(),
-  ]);
+  const refreshData = async () => {
+    const [portafolioRes, experienciasRes, certRes] = await Promise.all([
+      getPortafolio(),
+      getExperiencias(),
+      getCertificaciones(),
+    ]);
 
-  setData(portafolioRes);
-  setExperiencias(experienciasRes);
-  setCertificaciones(certRes);
-};
-
-useEffect(() => {
-  const cargar = async () => {
-    try {
-      const [portafolioRes, catalogoRes, experienciasRes, certRes] = await Promise.all([
-        getPortafolio(),
-        getCatalogoHabilidades(),
-        getExperiencias(),
-        getCertificaciones(),
-      ]);
-
-      setData(portafolioRes);
-      setCatalogo(catalogoRes.habilidades ?? []);
-      setExperiencias(experienciasRes);
-      setCertificaciones(certRes);
-    } catch {
-      setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
-    } finally {
-      setLoadingPage(false);
-    }
+    setData(portafolioRes);
+    setExperiencias(experienciasRes);
+    setCertificaciones(normalizarCertificaciones(certRes));
   };
-  cargar();
-}, []);
+
+  useEffect(() => {
+    const cargar = async () => {
+      try {
+        const [portafolioRes, catalogoRes, experienciasRes, certRes] = await Promise.all([
+          getPortafolio(),
+          getCatalogoHabilidades(),
+          getExperiencias(),
+          getCertificaciones(),
+        ]);
+
+        setData(portafolioRes);
+        setCatalogo(catalogoRes.habilidades ?? []);
+        setExperiencias(experienciasRes);
+        setCertificaciones(normalizarCertificaciones(certRes));
+      } catch {
+        setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
+      } finally {
+        setLoadingPage(false);
+      }
+    };
+    cargar();
+  }, []);
 
 
-  const perfil             = data?.perfil ?? null;
+  const perfil              = data?.perfil ?? null;
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
   const habilidadesBlandas  = data?.habilidades_blandas ?? [];
   const proyectos           = data?.proyectos ?? [];
@@ -155,20 +177,28 @@ useEffect(() => {
   const cursos              = (data?.cursos ?? []) as Curso[];
   const logros              = (data?.logros ?? []) as Logro[];
   const idiomas             = (data?.idiomas ?? []) as Idioma[];
-  
+
   const certConImagenes = certificaciones.map((c) => {
-  const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-  return { ...c, imagen_url: stored[c.id_certificacion] ?? null };
-});
+    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+    return { ...c, imagen_url: stored[c.id_certificacion] ?? null };
+  });
+
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Nombre completo";
   }, [perfil]);
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
-
 
   const handleAddHabilidad = async (habilidadId: number, nivel: string) => {
+    const todasHabilidades = [...habilidadesTecnicas, ...habilidadesBlandas];
+    const nombre = catalogo.find(h => h.id_habilidad === habilidadId)?.nombre ?? "";
+
+    if (detectarDuplicado(todasHabilidades, { nombre }, ["nombre"])) {
+      setWarningHabilidad("Esta habilidad ya está registrada en tu perfil.");
+      return false;
+    }
+
+    setWarningHabilidad(undefined);
     const res = await addHabilidad({ habilidad_id: habilidadId, nivel });
     const habilidad = res.habilidad;
     const item = {
@@ -182,6 +212,7 @@ useEffect(() => {
       const key = habilidad.habilidad?.tipo === "tecnica" ? "habilidades_tecnicas" : "habilidades_blandas";
       return { ...prev, [key]: [...prev[key], item] };
     });
+    return true;
   };
 
   const handleEditHabilidad = async (id: number, nivel: string) => {
@@ -226,6 +257,17 @@ useEffect(() => {
   };
 
   const handleSaveProyecto = async (formData: Parameters<typeof addProyecto>[0]) => {
+    const proyectosAComparar =
+      modalProy && modalProy !== "nuevo"
+        ? proyectos.filter((proyecto) => proyecto.id_proyecto !== modalProy.id_proyecto)
+        : proyectos;
+
+    if (detectarDuplicado(proyectosAComparar, { titulo: formData.titulo }, ["titulo"])) {
+      setWarningProyecto("Ya tienes un proyecto con ese título.");
+      return false;
+    }
+
+    setWarningProyecto(undefined);
     if (modalProy && modalProy !== "nuevo") {
       const res = await updateProyecto(modalProy.id_proyecto, formData);
       setData((prev) => prev
@@ -244,6 +286,7 @@ useEffect(() => {
         : prev
       );
     }
+    return true;
   };
 
   const handleRemoveProyecto = async (id: number) => {
@@ -252,12 +295,12 @@ useEffect(() => {
       onConfirm: async () => {
         setModalAlert(null);
         try {
-        await removeProyecto(id);
-        setData((prev) => prev
-          ? { ...prev, proyectos: prev.proyectos.filter((proyecto) => proyecto.id_proyecto !== id) }
-          : prev
-        );
-        setSuccessMessage("El proyecto ha sido eliminado correctamente.");
+          await removeProyecto(id);
+          setData((prev) => prev
+            ? { ...prev, proyectos: prev.proyectos.filter((proyecto) => proyecto.id_proyecto !== id) }
+            : prev
+          );
+          setSuccessMessage("El proyecto ha sido eliminado correctamente.");
         } catch (error) {
           setErrorMessage("Error al eliminar el proyecto. Intenta de nuevo.");
         }
@@ -265,9 +308,18 @@ useEffect(() => {
     });
   };
 
-  // ── Experiencia handlers ──────────────────────────────────────────────────
-
   const handleSaveExperiencia = async (formData: Parameters<typeof addExperiencia>[0]) => {
+    const experienciasAComparar =
+      modalExp && modalExp !== "nueva"
+        ? experiencias.filter((experiencia) => experiencia.id_experiencia !== modalExp.id_experiencia)
+        : experiencias;
+
+    if (detectarDuplicado(experienciasAComparar, { nombre_empresa: formData.nombre_empresa, puesto: formData.puesto }, ["nombre_empresa", "puesto"])) {
+      setWarningExperiencia("Ya tienes una experiencia registrada con esa empresa y puesto.");
+      return false;
+    }
+
+    setWarningExperiencia(undefined);
     if (modalExp && modalExp !== "nueva") {
       await updateExperiencia(modalExp.id_experiencia, formData);
       await refreshData();
@@ -279,30 +331,35 @@ useEffect(() => {
       };
       setExperiencias((prev) => [experiencia, ...prev]);
     }
+    return true;
   };
 
   const handleRemoveExperiencia = async (id: number) => {
-  setModalAlert({
-    mensaje: "Esta experiencia laboral será eliminada permanentemente.",
-    onConfirm: async () => {
-      setModalAlert(null);
-      try {
-        await removeExperiencia(id);
-        setExperiencias((prev) => prev.filter((experiencia) => experiencia.id_experiencia !== id));
-        setSuccessMessage("La experiencia laboral ha sido eliminada correctamente.");
-      } catch (error) {
-        setErrorMessage("Error al eliminar la experiencia laboral. Intenta de nuevo.");
-      }
-    },
-  });
-};
+    setModalAlert({
+      mensaje: "Esta experiencia laboral será eliminada permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        try {
+          await removeExperiencia(id);
+          setExperiencias((prev) => prev.filter((experiencia) => experiencia.id_experiencia !== id));
+          setSuccessMessage("La experiencia laboral ha sido eliminada correctamente.");
+        } catch (error) {
+          setErrorMessage("Error al eliminar la experiencia laboral. Intenta de nuevo.");
+        }
+      },
+    });
+  };
 
-const handleSaveEducacion = async (
-  formData: Parameters<typeof addEducacion>[0]
-) => {
-  const res = await addEducacion(formData);
-  setData((prev) => prev ? { ...prev, educaciones: [res.educacion, ...prev.educaciones] } : prev);
-};
+  const handleSaveEducacion = async (formData: Parameters<typeof addEducacion>[0]) => {
+    if (detectarDuplicado(educaciones, { institucion: formData.institucion, titulo: formData.titulo }, ["institucion", "titulo"])) {
+      setWarningEducacion("Ya tienes este registro de educación en tu perfil.");
+      return false;
+    }
+    setWarningEducacion(undefined);
+    const res = await addEducacion(formData);
+    setData((prev) => prev ? { ...prev, educaciones: [res.educacion, ...prev.educaciones] } : prev);
+    return true;
+  };
 
   const handleRemoveEducacion = async (id: number) => {
     setModalAlert({
@@ -310,23 +367,28 @@ const handleSaveEducacion = async (
       onConfirm: async () => {
         setModalAlert(null);
         try {
-        await removeEducacion(id);
-        setData((prev) => prev
-          ? { ...prev, educaciones: prev.educaciones.filter((educacion) => educacion.id_educacion !== id) }
-          : prev
-        );
-        setSuccessMessage("El registro de educación ha sido eliminado correctamente.");
+          await removeEducacion(id);
+          setData((prev) => prev
+            ? { ...prev, educaciones: prev.educaciones.filter((educacion) => educacion.id_educacion !== id) }
+            : prev
+          );
+          setSuccessMessage("El registro de educación ha sido eliminado correctamente.");
         } catch (error) {
           setErrorMessage("Error al eliminar el registro de educación. Intenta de nuevo.");
         }
-
       },
     });
   };
 
   const handleSaveCurso = async (formData: Parameters<typeof addCurso>[0]) => {
+    if (detectarDuplicado(cursos, { titulo: formData.nombre_curso, institucion: formData.institucion }, ["titulo", "institucion"])) {
+      setWarningCurso("Ya tienes este curso registrado en tu perfil.");
+      return false;
+    }
+    setWarningCurso(undefined);
     const res = await addCurso(formData);
     setData((prev) => prev ? { ...prev, cursos: [res.curso, ...prev.cursos] } : prev);
+    return true;
   };
 
   const handleRemoveCurso = async (id: number) => {
@@ -334,17 +396,16 @@ const handleSaveEducacion = async (
       mensaje: "Este curso será eliminado permanentemente.",
       onConfirm: async () => {
         setModalAlert(null);
-        
-      try {
-        await removeCurso(id);
-        setData((prev) => prev
-          ? { ...prev, cursos: prev.cursos.filter((curso) => curso.id_educacion !== id) }
-          : prev
-        );
-        setSuccessMessage("El curso ha sido eliminado correctamente.");
-      } catch (error) {
-        setErrorMessage("Error al eliminar el curso. Intenta de nuevo.");
-      }
+        try {
+          await removeCurso(id);
+          setData((prev) => prev
+            ? { ...prev, cursos: prev.cursos.filter((curso) => curso.id_educacion !== id) }
+            : prev
+          );
+          setSuccessMessage("El curso ha sido eliminado correctamente.");
+        } catch (error) {
+          setErrorMessage("Error al eliminar el curso. Intenta de nuevo.");
+        }
       },
     });
   };
@@ -369,15 +430,26 @@ const handleSaveEducacion = async (
   };
 
   const handleAddLogro = async (formData: Parameters<typeof addLogro>[0]) => {
+    if (detectarDuplicado(logros as any[], { titulo: formData.titulo, entidad_nombre: formData.nombre_entidad }, ["titulo", "entidad_nombre"])) {
+      setWarningLogro("Ya tienes este logro registrado en tu perfil.");
+      return false;
+    }
+    setWarningLogro(undefined);
     const res = await addLogro(formData);
     const logro = {
       ...res.logro,
       entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
     };
     setData((prev) => prev ? { ...prev, logros: [logro, ...prev.logros] } : prev);
+    return true;
   };
 
   const handleAddIdioma = async (formData: Parameters<typeof addIdioma>[0]) => {
+    if (detectarDuplicado(idiomas as any[], { nombre: formData.nombre_idioma }, ["nombre"])) {
+      setWarningIdioma("Ya tienes este idioma registrado en tu perfil.");
+      return false;
+    }
+    setWarningIdioma(undefined);
     const res = await addIdioma(formData);
     const idioma = {
       id_usuario_idioma: res.idioma.id_usuario_idioma,
@@ -386,7 +458,8 @@ const handleSaveEducacion = async (
       visibilidad: res.idioma.visibilidad,
     };
     setData((prev) => prev ? { ...prev, idiomas: [...prev.idiomas, idioma] } : prev);
-  } 
+    return true;
+  };
 
   const handleRemoveIdioma = async (id: number) => {
     setModalAlert({
@@ -408,42 +481,48 @@ const handleSaveEducacion = async (
   };
 
   const handleSaveCertificacion = async (
-  formData: Parameters<typeof addCertificacion>[0],
-  imagenBase64: string | null
-) => {
-  const res = await addCertificacion(formData);
-  const id = res.certificacion?.id_certificacion;
-  if (imagenBase64 && id) {
-    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-    stored[id] = imagenBase64;
-    localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
-  }
-  const certificacion = {
-    ...res.certificacion,
-    nombre_entidad: formData.nombre_entidad,
-    imagen_url: imagenBase64,
+    formData: Parameters<typeof addCertificacion>[0],
+    imagenBase64: string | null
+  ) => {
+    if (detectarDuplicado(certificaciones as any[], { nombre: formData.nombre, nombre_entidad: formData.nombre_entidad }, ["nombre", "nombre_entidad"])) {
+      setWarningCertificacion("Ya tienes esta certificación registrada en tu perfil.");
+      return false;
+    }
+    setWarningCertificacion(undefined);
+    const res = await addCertificacion(formData);
+    const id = res.certificacion?.id_certificacion;
+    if (imagenBase64 && id) {
+      const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+      stored[id] = imagenBase64;
+      localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
+    }
+    const certificacion = {
+      ...res.certificacion,
+      nombre_entidad: formData.nombre_entidad,
+      imagen_url: imagenBase64,
+    };
+    setCertificaciones((prev) => [certificacion, ...prev]);
+    return true;
   };
-  setCertificaciones((prev) => [certificacion, ...prev]);
-};
 
-const handleRemoveCertificacion = async (id: number) => {
-  setModalAlert({
-    mensaje: "Esta certificación será eliminada permanentemente.",
-    onConfirm: async () => {
-      setModalAlert(null);
-      try {
-        await removeCertificacion(id);
-        const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-        delete stored[id];
-        localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
-        setCertificaciones((prev) => prev.filter((certificacion) => certificacion.id_certificacion !== id));
-        setSuccessMessage("La certificacion ha sido eliminada correctamente.");
-      } catch (error) {
-        setErrorMessage("Error al eliminar la certificacion. Intenta de nuevo.");
-      }
-    },
-  });
-};
+  const handleRemoveCertificacion = async (id: number) => {
+    setModalAlert({
+      mensaje: "Esta certificación será eliminada permanentemente.",
+      onConfirm: async () => {
+        setModalAlert(null);
+        try {
+          await removeCertificacion(id);
+          const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+          delete stored[id];
+          localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
+          setCertificaciones((prev) => prev.filter((certificacion) => certificacion.id_certificacion !== id));
+          setSuccessMessage("La certificacion ha sido eliminada correctamente.");
+        } catch (error) {
+          setErrorMessage("Error al eliminar la certificacion. Intenta de nuevo.");
+        }
+      },
+    });
+  };
 
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
   if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
@@ -627,7 +706,6 @@ const handleRemoveCertificacion = async (id: number) => {
                   {logros.length} logro{logros.length !== 1 ? "s" : ""}
                 </span>
               </div>
-
               <LogroCard
                 logros={logros}
                 onAdd={() => setModalLogro(true)}
@@ -644,7 +722,6 @@ const handleRemoveCertificacion = async (id: number) => {
                   {idiomas.length} idioma{idiomas.length !== 1 ? "s" : ""}
                 </span>
               </div>
-
               <IdiomaCard
                 idiomas={idiomas}
                 onAdd={() => setModalIdioma(true)}
@@ -655,24 +732,30 @@ const handleRemoveCertificacion = async (id: number) => {
 
           {activeSection === "certificaciones" && (
             <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionTitle}>Certificaciones</span>
-                  <span className={styles.sectionMeta}>
-                    {certConImagenes.length} registro{certConImagenes.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <CertificacionCard
-                  certificaciones={certConImagenes}
-                  onAdd={() => setModalCertificacion(true)}
-                  onRemove={handleRemoveCertificacion}
-                />
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Certificaciones</span>
+                <span className={styles.sectionMeta}>
+                  {certConImagenes.length} registro{certConImagenes.length !== 1 ? "s" : ""}
+                </span>
               </div>
-            )}
+              <CertificacionCard
+                certificaciones={certConImagenes}
+                onAdd={() => setModalCertificacion(true)}
+                onRemove={handleRemoveCertificacion}
+              />
+            </div>
+          )}
         </div>
       </main>
 
       {modalHab && (
-        <ModalAgregarHabilidad tipo={modalHab} catalogo={catalogo} onClose={() => setModalHab(null)} onSave={handleAddHabilidad} />
+        <ModalAgregarHabilidad
+          tipo={modalHab}
+          catalogo={catalogo}
+          onClose={() => { setModalHab(null); setWarningHabilidad(undefined); }}
+          onSave={handleAddHabilidad}
+          duplicadoWarning={warningHabilidad}
+        />
       )}
       {modalEditarHab && (
         <ModalEditarHabilidad
@@ -684,45 +767,50 @@ const handleRemoveCertificacion = async (id: number) => {
       {modalProy !== null && (
         <ModalProyecto
           proyecto={modalProy === "nuevo" ? null : modalProy}
-          onClose={() => setModalProy(null)}
+          onClose={() => { setModalProy(null); setWarningProyecto(undefined); }}
           onSave={handleSaveProyecto}
+          duplicadoWarning={warningProyecto}
         />
       )}
       {modalExp !== null && (
         <ModalExperiencia
           experiencia={modalExp === "nueva" ? null : modalExp}
-          onClose={() => setModalExp(null)}
+          onClose={() => { setModalExp(null); setWarningExperiencia(undefined); }}
           onSave={handleSaveExperiencia}
+          duplicadoWarning={warningExperiencia}
         />
       )}
 
       {modalEducacion && (
         <ModalEducacion
-          onClose={() => setModalEducacion(false)}
+          onClose={() => { setModalEducacion(false); setWarningEducacion(undefined); }}
           onSave={handleSaveEducacion}
+          duplicadoWarning={warningEducacion}
         />
       )}
 
       {modalCurso && (
         <ModalCurso
-          onClose={() => setModalCurso(false)}
+          onClose={() => { setModalCurso(false); setWarningCurso(undefined); }}
           onSave={handleSaveCurso}
+          duplicadoWarning={warningCurso}
         />
       )}
 
       {modalLogro && (
         <ModalLogro
-          onClose={() => setModalLogro(false)}
+          onClose={() => { setModalLogro(false); setWarningLogro(undefined); }}
           onSave={handleAddLogro}
           logrosExistentes={logros}
+          duplicadoWarning={warningLogro}
         />
       )}
 
       {modalIdioma && (
         <ModalIdioma
-          onClose={() => setModalIdioma(false)}
+          onClose={() => { setModalIdioma(false); setWarningIdioma(undefined); }}
           onSave={handleAddIdioma}
-          
+          duplicadoWarning={warningIdioma}
         />
       )}
 
@@ -743,59 +831,59 @@ const handleRemoveCertificacion = async (id: number) => {
       )}
 
       {errorMessage && (
-  <div
-    style={{
-      position: "fixed", inset: 0, background: "rgba(15,25,20,0.45)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      zIndex: 1200, padding: 16, backdropFilter: "blur(3px)",
-    }}
-    onClick={() => setErrorMessage(null)}
-  >
-    <div
-      style={{
-        background: "var(--bg3)", border: "1px solid #f5c6c2",
-        borderRadius: 12, padding: "28px 24px", width: "100%",
-        maxWidth: 360, textAlign: "center",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.13)",
-      }}
-      onClick={e => e.stopPropagation()}
-    >
-      <div style={{
-        width: 52, height: 52, borderRadius: "50%", background: "var(--red-lt)",
-        border: "1.5px solid #f5c6c2", display: "flex", alignItems: "center",
-        justifyContent: "center", margin: "0 auto 16px",
-      }}>
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2.5">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </div>
-      <p style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", margin: "0 0 6px" }}>
-        Error al eliminar
-      </p>
-      <p style={{ fontSize: 13, color: "var(--text2)", margin: "0 0 22px", lineHeight: 1.6 }}>
-        {errorMessage}
-      </p>
-      <button
-        onClick={() => setErrorMessage(null)}
-        style={{
-          background: "var(--red)", border: "1.5px solid var(--red)", color: "#fff",
-          padding: "9px 24px", borderRadius: 7, fontSize: 13, fontWeight: 700,
-          cursor: "pointer", fontFamily: "inherit",
-        }}
-      >
-        Aceptar
-      </button>
-    </div>
-  </div>
-)}
-
+        <div
+          style={{
+            position: "fixed", inset: 0, background: "rgba(15,25,20,0.45)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1200, padding: 16, backdropFilter: "blur(3px)",
+          }}
+          onClick={() => setErrorMessage(null)}
+        >
+          <div
+            style={{
+              background: "var(--bg3)", border: "1px solid #f5c6c2",
+              borderRadius: 12, padding: "28px 24px", width: "100%",
+              maxWidth: 360, textAlign: "center",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.13)",
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{
+              width: 52, height: 52, borderRadius: "50%", background: "var(--red-lt)",
+              border: "1.5px solid #f5c6c2", display: "flex", alignItems: "center",
+              justifyContent: "center", margin: "0 auto 16px",
+            }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", margin: "0 0 6px" }}>
+              Error al eliminar
+            </p>
+            <p style={{ fontSize: 13, color: "var(--text2)", margin: "0 0 22px", lineHeight: 1.6 }}>
+              {errorMessage}
+            </p>
+            <button
+              onClick={() => setErrorMessage(null)}
+              style={{
+                background: "var(--red)", border: "1.5px solid var(--red)", color: "#fff",
+                padding: "9px 24px", borderRadius: 7, fontSize: 13, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+      )}
 
       {modalCertificacion && (
         <ModalCertificacion
-          onClose={() => setModalCertificacion(false)}
+          onClose={() => { setModalCertificacion(false); setWarningCertificacion(undefined); }}
           onSave={handleSaveCertificacion}
+          duplicadoWarning={warningCertificacion}
         />
-      )}      
+      )}
     </div>
   );
 }

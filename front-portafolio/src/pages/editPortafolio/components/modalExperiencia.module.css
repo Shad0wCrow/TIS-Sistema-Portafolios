@@ -145,6 +145,25 @@
   color: var(--red);
 }
 
+.duplicadoWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(220, 80, 60, 0.08);
+  border: 1px solid rgba(220, 80, 60, 0.35);
+  border-left: 3px solid #dc503c;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #dc503c;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.duplicadoWarning svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .checkRow {
   display: flex;
   align-items: center;
