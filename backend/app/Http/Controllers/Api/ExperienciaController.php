@@ -88,10 +88,25 @@ public function index(Request $request)
 {
     $user = $request->user();
 
-    $experiencias = Experiencia::where('usuario_id', $user->id_usuario)
+    $experiencias = Experiencia::with('empresa')
+        ->where('usuario_id', $user->id_usuario)
         ->where('eliminado', false)
         ->orderByDesc('fecha_inicio')
-        ->get();
+        ->get()
+        ->map(function ($experiencia) {
+            return [
+                'id_experiencia' => $experiencia->id_experiencia,
+                'nombre_empresa' => $experiencia->empresa->nombre ?? null,
+                'puesto' => $experiencia->puesto,
+                'tipo' => $experiencia->tipo,
+                'descripcion' => $experiencia->descripcion,
+                'fecha_inicio' => $experiencia->fecha_inicio,
+                'fecha_fin' => $experiencia->fecha_fin,
+                'es_actual' => $experiencia->es_actual,
+                'ubicacion' => $experiencia->ubicacion,
+                'visibilidad' => $experiencia->visibilidad,
+            ];
+        });
 
     return response()->json(['experiencias' => $experiencias]);
 }
@@ -100,7 +115,8 @@ public function show(Request $request, $id)
 {
     $user = $request->user();
 
-    $experiencia = Experiencia::where('id_experiencia', $id)
+    $experiencia = Experiencia::with('empresa')
+        ->where('id_experiencia', $id)
         ->where('usuario_id', $user->id_usuario)
         ->where('eliminado', false)
         ->first();
@@ -109,7 +125,20 @@ public function show(Request $request, $id)
         return response()->json(['message' => 'Experiencia no encontrada'], 404);
     }
 
-    return response()->json(['experiencia' => $experiencia]);
+    return response()->json([
+        'experiencia' => [
+            'id_experiencia' => $experiencia->id_experiencia,
+            'nombre_empresa' => $experiencia->empresa->nombre ?? null,
+            'puesto' => $experiencia->puesto,
+            'tipo' => $experiencia->tipo,
+            'descripcion' => $experiencia->descripcion,
+            'fecha_inicio' => $experiencia->fecha_inicio,
+            'fecha_fin' => $experiencia->fecha_fin,
+            'es_actual' => $experiencia->es_actual,
+            'ubicacion' => $experiencia->ubicacion,
+            'visibilidad' => $experiencia->visibilidad,
+        ],
+    ]);
 }
 
 public function update(Request $request, $id)
