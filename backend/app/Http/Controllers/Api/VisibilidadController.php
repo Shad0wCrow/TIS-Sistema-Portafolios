@@ -48,7 +48,7 @@ class VisibilidadController extends Controller
 
     /**
      * PUT /api/visibilidad/secciones
-     * Actualiza los campos de sección. Valida que al menos uno sea 'publico' (CA-4).
+     * Actualiza los campos de sección. Valida que al menos uno sea 'publico'.
      */
     public function update(Request $request)
     {
