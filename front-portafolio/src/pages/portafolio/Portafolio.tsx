@@ -1,181 +1,546 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { getPortafolio } from "../../services/portafolioservice";
-import type { PortafolioData, Educacion, Curso, Logro, Idioma } from "../../types/portafolioTypes";
+import {
+  getCertificaciones,
+  getExperiencias,
+  getPortafolio,
+  getVisibilidadSecciones,
+} from "../../services/portafolioservice";
+import type {
+  Certificacion,
+  ConfiguracionSecciones,
+  Curso,
+  Educacion,
+  Experiencia,
+  Idioma,
+  Logro,
+  PortafolioData,
+} from "../../types/portafolioTypes";
 import ProjectCard from "../../components/portafolio/ProjectCard";
-import SkillChip   from "../../components/portafolio/SkillChip";
+import SkillChip from "../../components/portafolio/SkillChip";
 import styles from "./Portafolio.module.css";
 
-import { IconBack, IconEdit, IconUser } from "./components/PortafolioIcons";
-import EmptyState from "./components/EmptyState";
-import EducacionItem from "./components/EducacionItem";
-import CursoItem from "./components/CursoItem";
-import LogroItem from "./components/LogroItem";
+import { IconArrowLeft, IconSort, IconPencil, IconEye, IconUser } from "./components/PortafolioIcons";
+import { SectionShell, EmptyState, TimelineItem, CertificacionCard } from "./components/PortafolioSections";
+import {
+  NIVEL_IDIOMA,
+  DEFAULTS_SECCIONES,
+  DEFAULT_SECTION_ORDER,
+  SECTION_LABELS,
+  isSectionPublic,
+  loadSectionOrder,
+  saveSectionOrder,
+  formatFecha,
+  formatPeriodo,
+  readPreviewCache,
+} from "./components/portafolioUtils";
+import type { SectionId } from "./components/portafolioUtils";
 
 export default function Portafolio() {
   const navigate = useNavigate();
-  const [data, setData]       = useState<PortafolioData | null>(null);
+
+  const [data, setData] = useState<PortafolioData | null>(null);
+  const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
+  const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
+  const [secciones, setSecciones] = useState<ConfiguracionSecciones>(DEFAULTS_SECCIONES);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
+
+  const [sectionOrder, setSectionOrder] = useState<SectionId[]>(loadSectionOrder);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [dragOrder, setDragOrder] = useState<SectionId[]>([]);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const openOrderModal = () => {
+    setDragOrder([...sectionOrder]);
+    setShowOrderModal(true);
+  };
+
+  const saveOrder = () => {
+    saveSectionOrder(dragOrder);
+    setSectionOrder([...dragOrder]);
+    setShowOrderModal(false);
+  };
+
+  const resetOrder = () => setDragOrder([...DEFAULT_SECTION_ORDER]);
+
+  const handleDragStart = (index: number) => setDragIndex(index);
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (index: number) => {
+    if (dragIndex === null || dragIndex === index) return;
+
+    const next = [...dragOrder];
+    const [moved] = next.splice(dragIndex, 1);
+    next.splice(index, 0, moved);
+
+    setDragOrder(next);
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
 
   useEffect(() => {
-    getPortafolio()
-      .then(setData)
+    const cached = readPreviewCache();
+    if (cached?.data) {
+      setData(cached.data);
+      setExperiencias(cached.experiencias ?? []);
+      setCertificaciones(cached.certificaciones ?? []);
+    }
+
+    Promise.all([
+      getPortafolio(),
+      getExperiencias().catch(() => [] as Experiencia[]),
+      getCertificaciones().catch(() => [] as Certificacion[]),
+      getVisibilidadSecciones().catch(() => null),
+    ])
+      .then(([portafolioData, expData, certData, seccionesData]) => {
+        setData(portafolioData);
+        setExperiencias(expData ?? []);
+        setCertificaciones(certData ?? []);
+        setSecciones(seccionesData ?? DEFAULTS_SECCIONES);
+      })
       .catch(() => setError("Error al cargar el portafolio. Verifica tu conexión."))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className={styles.stateScreen}>Cargando...</div>;
-  if (error)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{error}</div>;
+  const nombreCompleto = useMemo(() => {
+    const perfil = data?.perfil;
+    if (!perfil) return "Sin nombre definido";
+    return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Sin nombre definido";
+  }, [data]);
 
-  const perfil      = data?.perfil ?? null;
-  const tecnicas    = data?.habilidades_tecnicas ?? [];
-  const blandas     = data?.habilidades_blandas ?? [];
-  const proyectos   = data?.proyectos ?? [];
-  
-  const educaciones = (data?.educaciones ?? [] as Educacion[]).filter(e => e.visibilidad === "publico");
-  const cursos      = (data?.cursos ?? [] as Curso[]).filter(c => c.visibilidad === "publico");
-  const logros       = (data?.logros ?? [] as Logro[]).filter(l => l.visibilidad === "publico");
-  const idiomas      = (data?.idiomas ?? [] as Idioma[]).filter(i => i.visibilidad === "publico");
+  const perfil = data?.perfil ?? null;
+  const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
+  const habilidadesBlandas = data?.habilidades_blandas ?? [];
+  const proyectos = data?.proyectos ?? [];
+  const educaciones = (data?.educaciones ?? ([] as Educacion[])).filter((item) => item.visibilidad === "publico");
+  const cursos = (data?.cursos ?? ([] as Curso[])).filter((item) => item.visibilidad === "publico");
+  const logros = (data?.logros ?? ([] as Logro[])).filter((item) => item.visibilidad === "publico");
+  const idiomas = (data?.idiomas ?? ([] as Idioma[])).filter((item) => item.visibilidad === "publico");
+  const experienciasPublicas = experiencias.filter((item) => item.visibilidad !== "privado");
+  const certificacionesPublicas = certificaciones.filter((item) => item.visibilidad === "publico");
 
+  const cfg = secciones;
 
-  const nombre = perfil
-    ? `${perfil.nombre_perfil} ${perfil.apellido_perfil}`.trim()
-    : "Sin nombre";
+  const sectionHasContent: Record<SectionId, boolean> = {
+    perfil: Boolean(perfil),
+    habilidades: habilidadesTecnicas.length + habilidadesBlandas.length > 0,
+    proyectos: proyectos.length > 0,
+    educacion: educaciones.length > 0,
+    experiencia: experienciasPublicas.length > 0,
+    cursos: cursos.length > 0,
+    certificaciones: certificacionesPublicas.length > 0,
+    logros: logros.length > 0,
+    idiomas: idiomas.length > 0,
+  };
+
+  const seccionesActivas = sectionOrder.some((id) => isSectionPublic(id, cfg) && sectionHasContent[id]);
+
+  const renderSection = (id: SectionId) => {
+    switch (id) {
+      case "perfil":
+        return (
+          <SectionShell key="perfil" id="perfil" title="Perfil profesional" count={perfil ? 1 : 0}>
+            <div className={styles.profileGrid}>
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Nombre completo</p>
+                <p className={styles.fieldValue}>{nombreCompleto}</p>
+              </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Profesión</p>
+                <p className={styles.fieldValue}>{perfil?.profesion ?? "Sin información"}</p>
+              </div>
+
+              <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                <p className={styles.fieldLabel}>Descripción</p>
+                <p className={styles.fieldValueMuted}>{perfil?.descripcion ?? "Sin descripción"}</p>
+              </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Teléfono</p>
+                <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
+              </div>
+            </div>
+          </SectionShell>
+        );
+
+      case "habilidades":
+        return (
+          <SectionShell
+            key="habilidades"
+            id="habilidades"
+            title="Habilidades"
+            count={habilidadesTecnicas.length + habilidadesBlandas.length}
+          >
+            <div className={styles.splitGrid}>
+              <div className={styles.splitColumn}>
+                <p className={styles.splitLabel}>Técnicas</p>
+                {habilidadesTecnicas.length > 0 ? (
+                  <div className={styles.chipWrap}>
+                    {habilidadesTecnicas.map((item) => (
+                      <SkillChip key={item.id_usuario_habilidad} nombre={item.nombre} nivel={item.nivel} tipo="tecnica" />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState title="Sin habilidades técnicas" description="No hay habilidades técnicas visibles para esta vista previa." />
+                )}
+              </div>
+
+              <div className={styles.splitColumn}>
+                <p className={styles.splitLabel}>Blandas</p>
+                {habilidadesBlandas.length > 0 ? (
+                  <div className={styles.chipWrap}>
+                    {habilidadesBlandas.map((item) => (
+                      <SkillChip key={item.id_usuario_habilidad} nombre={item.nombre} nivel={item.nivel} tipo="blanda" />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState title="Sin habilidades blandas" description="No hay habilidades blandas visibles para esta vista previa." />
+                )}
+              </div>
+            </div>
+          </SectionShell>
+        );
+
+      case "proyectos":
+        return (
+          <SectionShell key="proyectos" id="proyectos" title="Proyectos" count={proyectos.length}>
+            {proyectos.length > 0 ? (
+              <div className={styles.projectGrid}>
+                {proyectos.map((proyecto) => (
+                  <ProjectCard key={proyecto.id_proyecto} proyecto={proyecto} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Sin proyectos visibles"
+                description="Todavía no hay proyectos listos para mostrarse en esta vista previa."
+              />
+            )}
+          </SectionShell>
+        );
+
+      case "educacion":
+        return (
+          <SectionShell key="educacion" id="educacion" title="Formación académica" count={educaciones.length}>
+            {educaciones.length > 0 ? (
+              <div className={styles.timelineList}>
+                {educaciones.map((educacion) => (
+                  <TimelineItem
+                    key={educacion.id_educacion}
+                    title={educacion.titulo}
+                    subtitle={educacion.institucion}
+                    period={formatPeriodo(educacion.fecha_inicio, educacion.fecha_fin)}
+                    description={educacion.descripcion}
+                    meta={educacion.area_estudio ? [educacion.area_estudio] : []}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Sin formación académica visible"
+                description="No hay registros públicos de formación académica para esta vista previa."
+              />
+            )}
+          </SectionShell>
+        );
+
+      case "experiencia":
+        return (
+          <SectionShell key="experiencia" id="experiencia" title="Experiencia laboral" count={experienciasPublicas.length}>
+            {experienciasPublicas.length > 0 ? (
+              <div className={styles.timelineList}>
+                {experienciasPublicas.map((experiencia) => (
+                  <TimelineItem
+                    key={experiencia.id_experiencia}
+                    title={experiencia.puesto}
+                    subtitle={experiencia.nombre_empresa}
+                    period={formatPeriodo(
+                      experiencia.fecha_inicio,
+                      experiencia.es_actual ? null : experiencia.fecha_fin ?? null,
+                    )}
+                    description={experiencia.descripcion}
+                    meta={[
+                      experiencia.tipo ?? "Experiencia",
+                      experiencia.ubicacion ? `Ubicación: ${experiencia.ubicacion}` : "",
+                    ].filter(Boolean) as string[]}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Sin experiencia visible" description="No hay experiencias públicas disponibles para esta vista previa." />
+            )}
+          </SectionShell>
+        );
+
+      case "cursos":
+        return (
+          <SectionShell key="cursos" id="cursos" title="Cursos" count={cursos.length}>
+            {cursos.length > 0 ? (
+              <div className={styles.timelineList}>
+                {cursos.map((curso) => (
+                  <TimelineItem
+                    key={curso.id_educacion}
+                    title={curso.titulo}
+                    subtitle={curso.institucion}
+                    period={formatPeriodo(curso.fecha_inicio, curso.fecha_fin)}
+                    description={curso.descripcion}
+                    meta={curso.fecha_fin === null ? ["En curso"] : []}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Sin cursos visibles" description="No hay cursos públicos para esta vista previa." />
+            )}
+          </SectionShell>
+        );
+
+      case "certificaciones":
+        return (
+          <SectionShell
+            key="certificaciones"
+            id="certificaciones"
+            title="Certificaciones"
+            count={certificacionesPublicas.length}
+          >
+            {certificacionesPublicas.length > 0 ? (
+              <div className={styles.certGrid}>
+                {certificacionesPublicas.map((certificacion) => (
+                  <CertificacionCard key={certificacion.id_certificacion} cert={certificacion} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Sin certificaciones visibles"
+                description="No hay certificaciones públicas disponibles para esta vista previa."
+              />
+            )}
+          </SectionShell>
+        );
+
+      case "logros":
+        return (
+          <SectionShell key="logros" id="logros" title="Logros y reconocimientos" count={logros.length}>
+            {logros.length > 0 ? (
+              <div className={styles.timelineList}>
+                {logros.map((logro) => (
+                  <TimelineItem
+                    key={logro.id_logro}
+                    title={logro.titulo}
+                    subtitle={logro.entidad_nombre ?? "Entidad no especificada"}
+                    period={logro.fecha_obtencion ? formatFecha(logro.fecha_obtencion) : undefined}
+                    description={logro.descripcion}
+                    meta={logro.identificador ? [`ID: ${logro.identificador}`] : []}
+                    extra={
+                      logro.url_credencial ? (
+                        <a href={logro.url_credencial} target="_blank" rel="noreferrer" className={styles.inlineLink}>
+                          Ver credencial
+                        </a>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Sin logros visibles" description="No hay logros públicos para esta vista previa." />
+            )}
+          </SectionShell>
+        );
+
+      case "idiomas":
+        return (
+          <SectionShell key="idiomas" id="idiomas" title="Idiomas" count={idiomas.length}>
+            {idiomas.length > 0 ? (
+              <div className={styles.languagesGrid}>
+                {idiomas.map((idioma) => (
+                  <article key={idioma.id_usuario_idioma} className={styles.languageCard}>
+                    <p className={styles.languageName}>{idioma.nombre}</p>
+                    <span className={styles.languageLevel}>
+                      {NIVEL_IDIOMA[idioma.nivel] ?? idioma.nivel.toUpperCase()}
+                    </span>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Sin idiomas visibles" description="No hay idiomas públicos para esta vista previa." />
+            )}
+          </SectionShell>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.stateScreen}>
+        <div className={styles.stateCard}>
+          <span className={styles.loadingDot} />
+          <p>Cargando vista previa del portafolio</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className={`${styles.stateScreen} ${styles.stateError}`}>{error}</div>;
+  }
+
+  if (!seccionesActivas) {
+    return (
+      <div className={styles.stateScreen}>
+        <div className={styles.emptyPreviewCard}>
+          <div className={styles.emptyPreviewIcon}>
+            <IconEye />
+          </div>
+          <h1 className={styles.emptyPreviewTitle}>Vista previa no disponible</h1>
+          <p className={styles.emptyPreviewText}>
+            Debes activar al menos una sección para visualizar cómo quedará tu portafolio antes de publicarlo.
+          </p>
+          <div className={styles.emptyPreviewActions}>
+            <button type="button" className={styles.secondaryButton} onClick={() => navigate(-1)}>
+              <IconArrowLeft />
+              Volver
+            </button>
+            <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/editar")}>
+              <IconPencil />
+              Editar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
-
-      <button className={styles.fabBack} onClick={() => navigate(-1)} type="button">
-        <IconBack /> Volver
-      </button>
-      <button className={styles.fabEdit} onClick={() => navigate("/portafolio/editar")} type="button">
-        <IconEdit /> Editar portafolio
-      </button>
-
-      <div className={styles.container}>
-
-        {/* Hero / Perfil */}
-        <section className={styles.hero}>
-          <div className={styles.avatarWrap}>
-            {perfil?.foto_url
-              ? <img src={perfil.foto_url} alt={nombre} className={styles.avatarImg} />
-              : <div className={styles.avatarPlaceholder}><IconUser /></div>
-            }
+      <header className={styles.topBar}>
+        <div className={styles.brandBlock}>
+          <span className={styles.brandKicker}>Portafolio</span>
+          <div>
+            <h1 className={styles.brandTitle}>Vista previa</h1>
+            <p className={styles.brandSubtitle}>Revisa el contenido tal como se mostrará públicamente.</p>
           </div>
-          <div className={styles.heroInfo}>
-            <h1 className={styles.heroName}>{nombre}</h1>
-            <p className={styles.heroProfesion}>{perfil?.profesion ?? "—"}</p>
-            {perfil?.descripcion && <p className={styles.heroDesc}>{perfil.descripcion}</p>}
-            {perfil?.celular && <span className={styles.heroBadge}>📞 {perfil.celular}</span>}
-          </div>
-        </section>
+        </div>
 
-        {/* Habilidades */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Habilidades</h2>
-            <span className={styles.sectionCount}>{tecnicas.length + blandas.length}</span>
-          </div>
-          <div className={styles.sectionBody}>
-            <div className={styles.habilidadesGrid}>
-              <div className={styles.habilidadesCol}>
-                <p className={styles.colLabel}>Técnicas</p>
-                {tecnicas.length === 0
-                  ? <EmptyState label="habilidades técnicas" />
-                  : <div className={styles.chipRow}>{tecnicas.map(h => <SkillChip key={h.id_usuario_habilidad} nombre={h.nombre} nivel={h.nivel} tipo="tecnica" />)}</div>
-                }
-              </div>
-              <div className={styles.colDivider} />
-              <div className={styles.habilidadesCol}>
-                <p className={styles.colLabel}>Blandas</p>
-                {blandas.length === 0
-                  ? <EmptyState label="habilidades blandas" />
-                  : <div className={styles.chipRow}>{blandas.map(h => <SkillChip key={h.id_usuario_habilidad} nombre={h.nombre} tipo="blanda" />)}</div>
-                }
-              </div>
+        <div className={styles.topActions}>
+          <button type="button" className={styles.secondaryButton} onClick={() => navigate(-1)}>
+            <IconArrowLeft />
+            Volver
+          </button>
+          <button type="button" className={styles.secondaryButton} onClick={() => navigate("/portafolio/editar")}>
+            <IconPencil />
+            Editar
+          </button>
+          <button type="button" className={styles.secondaryButton} onClick={openOrderModal}>
+            <IconSort />
+            Ordenar secciones
+          </button>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => navigate("/portafolio/visibilidad")}
+          >
+            Configurar visibilidad
+          </button>
+          <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/editar")}>
+            Publicar
+          </button>
+
+        </div>
+      </header>
+
+      <main className={styles.main}>
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarCard}>
+            <div className={styles.profileAvatar}>
+              {perfil?.foto_url ? <img src={perfil.foto_url} alt={nombreCompleto} /> : <IconUser />}
+            </div>
+            <div className={styles.profileHeader}>
+              <h2 className={styles.profileName}>{nombreCompleto}</h2>
+              {perfil?.profesion && <p className={styles.profileRole}>{perfil.profesion}</p>}
+              {perfil?.descripcion && <p className={styles.profileDescription}>{perfil.descripcion}</p>}
             </div>
           </div>
-        </section>
 
-        {/* Formación Académica */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Formación Académica</h2>
-            <span className={styles.sectionCount}>{educaciones.length}</span>
-          </div>
-          <div className={styles.sectionBody}>
-            {educaciones.length === 0
-              ? <EmptyState label="formaciones académicas" />
-              : <div className={styles.timelineList}>{educaciones.map(e => <EducacionItem key={e.id_educacion} edu={e} />)}</div>
-            }
-          </div>
-        </section>
+          <nav className={styles.navCard} aria-label="Secciones del portafolio">
+            <p className={styles.navTitle}>Secciones</p>
+            {sectionOrder.map((id) =>
+              isSectionPublic(id, cfg) ? (
+                <a key={id} href={`#${id}`} className={styles.navLink}>
+                  {SECTION_LABELS[id]}
+                </a>
+              ) : null,
+            )}
+          </nav>
+        </aside>
 
-        {/* Cursos */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Cursos</h2>
-            <span className={styles.sectionCount}>{cursos.length}</span>
-          </div>
-          <div className={styles.sectionBody}>
-            {cursos.length === 0
-              ? <EmptyState label="cursos" />
-              : <div className={styles.timelineList}>{cursos.map(c => <CursoItem key={c.id_educacion} curso={c} />)}</div>
-            }
-          </div>
-          
-         {/* Logros y reconocimientos */}
+        <section className={styles.content}>
+          {sectionOrder.map((id) => (isSectionPublic(id, cfg) ? renderSection(id) : null))}
         </section>
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Logros y Reconocimientos</h2>
-            <span className={styles.sectionCount}>{logros.length}</span>
-          </div>
-          <div className={styles.sectionBody}>
-            {logros.length === 0
-              ? <EmptyState label="logros" />
-              : <div className={styles.timelineList}>{logros.map(l => <LogroItem key={l.id_logro} logro={l} />)}</div>
-            }
-          </div>
-        </section>
-        {/* Proyectos */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Proyectos</h2>
-            <span className={styles.sectionCount}>{proyectos.length}</span>
-          </div>
-          <div className={styles.sectionBody}>
-            {proyectos.length === 0
-              ? <EmptyState label="proyectos" />
-              : <div className={styles.projectGrid}>{proyectos.map(p => <ProjectCard key={p.id_proyecto} proyecto={p} />)}</div>
-            }
-          </div>
-        </section>
-        {/* Idiomas */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Idiomas</h2>
-            <span className={styles.sectionCount}>{idiomas.length}</span>
-          </div>
-          <div className={styles.sectionBody}>
-            {idiomas.length === 0
-              ? <EmptyState label="idiomas" />
-              : <div className={styles.timelineList}>
-                  {idiomas.map(i => (
-                    <div key={i.id_usuario_idioma} className={styles.timelineItem}>
-                      <div className={styles.timelineIcono}>🌐</div>
-                      <div className={styles.timelineInfo}>
-                        <span className={styles.timelineTitulo}>{i.nombre}</span>
-                        {i.nivel && <span className={styles.timelineArea}>{i.nivel.toUpperCase()}</span>}
-                      </div>
-                    </div>
-                  ))}
+      </main>
+
+      {showOrderModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowOrderModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Ordenar secciones</h2>
+            <p className={styles.modalSub}>Arrastra cada sección para cambiar el orden de visualización.</p>
+
+            <div className={styles.modalList}>
+              {dragOrder.map((id, index) => (
+                <div
+                  key={id}
+                  className={[
+                    styles.modalItem,
+                    dragIndex === index ? styles.modalItemDragging : "",
+                    dragOverIndex === index ? styles.modalItemOver : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={() => handleDrop(index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className={styles.modalHandle} aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+
+                  <span className={styles.modalItemLabel}>{SECTION_LABELS[id]}</span>
+                  <span className={styles.modalItemNum}>{index + 1}</span>
                 </div>
-            }
+              ))}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.secondaryButton} onClick={resetOrder}>
+                Restablecer
+              </button>
+              <button type="button" className={styles.secondaryButton} onClick={() => setShowOrderModal(false)}>
+                Cancelar
+              </button>
+              <button type="button" className={styles.primaryButton} onClick={saveOrder}>
+                Guardar orden
+              </button>
+            </div>
           </div>
-        </section>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,14 @@
 import axios from "axios";
 
+import type { ConfiguracionSecciones } from '../types/portafolioTypes';
+
 const API = "http://localhost:8000/api";
 
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const authHeaders = () => {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("No autenticado");
+  return { Authorization: `Bearer ${token}` };
+};
 
 export const getPortafolio = async () => {
   const res = await axios.get(`${API}/portafolio`, { headers: authHeaders() });
@@ -377,3 +381,21 @@ function dataUrlToBlob(dataUrl: string): Blob {
   }
   return new Blob([bytes], { type: mime });
 }
+
+/** Obtiene la configuración de secciones visibles del portafolio. */
+export const getVisibilidadSecciones = async (): Promise<ConfiguracionSecciones> => {
+  const res = await axios.get(`${API}/visibilidad/secciones`, {
+    headers: authHeaders(),
+  });
+  return res.data.configuracion;
+};
+ 
+/** Guarda la configuración de secciones visibles del portafolio. */
+export const updateVisibilidadSecciones = async (
+  data: ConfiguracionSecciones
+): Promise<ConfiguracionSecciones> => {
+  const res = await axios.put(`${API}/visibilidad/secciones`, data, {
+    headers: authHeaders(),
+  });
+  return res.data.configuracion;
+};
