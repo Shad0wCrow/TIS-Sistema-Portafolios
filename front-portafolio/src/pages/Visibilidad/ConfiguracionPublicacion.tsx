@@ -181,7 +181,7 @@ export default function ConfiguracionPublicacion() {
       {/* Topbar */}
       <header className={styles.topbar}>
         <div className={styles.topbarLeft}>
-          <button type="button" className={styles.backBtn} onClick={() => navigate('/portafolio/editar')}>
+          <button type="button" className={styles.backBtn} onClick={() => navigate(-1)}>
             <IconArrowLeft />
             Volver
           </button>

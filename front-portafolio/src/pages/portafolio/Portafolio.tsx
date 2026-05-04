@@ -722,9 +722,17 @@ export default function Portafolio() {
             <IconSort />
             Ordenar secciones
           </button>
+                  <button
+          type="button"
+          className={styles.secondaryButton}
+          onClick={() => navigate("/portafolio/visibilidad")}
+        >
+          Configurar visibilidad
+        </button>
           <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/editar")}>
             Publicar
           </button>
+
         </div>
       </header>
 
