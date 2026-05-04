@@ -8,9 +8,13 @@ import CreateAccount from "./pages/createAccount/createAccount";
 import EdicionPortafolio from "./pages/editPortafolio/edicionPortafolio";
 import Portafolio from "./pages/portafolio/Portafolio";
 import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
+import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicacion";
+
 
 import CreateAccountRoute from "./components/CreateAccountRoute";
 import PortafolioRoute from "./components/PortafolioRoute";
+
+
 
 function App() {
   return (
@@ -44,6 +48,15 @@ function App() {
         element={
           <PortafolioRoute>
             <Portafolio />
+          </PortafolioRoute>
+        }
+      />
+
+      <Route
+        path="/portafolio/visibilidad"
+        element={
+          <PortafolioRoute>
+            <ConfiguracionPublicacion />
           </PortafolioRoute>
         }
       />

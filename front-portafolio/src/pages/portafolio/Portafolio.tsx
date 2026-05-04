@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCertificaciones, getExperiencias, getPortafolio } from "../../services/portafolioservice";
+import {
+  getCertificaciones,
+  getExperiencias,
+  getPortafolio,
+  getVisibilidadSecciones,
+} from "../../services/portafolioservice";
 import type {
   Certificacion,
+  ConfiguracionSecciones,
   Curso,
   Educacion,
   Experiencia,
@@ -35,6 +41,18 @@ const NIVEL_IDIOMA: Record<string, string> = {
 };
 
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+const DEFAULTS_SECCIONES: ConfiguracionSecciones = {
+  seccion_perfil:          "publico",
+  seccion_habilidades:     "publico",
+  seccion_proyectos:       "publico",
+  seccion_educacion:       "publico",
+  seccion_experiencia:     "publico",
+  seccion_cursos:          "publico",
+  seccion_certificaciones: "publico",
+  seccion_logros:          "publico",
+  seccion_idiomas:         "publico",
+};
 
 function IconArrowLeft() {
   return (
@@ -215,6 +233,7 @@ export default function Portafolio() {
   const [data, setData] = useState<PortafolioData | null>(null);
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
+  const [secciones, setSecciones] = useState<ConfiguracionSecciones>(DEFAULTS_SECCIONES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -230,11 +249,13 @@ export default function Portafolio() {
       getPortafolio(),
       getExperiencias().catch(() => [] as Experiencia[]),
       getCertificaciones().catch(() => [] as Certificacion[]),
+      getVisibilidadSecciones().catch(() => null),
     ])
-      .then(([portafolioData, expData, certData]) => {
+      .then(([portafolioData, expData, certData, seccionesData]) => {
         setData(portafolioData);
         setExperiencias(expData ?? []);
         setCertificaciones(certData ?? []);
+        setSecciones(seccionesData ?? DEFAULTS_SECCIONES);
       })
       .catch(() => setError("Error al cargar el portafolio. Verifica tu conexión."))
       .finally(() => setLoading(false));
@@ -246,28 +267,30 @@ export default function Portafolio() {
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Sin nombre definido";
   }, [data]);
 
-  const perfil = data?.perfil ?? null;
-  const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
-  const habilidadesBlandas = data?.habilidades_blandas ?? [];
-  const proyectos = data?.proyectos ?? [];
-  const educaciones = (data?.educaciones ?? [] as Educacion[]).filter((item) => item.visibilidad === "publico");
-  const cursos = (data?.cursos ?? [] as Curso[]).filter((item) => item.visibilidad === "publico");
-  const logros = (data?.logros ?? [] as Logro[]).filter((item) => item.visibilidad === "publico");
-  const idiomas = (data?.idiomas ?? [] as Idioma[]).filter((item) => item.visibilidad === "publico");
-  const experienciasPublicas = experiencias.filter((item) => item.visibilidad !== "privado");
+  const perfil                 = data?.perfil ?? null;
+  const habilidadesTecnicas    = data?.habilidades_tecnicas ?? [];
+  const habilidadesBlandas     = data?.habilidades_blandas ?? [];
+  const proyectos              = data?.proyectos ?? [];
+  const educaciones            = (data?.educaciones ?? [] as Educacion[]).filter((item) => item.visibilidad === "publico");
+  const cursos                 = (data?.cursos ?? [] as Curso[]).filter((item) => item.visibilidad === "publico");
+  const logros                 = (data?.logros ?? [] as Logro[]).filter((item) => item.visibilidad === "publico");
+  const idiomas                = (data?.idiomas ?? [] as Idioma[]).filter((item) => item.visibilidad === "publico");
+  const experienciasPublicas   = experiencias.filter((item) => item.visibilidad !== "privado");
   const certificacionesPublicas = certificaciones.filter((item) => item.visibilidad === "publico");
 
+  const cfg = secciones;
+
   const seccionesActivas = [
-    perfil ? 1 : 0,
-    habilidadesTecnicas.length + habilidadesBlandas.length,
-    proyectos.length,
-    educaciones.length,
-    experienciasPublicas.length,
-    cursos.length,
-    logros.length,
-    idiomas.length,
-    certificacionesPublicas.length,
-  ].some((cantidad) => cantidad > 0);
+    cfg.seccion_perfil          === "publico" && perfil,
+    cfg.seccion_habilidades     === "publico" && (habilidadesTecnicas.length + habilidadesBlandas.length > 0),
+    cfg.seccion_proyectos       === "publico" && proyectos.length > 0,
+    cfg.seccion_educacion       === "publico" && educaciones.length > 0,
+    cfg.seccion_experiencia     === "publico" && experienciasPublicas.length > 0,
+    cfg.seccion_cursos          === "publico" && cursos.length > 0,
+    cfg.seccion_certificaciones === "publico" && certificacionesPublicas.length > 0,
+    cfg.seccion_logros          === "publico" && logros.length > 0,
+    cfg.seccion_idiomas         === "publico" && idiomas.length > 0,
+  ].some(Boolean);
 
   if (loading) {
     return (
@@ -347,229 +370,246 @@ export default function Portafolio() {
               {perfil?.profesion && <p className={styles.profileRole}>{perfil.profesion}</p>}
               {perfil?.descripcion && <p className={styles.profileDescription}>{perfil.descripcion}</p>}
             </div>
-            
           </div>
 
           <nav className={styles.navCard} aria-label="Secciones del portafolio">
             <p className={styles.navTitle}>Secciones</p>
-            <a href="#perfil" className={styles.navLink}>Perfil</a>
-            <a href="#habilidades" className={styles.navLink}>Habilidades</a>
-            <a href="#proyectos" className={styles.navLink}>Proyectos</a>
-            <a href="#educacion" className={styles.navLink}>Formación académica</a>
-            <a href="#experiencia" className={styles.navLink}>Experiencia laboral</a>
-            <a href="#cursos" className={styles.navLink}>Cursos</a>
-            <a href="#certificaciones" className={styles.navLink}>Certificaciones</a>
-            <a href="#logros" className={styles.navLink}>Logros y reconocimientos</a>
-            <a href="#idiomas" className={styles.navLink}>Idiomas</a>
+            {cfg.seccion_perfil          === "publico" && <a href="#perfil"          className={styles.navLink}>Perfil</a>}
+            {cfg.seccion_habilidades     === "publico" && <a href="#habilidades"     className={styles.navLink}>Habilidades</a>}
+            {cfg.seccion_proyectos       === "publico" && <a href="#proyectos"       className={styles.navLink}>Proyectos</a>}
+            {cfg.seccion_educacion       === "publico" && <a href="#educacion"       className={styles.navLink}>Formación académica</a>}
+            {cfg.seccion_experiencia     === "publico" && <a href="#experiencia"     className={styles.navLink}>Experiencia laboral</a>}
+            {cfg.seccion_cursos          === "publico" && <a href="#cursos"          className={styles.navLink}>Cursos</a>}
+            {cfg.seccion_certificaciones === "publico" && <a href="#certificaciones" className={styles.navLink}>Certificaciones</a>}
+            {cfg.seccion_logros          === "publico" && <a href="#logros"          className={styles.navLink}>Logros y reconocimientos</a>}
+            {cfg.seccion_idiomas         === "publico" && <a href="#idiomas"         className={styles.navLink}>Idiomas</a>}
           </nav>
         </aside>
 
         <section className={styles.content}>
-          <SectionShell id="perfil" title="Perfil profesional" count={perfil ? 1 : 0}>
-            <div className={styles.profileGrid}>
-              <div className={styles.profileInfoCard}>
-                <p className={styles.fieldLabel}>Nombre completo</p>
-                <p className={styles.fieldValue}>{nombreCompleto}</p>
+          {cfg.seccion_perfil === "publico" && (
+            <SectionShell id="perfil" title="Perfil profesional" count={perfil ? 1 : 0}>
+              <div className={styles.profileGrid}>
+                <div className={styles.profileInfoCard}>
+                  <p className={styles.fieldLabel}>Nombre completo</p>
+                  <p className={styles.fieldValue}>{nombreCompleto}</p>
+                </div>
+                <div className={styles.profileInfoCard}>
+                  <p className={styles.fieldLabel}>Profesión</p>
+                  <p className={styles.fieldValue}>{perfil?.profesion ?? "Sin información"}</p>
+                </div>
+                <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                  <p className={styles.fieldLabel}>Descripción</p>
+                  <p className={styles.fieldValueMuted}>{perfil?.descripcion ?? "Sin descripción"}</p>
+                </div>
+                <div className={styles.profileInfoCard}>
+                  <p className={styles.fieldLabel}>Teléfono</p>
+                  <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
+                </div>
               </div>
-              <div className={styles.profileInfoCard}>
-                <p className={styles.fieldLabel}>Profesión</p>
-                <p className={styles.fieldValue}>{perfil?.profesion ?? "Sin información"}</p>
-              </div>
-              <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
-                <p className={styles.fieldLabel}>Descripción</p>
-                <p className={styles.fieldValueMuted}>{perfil?.descripcion ?? "Sin descripción"}</p>
-              </div>
-              <div className={styles.profileInfoCard}>
-                <p className={styles.fieldLabel}>Teléfono</p>
-                <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
-              </div>
-            </div>
-          </SectionShell>
+            </SectionShell>
+          )}
 
-          <SectionShell id="habilidades" title="Habilidades" count={habilidadesTecnicas.length + habilidadesBlandas.length}>
-            <div className={styles.splitGrid}>
-              <div className={styles.splitColumn}>
-                <p className={styles.splitLabel}>Técnicas</p>
-                {habilidadesTecnicas.length > 0 ? (
-                  <div className={styles.chipWrap}>
-                    {habilidadesTecnicas.map((item) => (
-                      <SkillChip
-                        key={item.id_usuario_habilidad}
-                        nombre={item.nombre}
-                        nivel={item.nivel}
-                        tipo="tecnica"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState
-                    title="Sin habilidades técnicas"
-                    description="No hay habilidades técnicas visibles para esta vista previa."
-                  />
-                )}
+          {cfg.seccion_habilidades === "publico" && (
+            <SectionShell id="habilidades" title="Habilidades" count={habilidadesTecnicas.length + habilidadesBlandas.length}>
+              <div className={styles.splitGrid}>
+                <div className={styles.splitColumn}>
+                  <p className={styles.splitLabel}>Técnicas</p>
+                  {habilidadesTecnicas.length > 0 ? (
+                    <div className={styles.chipWrap}>
+                      {habilidadesTecnicas.map((item) => (
+                        <SkillChip
+                          key={item.id_usuario_habilidad}
+                          nombre={item.nombre}
+                          nivel={item.nivel}
+                          tipo="tecnica"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="Sin habilidades técnicas"
+                      description="No hay habilidades técnicas visibles para esta vista previa."
+                    />
+                  )}
+                </div>
+                <div className={styles.splitColumn}>
+                  <p className={styles.splitLabel}>Blandas</p>
+                  {habilidadesBlandas.length > 0 ? (
+                    <div className={styles.chipWrap}>
+                      {habilidadesBlandas.map((item) => (
+                        <SkillChip
+                          key={item.id_usuario_habilidad}
+                          nombre={item.nombre}
+                          nivel={item.nivel}
+                          tipo="blanda"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="Sin habilidades blandas"
+                      description="No hay habilidades blandas visibles para esta vista previa."
+                    />
+                  )}
+                </div>
               </div>
-              <div className={styles.splitColumn}>
-                <p className={styles.splitLabel}>Blandas</p>
-                {habilidadesBlandas.length > 0 ? (
-                  <div className={styles.chipWrap}>
-                    {habilidadesBlandas.map((item) => (
-                      <SkillChip
-                        key={item.id_usuario_habilidad}
-                        nombre={item.nombre}
-                        nivel={item.nivel}
-                        tipo="blanda"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState
-                    title="Sin habilidades blandas"
-                    description="No hay habilidades blandas visibles para esta vista previa."
-                  />
-                )}
-              </div>
-            </div>
-          </SectionShell>
+            </SectionShell>
+          )}
 
-          <SectionShell id="proyectos" title="Proyectos" count={proyectos.length}>
-            {proyectos.length > 0 ? (
-              <div className={styles.projectGrid}>
-                {proyectos.map((proyecto) => (
-                  <ProjectCard key={proyecto.id_proyecto} proyecto={proyecto} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Sin proyectos visibles"
-                description="Todavía no hay proyectos listos para mostrarse en esta vista previa."
-              />
-            )}
-          </SectionShell>
+          {cfg.seccion_proyectos === "publico" && (
+            <SectionShell id="proyectos" title="Proyectos" count={proyectos.length}>
+              {proyectos.length > 0 ? (
+                <div className={styles.projectGrid}>
+                  {proyectos.map((proyecto) => (
+                    <ProjectCard key={proyecto.id_proyecto} proyecto={proyecto} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Sin proyectos visibles"
+                  description="Todavía no hay proyectos listos para mostrarse en esta vista previa."
+                />
+              )}
+            </SectionShell>
+          )}
 
-          <SectionShell id="educacion" title="Formación académica" count={educaciones.length}>
-            {educaciones.length > 0 ? (
-              <div className={styles.timelineList}>
-                {educaciones.map((educacion) => (
-                  <TimelineItem
-                    key={educacion.id_educacion}
-                    title={educacion.titulo}
-                    subtitle={educacion.institucion}
-                    period={formatPeriodo(educacion.fecha_inicio, educacion.fecha_fin)}
-                    description={educacion.descripcion}
-                    meta={educacion.area_estudio ? [educacion.area_estudio] : []}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Sin formación académica visible"
-                description="No hay registros públicos de formación académica para esta vista previa."
-              />
-            )}
-          </SectionShell>
+          {cfg.seccion_educacion === "publico" && (
+            <SectionShell id="educacion" title="Formación académica" count={educaciones.length}>
+              {educaciones.length > 0 ? (
+                <div className={styles.timelineList}>
+                  {educaciones.map((educacion) => (
+                    <TimelineItem
+                      key={educacion.id_educacion}
+                      title={educacion.titulo}
+                      subtitle={educacion.institucion}
+                      period={formatPeriodo(educacion.fecha_inicio, educacion.fecha_fin)}
+                      description={educacion.descripcion}
+                      meta={educacion.area_estudio ? [educacion.area_estudio] : []}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Sin formación académica visible"
+                  description="No hay registros públicos de formación académica para esta vista previa."
+                />
+              )}
+            </SectionShell>
+          )}
 
-          <SectionShell id="experiencia" title="Experiencia laboral" count={experienciasPublicas.length}>
-            {experienciasPublicas.length > 0 ? (
-              <div className={styles.timelineList}>
-                {experienciasPublicas.map((experiencia) => (
-                  <TimelineItem
-                    key={experiencia.id_experiencia}
-                    title={experiencia.puesto}
-                    subtitle={experiencia.nombre_empresa}
-                    period={formatPeriodo(experiencia.fecha_inicio, experiencia.es_actual ? null : experiencia.fecha_fin ?? null)}
-                    description={experiencia.descripcion}
-                    meta={[
-                      experiencia.tipo ?? "Experiencia",
-                      experiencia.ubicacion ? `Ubicación: ${experiencia.ubicacion}` : "",
-                    ].filter(Boolean) as string[]}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Sin experiencia visible"
-                description="No hay experiencias públicas disponibles para esta vista previa."
-              />
-            )}
-          </SectionShell>
+          {cfg.seccion_experiencia === "publico" && (
+            <SectionShell id="experiencia" title="Experiencia laboral" count={experienciasPublicas.length}>
+              {experienciasPublicas.length > 0 ? (
+                <div className={styles.timelineList}>
+                  {experienciasPublicas.map((experiencia) => (
+                    <TimelineItem
+                      key={experiencia.id_experiencia}
+                      title={experiencia.puesto}
+                      subtitle={experiencia.nombre_empresa}
+                      period={formatPeriodo(experiencia.fecha_inicio, experiencia.es_actual ? null : experiencia.fecha_fin ?? null)}
+                      description={experiencia.descripcion}
+                      meta={[
+                        experiencia.tipo ?? "Experiencia",
+                        experiencia.ubicacion ? `Ubicación: ${experiencia.ubicacion}` : "",
+                      ].filter(Boolean) as string[]}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Sin experiencia visible"
+                  description="No hay experiencias públicas disponibles para esta vista previa."
+                />
+              )}
+            </SectionShell>
+          )}
 
-          <SectionShell id="cursos" title="Cursos" count={cursos.length}>
-            {cursos.length > 0 ? (
-              <div className={styles.timelineList}>
-                {cursos.map((curso) => (
-                  <TimelineItem
-                    key={curso.id_educacion}
-                    title={curso.titulo}
-                    subtitle={curso.institucion}
-                    period={formatPeriodo(curso.fecha_inicio, curso.fecha_fin)}
-                    description={curso.descripcion}
-                    meta={curso.fecha_fin === null ? ["En curso"] : []}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Sin cursos visibles"
-                description="No hay cursos públicos para esta vista previa."
-              />
-            )}
-          </SectionShell>
+          {cfg.seccion_cursos === "publico" && (
+            <SectionShell id="cursos" title="Cursos" count={cursos.length}>
+              {cursos.length > 0 ? (
+                <div className={styles.timelineList}>
+                  {cursos.map((curso) => (
+                    <TimelineItem
+                      key={curso.id_educacion}
+                      title={curso.titulo}
+                      subtitle={curso.institucion}
+                      period={formatPeriodo(curso.fecha_inicio, curso.fecha_fin)}
+                      description={curso.descripcion}
+                      meta={curso.fecha_fin === null ? ["En curso"] : []}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Sin cursos visibles"
+                  description="No hay cursos públicos para esta vista previa."
+                />
+              )}
+            </SectionShell>
+          )}
 
-          <SectionShell id="certificaciones" title="Certificaciones" count={certificacionesPublicas.length}>
-            {certificacionesPublicas.length > 0 ? (
-              <div className={styles.certGrid}>
-                {certificacionesPublicas.map((certificacion) => (
-                  <CertificacionCard key={certificacion.id_certificacion} cert={certificacion} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Sin certificaciones visibles"
-                description="No hay certificaciones públicas disponibles para esta vista previa."
-              />
-            )}
-          </SectionShell>
+          {cfg.seccion_certificaciones === "publico" && (
+            <SectionShell id="certificaciones" title="Certificaciones" count={certificacionesPublicas.length}>
+              {certificacionesPublicas.length > 0 ? (
+                <div className={styles.certGrid}>
+                  {certificacionesPublicas.map((certificacion) => (
+                    <CertificacionCard key={certificacion.id_certificacion} cert={certificacion} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Sin certificaciones visibles"
+                  description="No hay certificaciones públicas disponibles para esta vista previa."
+                />
+              )}
+            </SectionShell>
+          )}
 
-          <SectionShell id="logros" title="Logros y reconocimientos" count={logros.length}>
-            {logros.length > 0 ? (
-              <div className={styles.timelineList}>
-                {logros.map((logro) => (
-                  <TimelineItem
-                    key={logro.id_logro}
-                    title={logro.titulo}
-                    subtitle={logro.entidad_nombre ?? "Entidad no especificada"}
-                    period={logro.fecha_obtencion ? formatFecha(logro.fecha_obtencion) : undefined}
-                    description={logro.descripcion}
-                    meta={logro.identificador ? [`ID: ${logro.identificador}`] : []}
-                    extra={logro.url_credencial ? <a href={logro.url_credencial} target="_blank" rel="noreferrer" className={styles.inlineLink}>Ver credencial</a> : undefined}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Sin logros visibles"
-                description="No hay logros públicos para esta vista previa."
-              />
-            )}
-          </SectionShell>
+          {cfg.seccion_logros === "publico" && (
+            <SectionShell id="logros" title="Logros y reconocimientos" count={logros.length}>
+              {logros.length > 0 ? (
+                <div className={styles.timelineList}>
+                  {logros.map((logro) => (
+                    <TimelineItem
+                      key={logro.id_logro}
+                      title={logro.titulo}
+                      subtitle={logro.entidad_nombre ?? "Entidad no especificada"}
+                      period={logro.fecha_obtencion ? formatFecha(logro.fecha_obtencion) : undefined}
+                      description={logro.descripcion}
+                      meta={logro.identificador ? [`ID: ${logro.identificador}`] : []}
+                      extra={logro.url_credencial ? <a href={logro.url_credencial} target="_blank" rel="noreferrer" className={styles.inlineLink}>Ver credencial</a> : undefined}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Sin logros visibles"
+                  description="No hay logros públicos para esta vista previa."
+                />
+              )}
+            </SectionShell>
+          )}
 
-          <SectionShell id="idiomas" title="Idiomas" count={idiomas.length}>
-            {idiomas.length > 0 ? (
-              <div className={styles.languagesGrid}>
-                {idiomas.map((idioma) => (
-                  <article key={idioma.id_usuario_idioma} className={styles.languageCard}>
-                    <p className={styles.languageName}>{idioma.nombre}</p>
-                    <span className={styles.languageLevel}>{NIVEL_IDIOMA[idioma.nivel] ?? idioma.nivel.toUpperCase()}</span>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Sin idiomas visibles"
-                description="No hay idiomas públicos para esta vista previa."
-              />
-            )}
-          </SectionShell>
+          {cfg.seccion_idiomas === "publico" && (
+            <SectionShell id="idiomas" title="Idiomas" count={idiomas.length}>
+              {idiomas.length > 0 ? (
+                <div className={styles.languagesGrid}>
+                  {idiomas.map((idioma) => (
+                    <article key={idioma.id_usuario_idioma} className={styles.languageCard}>
+                      <p className={styles.languageName}>{idioma.nombre}</p>
+                      <span className={styles.languageLevel}>{NIVEL_IDIOMA[idioma.nivel] ?? idioma.nivel.toUpperCase()}</span>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Sin idiomas visibles"
+                  description="No hay idiomas públicos para esta vista previa."
+                />
+              )}
+            </SectionShell>
+          )}
         </section>
       </main>
     </div>
