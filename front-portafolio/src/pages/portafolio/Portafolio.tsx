@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCertificaciones,
@@ -20,295 +20,21 @@ import ProjectCard from "../../components/portafolio/ProjectCard";
 import SkillChip from "../../components/portafolio/SkillChip";
 import styles from "./Portafolio.module.css";
 
-type PreviewSnapshot = {
-  data: PortafolioData | null;
-  experiencias: Experiencia[];
-  certificaciones: Certificacion[];
-  updatedAt: string;
-};
-
-const PREVIEW_CACHE_KEY = "portafolio_preview_cache";
-const SECTION_ORDER_KEY = "portafolio_section_order";
-
-const NIVEL_IDIOMA: Record<string, string> = {
-  a1: "A1 - Principiante",
-  a2: "A2 - Elemental",
-  b1: "B1 - Intermedio",
-  b2: "B2 - Intermedio alto",
-  c1: "C1 - Avanzado",
-  c2: "C2 - Maestría",
-  nativo: "Nativo",
-};
-
-const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-
-const DEFAULTS_SECCIONES: ConfiguracionSecciones = {
-  seccion_perfil: "publico",
-  seccion_habilidades: "publico",
-  seccion_proyectos: "publico",
-  seccion_educacion: "publico",
-  seccion_experiencia: "publico",
-  seccion_cursos: "publico",
-  seccion_certificaciones: "publico",
-  seccion_logros: "publico",
-  seccion_idiomas: "publico",
-};
-
-const DEFAULT_SECTION_ORDER = [
-  "perfil",
-  "habilidades",
-  "proyectos",
-  "educacion",
-  "experiencia",
-  "cursos",
-  "certificaciones",
-  "logros",
-  "idiomas",
-] as const;
-
-type SectionId = (typeof DEFAULT_SECTION_ORDER)[number];
-
-const SECTION_LABELS: Record<SectionId, string> = {
-  perfil: "Perfil profesional",
-  habilidades: "Habilidades",
-  proyectos: "Proyectos",
-  educacion: "Formación académica",
-  experiencia: "Experiencia laboral",
-  cursos: "Cursos",
-  certificaciones: "Certificaciones",
-  logros: "Logros y reconocimientos",
-  idiomas: "Idiomas",
-};
-
-const SECTION_CONFIG_KEYS: Record<SectionId, keyof ConfiguracionSecciones> = {
-  perfil: "seccion_perfil",
-  habilidades: "seccion_habilidades",
-  proyectos: "seccion_proyectos",
-  educacion: "seccion_educacion",
-  experiencia: "seccion_experiencia",
-  cursos: "seccion_cursos",
-  certificaciones: "seccion_certificaciones",
-  logros: "seccion_logros",
-  idiomas: "seccion_idiomas",
-};
-
-function isSectionPublic(id: SectionId, cfg: ConfiguracionSecciones): boolean {
-  return cfg[SECTION_CONFIG_KEYS[id]] === "publico";
-}
-
-function loadSectionOrder(): SectionId[] {
-  try {
-    const raw = localStorage.getItem(SECTION_ORDER_KEY);
-    if (!raw) return [...DEFAULT_SECTION_ORDER];
-    const ids = JSON.parse(raw) as SectionId[];
-    const valid = ids.filter((id) => (DEFAULT_SECTION_ORDER as readonly string[]).includes(id));
-    const missing = DEFAULT_SECTION_ORDER.filter((id) => !valid.includes(id));
-    return [...valid, ...missing] as SectionId[];
-  } catch {
-    return [...DEFAULT_SECTION_ORDER];
-  }
-}
-
-function saveSectionOrder(order: SectionId[]) {
-  try {
-    localStorage.setItem(SECTION_ORDER_KEY, JSON.stringify(order));
-  } catch {
-    // ignore storage errors
-  }
-}
-
-function IconArrowLeft() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M15 18l-6-6 6-6" />
-    </svg>
-  );
-}
-
-function IconSort() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="21" y1="10" x2="7" y2="10" />
-      <line x1="21" y1="6" x2="3" y2="6" />
-      <line x1="21" y1="14" x2="3" y2="14" />
-      <line x1="21" y1="18" x2="7" y2="18" />
-    </svg>
-  );
-}
-
-function IconPencil() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-    </svg>
-  );
-}
-
-function IconEye() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
-function IconUser() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-function formatFecha(fecha: string | null | undefined): string {
-  if (!fecha) return "Presente";
-  const parts = fecha.split("-");
-  if (parts.length < 2) return fecha;
-  const year = parts[0];
-  const monthIndex = Number(parts[1]) - 1;
-  const month = MESES[monthIndex] ?? parts[1];
-  return `${month} ${year}`;
-}
-
-function formatPeriodo(inicio?: string | null, fin?: string | null): string {
-  if (!inicio && !fin) return "Sin fechas";
-  return `${formatFecha(inicio)} — ${fin ? formatFecha(fin) : "Presente"}`;
-}
-
-function readPreviewCache(): PreviewSnapshot | null {
-  try {
-    const raw = localStorage.getItem(PREVIEW_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as PreviewSnapshot;
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function SectionShell({
-  id,
-  title,
-  count,
-  children,
-}: {
-  id: string;
-  title: string;
-  count: number;
-  children: ReactNode;
-}) {
-  return (
-    <section id={id} className={styles.sectionCard}>
-      <header className={styles.sectionHeader}>
-        <div>
-          <p className={styles.sectionEyebrow}>Sección pública</p>
-          <h2 className={styles.sectionTitle}>{title}</h2>
-        </div>
-        <span className={styles.sectionCount}>{count}</span>
-      </header>
-      <div className={styles.sectionBody}>{children}</div>
-    </section>
-  );
-}
-
-function EmptyState({ title, description }: { title: string; description: string }) {
-  return (
-    <div className={styles.emptyState}>
-      <p className={styles.emptyTitle}>{title}</p>
-      <p className={styles.emptyDescription}>{description}</p>
-    </div>
-  );
-}
-
-function TimelineItem({
-  title,
-  subtitle,
-  period,
-  description,
-  meta,
-  extra,
-}: {
-  title: string;
-  subtitle?: string | null;
-  period?: string;
-  description?: string | null;
-  meta?: string[];
-  extra?: ReactNode;
-}) {
-  return (
-    <article className={styles.timelineItem}>
-      <span className={styles.timelineDot} />
-      <div className={styles.timelineContent}>
-        <div className={styles.timelineTop}>
-          <div className={styles.timelineTitles}>
-            <h3 className={styles.timelineName}>{title}</h3>
-            {subtitle && <p className={styles.timelineSubtitle}>{subtitle}</p>}
-          </div>
-          {period && <span className={styles.timelinePeriod}>{period}</span>}
-        </div>
-
-        {meta && meta.length > 0 && (
-          <div className={styles.metaRow}>
-            {meta.map((item) => (
-              <span key={item} className={styles.metaPill}>
-                {item}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {description && <p className={styles.timelineDescription}>{description}</p>}
-        {extra}
-      </div>
-    </article>
-  );
-}
-
-function CertificacionCard({ cert }: { cert: Certificacion }) {
-  const vencida = cert.fecha_expiracion ? new Date(cert.fecha_expiracion).getTime() < Date.now() : false;
-
-  return (
-    <article className={styles.certCard}>
-      {cert.imagen_url ? (
-        <img className={styles.certImage} src={cert.imagen_url} alt={cert.nombre} />
-      ) : (
-        <div className={styles.certImagePlaceholder}>
-          <IconEye />
-        </div>
-      )}
-
-      <div className={styles.certInfo}>
-        <div className={styles.certTop}>
-          <h3 className={styles.certTitle}>{cert.nombre}</h3>
-          <span className={`${styles.certBadge} ${vencida ? styles.certBadgeExpired : styles.certBadgeActive}`}>
-            {vencida ? "Vencida" : "Vigente"}
-          </span>
-        </div>
-
-        <p className={styles.certEntity}>{cert.nombre_entidad}</p>
-
-        <div className={styles.certMeta}>
-          <span className={styles.metaPill}>Obtenida: {formatFecha(cert.fecha_obtencion)}</span>
-          {cert.fecha_expiracion && (
-            <span className={styles.metaPill}>
-              {vencida ? `Venció: ${formatFecha(cert.fecha_expiracion)}` : `Vence: ${formatFecha(cert.fecha_expiracion)}`}
-            </span>
-          )}
-        </div>
-
-        {cert.url_certificado && (
-          <a href={cert.url_certificado} target="_blank" rel="noreferrer" className={styles.inlineLink}>
-            Ver certificado
-          </a>
-        )}
-      </div>
-    </article>
-  );
-}
+import { IconArrowLeft, IconSort, IconPencil, IconEye, IconUser } from "./components/PortafolioIcons";
+import { SectionShell, EmptyState, TimelineItem, CertificacionCard } from "./components/PortafolioSections";
+import {
+  NIVEL_IDIOMA,
+  DEFAULTS_SECCIONES,
+  DEFAULT_SECTION_ORDER,
+  SECTION_LABELS,
+  isSectionPublic,
+  loadSectionOrder,
+  saveSectionOrder,
+  formatFecha,
+  formatPeriodo,
+  readPreviewCache,
+} from "./components/portafolioUtils";
+import type { SectionId } from "./components/portafolioUtils";
 
 export default function Portafolio() {
   const navigate = useNavigate();
@@ -722,13 +448,13 @@ export default function Portafolio() {
             <IconSort />
             Ordenar secciones
           </button>
-                  <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={() => navigate("/portafolio/visibilidad")}
-        >
-          Configurar visibilidad
-        </button>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => navigate("/portafolio/visibilidad")}
+          >
+            Configurar visibilidad
+          </button>
           <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/editar")}>
             Publicar
           </button>
