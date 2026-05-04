@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useState, type DragEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCertificaciones,
@@ -29,6 +28,7 @@ type PreviewSnapshot = {
 };
 
 const PREVIEW_CACHE_KEY = "portafolio_preview_cache";
+const SECTION_ORDER_KEY = "portafolio_section_order";
 
 const NIVEL_IDIOMA: Record<string, string> = {
   a1: "A1 - Principiante",
@@ -43,21 +43,95 @@ const NIVEL_IDIOMA: Record<string, string> = {
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
 const DEFAULTS_SECCIONES: ConfiguracionSecciones = {
-  seccion_perfil:          "publico",
-  seccion_habilidades:     "publico",
-  seccion_proyectos:       "publico",
-  seccion_educacion:       "publico",
-  seccion_experiencia:     "publico",
-  seccion_cursos:          "publico",
+  seccion_perfil: "publico",
+  seccion_habilidades: "publico",
+  seccion_proyectos: "publico",
+  seccion_educacion: "publico",
+  seccion_experiencia: "publico",
+  seccion_cursos: "publico",
   seccion_certificaciones: "publico",
-  seccion_logros:          "publico",
-  seccion_idiomas:         "publico",
+  seccion_logros: "publico",
+  seccion_idiomas: "publico",
 };
+
+const DEFAULT_SECTION_ORDER = [
+  "perfil",
+  "habilidades",
+  "proyectos",
+  "educacion",
+  "experiencia",
+  "cursos",
+  "certificaciones",
+  "logros",
+  "idiomas",
+] as const;
+
+type SectionId = (typeof DEFAULT_SECTION_ORDER)[number];
+
+const SECTION_LABELS: Record<SectionId, string> = {
+  perfil: "Perfil profesional",
+  habilidades: "Habilidades",
+  proyectos: "Proyectos",
+  educacion: "Formación académica",
+  experiencia: "Experiencia laboral",
+  cursos: "Cursos",
+  certificaciones: "Certificaciones",
+  logros: "Logros y reconocimientos",
+  idiomas: "Idiomas",
+};
+
+const SECTION_CONFIG_KEYS: Record<SectionId, keyof ConfiguracionSecciones> = {
+  perfil: "seccion_perfil",
+  habilidades: "seccion_habilidades",
+  proyectos: "seccion_proyectos",
+  educacion: "seccion_educacion",
+  experiencia: "seccion_experiencia",
+  cursos: "seccion_cursos",
+  certificaciones: "seccion_certificaciones",
+  logros: "seccion_logros",
+  idiomas: "seccion_idiomas",
+};
+
+function isSectionPublic(id: SectionId, cfg: ConfiguracionSecciones): boolean {
+  return cfg[SECTION_CONFIG_KEYS[id]] === "publico";
+}
+
+function loadSectionOrder(): SectionId[] {
+  try {
+    const raw = localStorage.getItem(SECTION_ORDER_KEY);
+    if (!raw) return [...DEFAULT_SECTION_ORDER];
+    const ids = JSON.parse(raw) as SectionId[];
+    const valid = ids.filter((id) => (DEFAULT_SECTION_ORDER as readonly string[]).includes(id));
+    const missing = DEFAULT_SECTION_ORDER.filter((id) => !valid.includes(id));
+    return [...valid, ...missing] as SectionId[];
+  } catch {
+    return [...DEFAULT_SECTION_ORDER];
+  }
+}
+
+function saveSectionOrder(order: SectionId[]) {
+  try {
+    localStorage.setItem(SECTION_ORDER_KEY, JSON.stringify(order));
+  } catch {
+    // ignore storage errors
+  }
+}
 
 function IconArrowLeft() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function IconSort() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="21" y1="10" x2="7" y2="10" />
+      <line x1="21" y1="6" x2="3" y2="6" />
+      <line x1="21" y1="14" x2="3" y2="14" />
+      <line x1="21" y1="18" x2="7" y2="18" />
     </svg>
   );
 }
@@ -176,13 +250,17 @@ function TimelineItem({
           </div>
           {period && <span className={styles.timelinePeriod}>{period}</span>}
         </div>
+
         {meta && meta.length > 0 && (
           <div className={styles.metaRow}>
             {meta.map((item) => (
-              <span key={item} className={styles.metaPill}>{item}</span>
+              <span key={item} className={styles.metaPill}>
+                {item}
+              </span>
             ))}
           </div>
         )}
+
         {description && <p className={styles.timelineDescription}>{description}</p>}
         {extra}
       </div>
@@ -202,6 +280,7 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
           <IconEye />
         </div>
       )}
+
       <div className={styles.certInfo}>
         <div className={styles.certTop}>
           <h3 className={styles.certTitle}>{cert.nombre}</h3>
@@ -209,7 +288,9 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
             {vencida ? "Vencida" : "Vigente"}
           </span>
         </div>
+
         <p className={styles.certEntity}>{cert.nombre_entidad}</p>
+
         <div className={styles.certMeta}>
           <span className={styles.metaPill}>Obtenida: {formatFecha(cert.fecha_obtencion)}</span>
           {cert.fecha_expiracion && (
@@ -218,6 +299,7 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
             </span>
           )}
         </div>
+
         {cert.url_certificado && (
           <a href={cert.url_certificado} target="_blank" rel="noreferrer" className={styles.inlineLink}>
             Ver certificado
@@ -230,12 +312,56 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
 
 export default function Portafolio() {
   const navigate = useNavigate();
+
   const [data, setData] = useState<PortafolioData | null>(null);
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
   const [secciones, setSecciones] = useState<ConfiguracionSecciones>(DEFAULTS_SECCIONES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [sectionOrder, setSectionOrder] = useState<SectionId[]>(loadSectionOrder);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [dragOrder, setDragOrder] = useState<SectionId[]>([]);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const openOrderModal = () => {
+    setDragOrder([...sectionOrder]);
+    setShowOrderModal(true);
+  };
+
+  const saveOrder = () => {
+    saveSectionOrder(dragOrder);
+    setSectionOrder([...dragOrder]);
+    setShowOrderModal(false);
+  };
+
+  const resetOrder = () => setDragOrder([...DEFAULT_SECTION_ORDER]);
+
+  const handleDragStart = (index: number) => setDragIndex(index);
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (index: number) => {
+    if (dragIndex === null || dragIndex === index) return;
+
+    const next = [...dragOrder];
+    const [moved] = next.splice(dragIndex, 1);
+    next.splice(index, 0, moved);
+
+    setDragOrder(next);
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
 
   useEffect(() => {
     const cached = readPreviewCache();
@@ -267,30 +393,269 @@ export default function Portafolio() {
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Sin nombre definido";
   }, [data]);
 
-  const perfil                 = data?.perfil ?? null;
-  const habilidadesTecnicas    = data?.habilidades_tecnicas ?? [];
-  const habilidadesBlandas     = data?.habilidades_blandas ?? [];
-  const proyectos              = data?.proyectos ?? [];
-  const educaciones            = (data?.educaciones ?? [] as Educacion[]).filter((item) => item.visibilidad === "publico");
-  const cursos                 = (data?.cursos ?? [] as Curso[]).filter((item) => item.visibilidad === "publico");
-  const logros                 = (data?.logros ?? [] as Logro[]).filter((item) => item.visibilidad === "publico");
-  const idiomas                = (data?.idiomas ?? [] as Idioma[]).filter((item) => item.visibilidad === "publico");
-  const experienciasPublicas   = experiencias.filter((item) => item.visibilidad !== "privado");
+  const perfil = data?.perfil ?? null;
+  const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
+  const habilidadesBlandas = data?.habilidades_blandas ?? [];
+  const proyectos = data?.proyectos ?? [];
+  const educaciones = (data?.educaciones ?? ([] as Educacion[])).filter((item) => item.visibilidad === "publico");
+  const cursos = (data?.cursos ?? ([] as Curso[])).filter((item) => item.visibilidad === "publico");
+  const logros = (data?.logros ?? ([] as Logro[])).filter((item) => item.visibilidad === "publico");
+  const idiomas = (data?.idiomas ?? ([] as Idioma[])).filter((item) => item.visibilidad === "publico");
+  const experienciasPublicas = experiencias.filter((item) => item.visibilidad !== "privado");
   const certificacionesPublicas = certificaciones.filter((item) => item.visibilidad === "publico");
 
   const cfg = secciones;
 
-  const seccionesActivas = [
-    cfg.seccion_perfil          === "publico" && perfil,
-    cfg.seccion_habilidades     === "publico" && (habilidadesTecnicas.length + habilidadesBlandas.length > 0),
-    cfg.seccion_proyectos       === "publico" && proyectos.length > 0,
-    cfg.seccion_educacion       === "publico" && educaciones.length > 0,
-    cfg.seccion_experiencia     === "publico" && experienciasPublicas.length > 0,
-    cfg.seccion_cursos          === "publico" && cursos.length > 0,
-    cfg.seccion_certificaciones === "publico" && certificacionesPublicas.length > 0,
-    cfg.seccion_logros          === "publico" && logros.length > 0,
-    cfg.seccion_idiomas         === "publico" && idiomas.length > 0,
-  ].some(Boolean);
+  const sectionHasContent: Record<SectionId, boolean> = {
+    perfil: Boolean(perfil),
+    habilidades: habilidadesTecnicas.length + habilidadesBlandas.length > 0,
+    proyectos: proyectos.length > 0,
+    educacion: educaciones.length > 0,
+    experiencia: experienciasPublicas.length > 0,
+    cursos: cursos.length > 0,
+    certificaciones: certificacionesPublicas.length > 0,
+    logros: logros.length > 0,
+    idiomas: idiomas.length > 0,
+  };
+
+  const seccionesActivas = sectionOrder.some((id) => isSectionPublic(id, cfg) && sectionHasContent[id]);
+
+  const renderSection = (id: SectionId) => {
+    switch (id) {
+      case "perfil":
+        return (
+          <SectionShell key="perfil" id="perfil" title="Perfil profesional" count={perfil ? 1 : 0}>
+            <div className={styles.profileGrid}>
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Nombre completo</p>
+                <p className={styles.fieldValue}>{nombreCompleto}</p>
+              </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Profesión</p>
+                <p className={styles.fieldValue}>{perfil?.profesion ?? "Sin información"}</p>
+              </div>
+
+              <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                <p className={styles.fieldLabel}>Descripción</p>
+                <p className={styles.fieldValueMuted}>{perfil?.descripcion ?? "Sin descripción"}</p>
+              </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Teléfono</p>
+                <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
+              </div>
+            </div>
+          </SectionShell>
+        );
+
+      case "habilidades":
+        return (
+          <SectionShell
+            key="habilidades"
+            id="habilidades"
+            title="Habilidades"
+            count={habilidadesTecnicas.length + habilidadesBlandas.length}
+          >
+            <div className={styles.splitGrid}>
+              <div className={styles.splitColumn}>
+                <p className={styles.splitLabel}>Técnicas</p>
+                {habilidadesTecnicas.length > 0 ? (
+                  <div className={styles.chipWrap}>
+                    {habilidadesTecnicas.map((item) => (
+                      <SkillChip key={item.id_usuario_habilidad} nombre={item.nombre} nivel={item.nivel} tipo="tecnica" />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState title="Sin habilidades técnicas" description="No hay habilidades técnicas visibles para esta vista previa." />
+                )}
+              </div>
+
+              <div className={styles.splitColumn}>
+                <p className={styles.splitLabel}>Blandas</p>
+                {habilidadesBlandas.length > 0 ? (
+                  <div className={styles.chipWrap}>
+                    {habilidadesBlandas.map((item) => (
+                      <SkillChip key={item.id_usuario_habilidad} nombre={item.nombre} nivel={item.nivel} tipo="blanda" />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState title="Sin habilidades blandas" description="No hay habilidades blandas visibles para esta vista previa." />
+                )}
+              </div>
+            </div>
+          </SectionShell>
+        );
+
+      case "proyectos":
+        return (
+          <SectionShell key="proyectos" id="proyectos" title="Proyectos" count={proyectos.length}>
+            {proyectos.length > 0 ? (
+              <div className={styles.projectGrid}>
+                {proyectos.map((proyecto) => (
+                  <ProjectCard key={proyecto.id_proyecto} proyecto={proyecto} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Sin proyectos visibles"
+                description="Todavía no hay proyectos listos para mostrarse en esta vista previa."
+              />
+            )}
+          </SectionShell>
+        );
+
+      case "educacion":
+        return (
+          <SectionShell key="educacion" id="educacion" title="Formación académica" count={educaciones.length}>
+            {educaciones.length > 0 ? (
+              <div className={styles.timelineList}>
+                {educaciones.map((educacion) => (
+                  <TimelineItem
+                    key={educacion.id_educacion}
+                    title={educacion.titulo}
+                    subtitle={educacion.institucion}
+                    period={formatPeriodo(educacion.fecha_inicio, educacion.fecha_fin)}
+                    description={educacion.descripcion}
+                    meta={educacion.area_estudio ? [educacion.area_estudio] : []}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Sin formación académica visible"
+                description="No hay registros públicos de formación académica para esta vista previa."
+              />
+            )}
+          </SectionShell>
+        );
+
+      case "experiencia":
+        return (
+          <SectionShell key="experiencia" id="experiencia" title="Experiencia laboral" count={experienciasPublicas.length}>
+            {experienciasPublicas.length > 0 ? (
+              <div className={styles.timelineList}>
+                {experienciasPublicas.map((experiencia) => (
+                  <TimelineItem
+                    key={experiencia.id_experiencia}
+                    title={experiencia.puesto}
+                    subtitle={experiencia.nombre_empresa}
+                    period={formatPeriodo(
+                      experiencia.fecha_inicio,
+                      experiencia.es_actual ? null : experiencia.fecha_fin ?? null,
+                    )}
+                    description={experiencia.descripcion}
+                    meta={[
+                      experiencia.tipo ?? "Experiencia",
+                      experiencia.ubicacion ? `Ubicación: ${experiencia.ubicacion}` : "",
+                    ].filter(Boolean) as string[]}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Sin experiencia visible" description="No hay experiencias públicas disponibles para esta vista previa." />
+            )}
+          </SectionShell>
+        );
+
+      case "cursos":
+        return (
+          <SectionShell key="cursos" id="cursos" title="Cursos" count={cursos.length}>
+            {cursos.length > 0 ? (
+              <div className={styles.timelineList}>
+                {cursos.map((curso) => (
+                  <TimelineItem
+                    key={curso.id_educacion}
+                    title={curso.titulo}
+                    subtitle={curso.institucion}
+                    period={formatPeriodo(curso.fecha_inicio, curso.fecha_fin)}
+                    description={curso.descripcion}
+                    meta={curso.fecha_fin === null ? ["En curso"] : []}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Sin cursos visibles" description="No hay cursos públicos para esta vista previa." />
+            )}
+          </SectionShell>
+        );
+
+      case "certificaciones":
+        return (
+          <SectionShell
+            key="certificaciones"
+            id="certificaciones"
+            title="Certificaciones"
+            count={certificacionesPublicas.length}
+          >
+            {certificacionesPublicas.length > 0 ? (
+              <div className={styles.certGrid}>
+                {certificacionesPublicas.map((certificacion) => (
+                  <CertificacionCard key={certificacion.id_certificacion} cert={certificacion} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Sin certificaciones visibles"
+                description="No hay certificaciones públicas disponibles para esta vista previa."
+              />
+            )}
+          </SectionShell>
+        );
+
+      case "logros":
+        return (
+          <SectionShell key="logros" id="logros" title="Logros y reconocimientos" count={logros.length}>
+            {logros.length > 0 ? (
+              <div className={styles.timelineList}>
+                {logros.map((logro) => (
+                  <TimelineItem
+                    key={logro.id_logro}
+                    title={logro.titulo}
+                    subtitle={logro.entidad_nombre ?? "Entidad no especificada"}
+                    period={logro.fecha_obtencion ? formatFecha(logro.fecha_obtencion) : undefined}
+                    description={logro.descripcion}
+                    meta={logro.identificador ? [`ID: ${logro.identificador}`] : []}
+                    extra={
+                      logro.url_credencial ? (
+                        <a href={logro.url_credencial} target="_blank" rel="noreferrer" className={styles.inlineLink}>
+                          Ver credencial
+                        </a>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Sin logros visibles" description="No hay logros públicos para esta vista previa." />
+            )}
+          </SectionShell>
+        );
+
+      case "idiomas":
+        return (
+          <SectionShell key="idiomas" id="idiomas" title="Idiomas" count={idiomas.length}>
+            {idiomas.length > 0 ? (
+              <div className={styles.languagesGrid}>
+                {idiomas.map((idioma) => (
+                  <article key={idioma.id_usuario_idioma} className={styles.languageCard}>
+                    <p className={styles.languageName}>{idioma.nombre}</p>
+                    <span className={styles.languageLevel}>
+                      {NIVEL_IDIOMA[idioma.nivel] ?? idioma.nivel.toUpperCase()}
+                    </span>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Sin idiomas visibles" description="No hay idiomas públicos para esta vista previa." />
+            )}
+          </SectionShell>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   if (loading) {
     return (
@@ -353,6 +718,10 @@ export default function Portafolio() {
             <IconPencil />
             Editar
           </button>
+          <button type="button" className={styles.secondaryButton} onClick={openOrderModal}>
+            <IconSort />
+            Ordenar secciones
+          </button>
           <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/editar")}>
             Publicar
           </button>
@@ -374,244 +743,70 @@ export default function Portafolio() {
 
           <nav className={styles.navCard} aria-label="Secciones del portafolio">
             <p className={styles.navTitle}>Secciones</p>
-            {cfg.seccion_perfil          === "publico" && <a href="#perfil"          className={styles.navLink}>Perfil</a>}
-            {cfg.seccion_habilidades     === "publico" && <a href="#habilidades"     className={styles.navLink}>Habilidades</a>}
-            {cfg.seccion_proyectos       === "publico" && <a href="#proyectos"       className={styles.navLink}>Proyectos</a>}
-            {cfg.seccion_educacion       === "publico" && <a href="#educacion"       className={styles.navLink}>Formación académica</a>}
-            {cfg.seccion_experiencia     === "publico" && <a href="#experiencia"     className={styles.navLink}>Experiencia laboral</a>}
-            {cfg.seccion_cursos          === "publico" && <a href="#cursos"          className={styles.navLink}>Cursos</a>}
-            {cfg.seccion_certificaciones === "publico" && <a href="#certificaciones" className={styles.navLink}>Certificaciones</a>}
-            {cfg.seccion_logros          === "publico" && <a href="#logros"          className={styles.navLink}>Logros y reconocimientos</a>}
-            {cfg.seccion_idiomas         === "publico" && <a href="#idiomas"         className={styles.navLink}>Idiomas</a>}
+            {sectionOrder.map((id) =>
+              isSectionPublic(id, cfg) ? (
+                <a key={id} href={`#${id}`} className={styles.navLink}>
+                  {SECTION_LABELS[id]}
+                </a>
+              ) : null,
+            )}
           </nav>
         </aside>
 
         <section className={styles.content}>
-          {cfg.seccion_perfil === "publico" && (
-            <SectionShell id="perfil" title="Perfil profesional" count={perfil ? 1 : 0}>
-              <div className={styles.profileGrid}>
-                <div className={styles.profileInfoCard}>
-                  <p className={styles.fieldLabel}>Nombre completo</p>
-                  <p className={styles.fieldValue}>{nombreCompleto}</p>
-                </div>
-                <div className={styles.profileInfoCard}>
-                  <p className={styles.fieldLabel}>Profesión</p>
-                  <p className={styles.fieldValue}>{perfil?.profesion ?? "Sin información"}</p>
-                </div>
-                <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
-                  <p className={styles.fieldLabel}>Descripción</p>
-                  <p className={styles.fieldValueMuted}>{perfil?.descripcion ?? "Sin descripción"}</p>
-                </div>
-                <div className={styles.profileInfoCard}>
-                  <p className={styles.fieldLabel}>Teléfono</p>
-                  <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
-                </div>
-              </div>
-            </SectionShell>
-          )}
-
-          {cfg.seccion_habilidades === "publico" && (
-            <SectionShell id="habilidades" title="Habilidades" count={habilidadesTecnicas.length + habilidadesBlandas.length}>
-              <div className={styles.splitGrid}>
-                <div className={styles.splitColumn}>
-                  <p className={styles.splitLabel}>Técnicas</p>
-                  {habilidadesTecnicas.length > 0 ? (
-                    <div className={styles.chipWrap}>
-                      {habilidadesTecnicas.map((item) => (
-                        <SkillChip
-                          key={item.id_usuario_habilidad}
-                          nombre={item.nombre}
-                          nivel={item.nivel}
-                          tipo="tecnica"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title="Sin habilidades técnicas"
-                      description="No hay habilidades técnicas visibles para esta vista previa."
-                    />
-                  )}
-                </div>
-                <div className={styles.splitColumn}>
-                  <p className={styles.splitLabel}>Blandas</p>
-                  {habilidadesBlandas.length > 0 ? (
-                    <div className={styles.chipWrap}>
-                      {habilidadesBlandas.map((item) => (
-                        <SkillChip
-                          key={item.id_usuario_habilidad}
-                          nombre={item.nombre}
-                          nivel={item.nivel}
-                          tipo="blanda"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title="Sin habilidades blandas"
-                      description="No hay habilidades blandas visibles para esta vista previa."
-                    />
-                  )}
-                </div>
-              </div>
-            </SectionShell>
-          )}
-
-          {cfg.seccion_proyectos === "publico" && (
-            <SectionShell id="proyectos" title="Proyectos" count={proyectos.length}>
-              {proyectos.length > 0 ? (
-                <div className={styles.projectGrid}>
-                  {proyectos.map((proyecto) => (
-                    <ProjectCard key={proyecto.id_proyecto} proyecto={proyecto} />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="Sin proyectos visibles"
-                  description="Todavía no hay proyectos listos para mostrarse en esta vista previa."
-                />
-              )}
-            </SectionShell>
-          )}
-
-          {cfg.seccion_educacion === "publico" && (
-            <SectionShell id="educacion" title="Formación académica" count={educaciones.length}>
-              {educaciones.length > 0 ? (
-                <div className={styles.timelineList}>
-                  {educaciones.map((educacion) => (
-                    <TimelineItem
-                      key={educacion.id_educacion}
-                      title={educacion.titulo}
-                      subtitle={educacion.institucion}
-                      period={formatPeriodo(educacion.fecha_inicio, educacion.fecha_fin)}
-                      description={educacion.descripcion}
-                      meta={educacion.area_estudio ? [educacion.area_estudio] : []}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="Sin formación académica visible"
-                  description="No hay registros públicos de formación académica para esta vista previa."
-                />
-              )}
-            </SectionShell>
-          )}
-
-          {cfg.seccion_experiencia === "publico" && (
-            <SectionShell id="experiencia" title="Experiencia laboral" count={experienciasPublicas.length}>
-              {experienciasPublicas.length > 0 ? (
-                <div className={styles.timelineList}>
-                  {experienciasPublicas.map((experiencia) => (
-                    <TimelineItem
-                      key={experiencia.id_experiencia}
-                      title={experiencia.puesto}
-                      subtitle={experiencia.nombre_empresa}
-                      period={formatPeriodo(experiencia.fecha_inicio, experiencia.es_actual ? null : experiencia.fecha_fin ?? null)}
-                      description={experiencia.descripcion}
-                      meta={[
-                        experiencia.tipo ?? "Experiencia",
-                        experiencia.ubicacion ? `Ubicación: ${experiencia.ubicacion}` : "",
-                      ].filter(Boolean) as string[]}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="Sin experiencia visible"
-                  description="No hay experiencias públicas disponibles para esta vista previa."
-                />
-              )}
-            </SectionShell>
-          )}
-
-          {cfg.seccion_cursos === "publico" && (
-            <SectionShell id="cursos" title="Cursos" count={cursos.length}>
-              {cursos.length > 0 ? (
-                <div className={styles.timelineList}>
-                  {cursos.map((curso) => (
-                    <TimelineItem
-                      key={curso.id_educacion}
-                      title={curso.titulo}
-                      subtitle={curso.institucion}
-                      period={formatPeriodo(curso.fecha_inicio, curso.fecha_fin)}
-                      description={curso.descripcion}
-                      meta={curso.fecha_fin === null ? ["En curso"] : []}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="Sin cursos visibles"
-                  description="No hay cursos públicos para esta vista previa."
-                />
-              )}
-            </SectionShell>
-          )}
-
-          {cfg.seccion_certificaciones === "publico" && (
-            <SectionShell id="certificaciones" title="Certificaciones" count={certificacionesPublicas.length}>
-              {certificacionesPublicas.length > 0 ? (
-                <div className={styles.certGrid}>
-                  {certificacionesPublicas.map((certificacion) => (
-                    <CertificacionCard key={certificacion.id_certificacion} cert={certificacion} />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="Sin certificaciones visibles"
-                  description="No hay certificaciones públicas disponibles para esta vista previa."
-                />
-              )}
-            </SectionShell>
-          )}
-
-          {cfg.seccion_logros === "publico" && (
-            <SectionShell id="logros" title="Logros y reconocimientos" count={logros.length}>
-              {logros.length > 0 ? (
-                <div className={styles.timelineList}>
-                  {logros.map((logro) => (
-                    <TimelineItem
-                      key={logro.id_logro}
-                      title={logro.titulo}
-                      subtitle={logro.entidad_nombre ?? "Entidad no especificada"}
-                      period={logro.fecha_obtencion ? formatFecha(logro.fecha_obtencion) : undefined}
-                      description={logro.descripcion}
-                      meta={logro.identificador ? [`ID: ${logro.identificador}`] : []}
-                      extra={logro.url_credencial ? <a href={logro.url_credencial} target="_blank" rel="noreferrer" className={styles.inlineLink}>Ver credencial</a> : undefined}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="Sin logros visibles"
-                  description="No hay logros públicos para esta vista previa."
-                />
-              )}
-            </SectionShell>
-          )}
-
-          {cfg.seccion_idiomas === "publico" && (
-            <SectionShell id="idiomas" title="Idiomas" count={idiomas.length}>
-              {idiomas.length > 0 ? (
-                <div className={styles.languagesGrid}>
-                  {idiomas.map((idioma) => (
-                    <article key={idioma.id_usuario_idioma} className={styles.languageCard}>
-                      <p className={styles.languageName}>{idioma.nombre}</p>
-                      <span className={styles.languageLevel}>{NIVEL_IDIOMA[idioma.nivel] ?? idioma.nivel.toUpperCase()}</span>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="Sin idiomas visibles"
-                  description="No hay idiomas públicos para esta vista previa."
-                />
-              )}
-            </SectionShell>
-          )}
+          {sectionOrder.map((id) => (isSectionPublic(id, cfg) ? renderSection(id) : null))}
         </section>
       </main>
+
+      {showOrderModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowOrderModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Ordenar secciones</h2>
+            <p className={styles.modalSub}>Arrastra cada sección para cambiar el orden de visualización.</p>
+
+            <div className={styles.modalList}>
+              {dragOrder.map((id, index) => (
+                <div
+                  key={id}
+                  className={[
+                    styles.modalItem,
+                    dragIndex === index ? styles.modalItemDragging : "",
+                    dragOverIndex === index ? styles.modalItemOver : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={() => handleDrop(index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className={styles.modalHandle} aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+
+                  <span className={styles.modalItemLabel}>{SECTION_LABELS[id]}</span>
+                  <span className={styles.modalItemNum}>{index + 1}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.secondaryButton} onClick={resetOrder}>
+                Restablecer
+              </button>
+              <button type="button" className={styles.secondaryButton} onClick={() => setShowOrderModal(false)}>
+                Cancelar
+              </button>
+              <button type="button" className={styles.primaryButton} onClick={saveOrder}>
+                Guardar orden
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
