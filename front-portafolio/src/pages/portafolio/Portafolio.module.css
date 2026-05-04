@@ -153,6 +153,8 @@
   color: #5b6d63;
   line-height: 1.6;
   font-size: 14px;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .profileStats {
@@ -307,6 +309,9 @@
   font-size: 14px;
   line-height: 1.65;
   color: #5b6d63;
+
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .splitGrid {
@@ -426,6 +431,9 @@
   color: #5b6d63;
   line-height: 1.6;
   font-size: 14px;
+
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .inlineLink {
@@ -787,24 +795,35 @@
 }
 .modalOverlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
   background: rgba(0, 0, 0, 0.45);
+
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+
+  z-index: 99999; 
 }
 
 .modalBox {
-   background-color: white;
-  border: 0.5px solid var(--color-border-tertiary);
-  border-radius: var(--border-radius-lg);
-  width: 420px;
+  background-color: white;
+  border-radius: 16px;
+
+  width: 520px;           
   max-width: 95vw;
+  max-height: 85vh;       
+
   padding: 1.5rem;
+
   display: flex;
   flex-direction: column;
   gap: 1rem;
+
+  overflow: hidden;       
 }
 
 .modalTitle {
@@ -828,12 +847,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
+
   padding: 10px 12px;
-  border-radius: var(--border-radius-md);
-  border: 0.5px solid var(--color-border-tertiary);
-  background: var(--color-background-secondary);
+  border-radius: 10px;
+
+  background: #f8faf9;
+  border: 1px solid rgba(145, 164, 153, 0.2);
+
   cursor: grab;
-  user-select: none;
 }
 
 .modalItemDragging {
@@ -875,6 +896,16 @@
 
 .modalActions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-end;
+  flex-wrap: wrap; 
+}
+
+.modalList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  max-height: 300px;  /* 🔥 límite */
+  overflow-y: auto;   /* 🔥 scroll */
 }

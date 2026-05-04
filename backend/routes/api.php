@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\CertificacionController;
 use App\Http\Controllers\Api\CursoController;
 use App\Http\Controllers\Api\LogroController;
 use App\Http\Controllers\Api\IdiomaController;
+use App\Http\Controllers\Api\VisibilidadController;
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
@@ -96,6 +97,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/idiomas/{id}', [IdiomaController::class, 'show']);
     Route::post('/idiomas', [IdiomaController::class, 'store']);
     Route::delete('/idiomas/{id}', [IdiomaController::class, 'destroy']);
+
+    // HU-23: Configuración de visibilidad de secciones del portafolio
+    Route::get('/visibilidad/secciones',  [VisibilidadController::class, 'show']);
+    Route::put('/visibilidad/secciones',  [VisibilidadController::class, 'update']);
 
     Route::get('/perfil/sugerencias-profesion', [PerfilController::class, 'sugerenciasProfecion']);
 

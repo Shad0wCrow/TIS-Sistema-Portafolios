@@ -108,3 +108,29 @@ export interface PortafolioData {
   idiomas: Idioma[];
   certificaciones: Certificacion[];
 }
+
+export type EstadoVisibilidad = 'publico' | 'privado';
+ 
+export interface ConfiguracionSecciones {
+  seccion_perfil:          EstadoVisibilidad;
+  seccion_habilidades:     EstadoVisibilidad;
+  seccion_proyectos:       EstadoVisibilidad;
+  seccion_educacion:       EstadoVisibilidad;
+  seccion_experiencia:     EstadoVisibilidad;
+  seccion_cursos:          EstadoVisibilidad;
+  seccion_certificaciones: EstadoVisibilidad;
+  seccion_logros:          EstadoVisibilidad;
+  seccion_idiomas:         EstadoVisibilidad;
+}
+ 
+export const SECCION_LABELS: Record<keyof ConfiguracionSecciones, string> = {
+  seccion_perfil:          'Perfil profesional',
+  seccion_habilidades:     'Habilidades',
+  seccion_proyectos:       'Proyectos',
+  seccion_educacion:       'Formación académica',
+  seccion_experiencia:     'Experiencia laboral',
+  seccion_cursos:          'Cursos',
+  seccion_certificaciones: 'Certificaciones',
+  seccion_logros:          'Logros y reconocimientos',
+  seccion_idiomas:         'Idiomas',
+};

@@ -1,9 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useState, type DragEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCertificaciones, getExperiencias, getPortafolio } from "../../services/portafolioservice";
+import {
+  getCertificaciones,
+  getExperiencias,
+  getPortafolio,
+  getVisibilidadSecciones,
+} from "../../services/portafolioservice";
 import type {
   Certificacion,
+  ConfiguracionSecciones,
   Curso,
   Educacion,
   Experiencia,
@@ -37,6 +42,18 @@ const NIVEL_IDIOMA: Record<string, string> = {
 
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
+const DEFAULTS_SECCIONES: ConfiguracionSecciones = {
+  seccion_perfil: "publico",
+  seccion_habilidades: "publico",
+  seccion_proyectos: "publico",
+  seccion_educacion: "publico",
+  seccion_experiencia: "publico",
+  seccion_cursos: "publico",
+  seccion_certificaciones: "publico",
+  seccion_logros: "publico",
+  seccion_idiomas: "publico",
+};
+
 const DEFAULT_SECTION_ORDER = [
   "perfil",
   "habilidades",
@@ -63,6 +80,22 @@ const SECTION_LABELS: Record<SectionId, string> = {
   idiomas: "Idiomas",
 };
 
+const SECTION_CONFIG_KEYS: Record<SectionId, keyof ConfiguracionSecciones> = {
+  perfil: "seccion_perfil",
+  habilidades: "seccion_habilidades",
+  proyectos: "seccion_proyectos",
+  educacion: "seccion_educacion",
+  experiencia: "seccion_experiencia",
+  cursos: "seccion_cursos",
+  certificaciones: "seccion_certificaciones",
+  logros: "seccion_logros",
+  idiomas: "seccion_idiomas",
+};
+
+function isSectionPublic(id: SectionId, cfg: ConfiguracionSecciones): boolean {
+  return cfg[SECTION_CONFIG_KEYS[id]] === "publico";
+}
+
 function loadSectionOrder(): SectionId[] {
   try {
     const raw = localStorage.getItem(SECTION_ORDER_KEY);
@@ -79,7 +112,9 @@ function loadSectionOrder(): SectionId[] {
 function saveSectionOrder(order: SectionId[]) {
   try {
     localStorage.setItem(SECTION_ORDER_KEY, JSON.stringify(order));
-  } catch {}
+  } catch {
+    // ignore storage errors
+  }
 }
 
 function IconArrowLeft() {
@@ -215,13 +250,17 @@ function TimelineItem({
           </div>
           {period && <span className={styles.timelinePeriod}>{period}</span>}
         </div>
+
         {meta && meta.length > 0 && (
           <div className={styles.metaRow}>
             {meta.map((item) => (
-              <span key={item} className={styles.metaPill}>{item}</span>
+              <span key={item} className={styles.metaPill}>
+                {item}
+              </span>
             ))}
           </div>
         )}
+
         {description && <p className={styles.timelineDescription}>{description}</p>}
         {extra}
       </div>
@@ -241,6 +280,7 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
           <IconEye />
         </div>
       )}
+
       <div className={styles.certInfo}>
         <div className={styles.certTop}>
           <h3 className={styles.certTitle}>{cert.nombre}</h3>
@@ -248,7 +288,9 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
             {vencida ? "Vencida" : "Vigente"}
           </span>
         </div>
+
         <p className={styles.certEntity}>{cert.nombre_entidad}</p>
+
         <div className={styles.certMeta}>
           <span className={styles.metaPill}>Obtenida: {formatFecha(cert.fecha_obtencion)}</span>
           {cert.fecha_expiracion && (
@@ -257,6 +299,7 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
             </span>
           )}
         </div>
+
         {cert.url_certificado && (
           <a href={cert.url_certificado} target="_blank" rel="noreferrer" className={styles.inlineLink}>
             Ver certificado
@@ -269,13 +312,14 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
 
 export default function Portafolio() {
   const navigate = useNavigate();
+
   const [data, setData] = useState<PortafolioData | null>(null);
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
+  const [secciones, setSecciones] = useState<ConfiguracionSecciones>(DEFAULTS_SECCIONES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // --- orden de secciones ---
   const [sectionOrder, setSectionOrder] = useState<SectionId[]>(loadSectionOrder);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [dragOrder, setDragOrder] = useState<SectionId[]>([]);
@@ -297,16 +341,18 @@ export default function Portafolio() {
 
   const handleDragStart = (index: number) => setDragIndex(index);
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
     setDragOverIndex(index);
   };
 
   const handleDrop = (index: number) => {
     if (dragIndex === null || dragIndex === index) return;
+
     const next = [...dragOrder];
     const [moved] = next.splice(dragIndex, 1);
     next.splice(index, 0, moved);
+
     setDragOrder(next);
     setDragIndex(null);
     setDragOverIndex(null);
@@ -316,7 +362,6 @@ export default function Portafolio() {
     setDragIndex(null);
     setDragOverIndex(null);
   };
-  // --- fin orden de secciones ---
 
   useEffect(() => {
     const cached = readPreviewCache();
@@ -330,11 +375,13 @@ export default function Portafolio() {
       getPortafolio(),
       getExperiencias().catch(() => [] as Experiencia[]),
       getCertificaciones().catch(() => [] as Certificacion[]),
+      getVisibilidadSecciones().catch(() => null),
     ])
-      .then(([portafolioData, expData, certData]) => {
+      .then(([portafolioData, expData, certData, seccionesData]) => {
         setData(portafolioData);
         setExperiencias(expData ?? []);
         setCertificaciones(certData ?? []);
+        setSecciones(seccionesData ?? DEFAULTS_SECCIONES);
       })
       .catch(() => setError("Error al cargar el portafolio. Verifica tu conexión."))
       .finally(() => setLoading(false));
@@ -350,24 +397,28 @@ export default function Portafolio() {
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
   const habilidadesBlandas = data?.habilidades_blandas ?? [];
   const proyectos = data?.proyectos ?? [];
-  const educaciones = (data?.educaciones ?? [] as Educacion[]).filter((item) => item.visibilidad === "publico");
-  const cursos = (data?.cursos ?? [] as Curso[]).filter((item) => item.visibilidad === "publico");
-  const logros = (data?.logros ?? [] as Logro[]).filter((item) => item.visibilidad === "publico");
-  const idiomas = (data?.idiomas ?? [] as Idioma[]).filter((item) => item.visibilidad === "publico");
+  const educaciones = (data?.educaciones ?? ([] as Educacion[])).filter((item) => item.visibilidad === "publico");
+  const cursos = (data?.cursos ?? ([] as Curso[])).filter((item) => item.visibilidad === "publico");
+  const logros = (data?.logros ?? ([] as Logro[])).filter((item) => item.visibilidad === "publico");
+  const idiomas = (data?.idiomas ?? ([] as Idioma[])).filter((item) => item.visibilidad === "publico");
   const experienciasPublicas = experiencias.filter((item) => item.visibilidad !== "privado");
   const certificacionesPublicas = certificaciones.filter((item) => item.visibilidad === "publico");
 
-  const seccionesActivas = [
-    perfil ? 1 : 0,
-    habilidadesTecnicas.length + habilidadesBlandas.length,
-    proyectos.length,
-    educaciones.length,
-    experienciasPublicas.length,
-    cursos.length,
-    logros.length,
-    idiomas.length,
-    certificacionesPublicas.length,
-  ].some((cantidad) => cantidad > 0);
+  const cfg = secciones;
+
+  const sectionHasContent: Record<SectionId, boolean> = {
+    perfil: Boolean(perfil),
+    habilidades: habilidadesTecnicas.length + habilidadesBlandas.length > 0,
+    proyectos: proyectos.length > 0,
+    educacion: educaciones.length > 0,
+    experiencia: experienciasPublicas.length > 0,
+    cursos: cursos.length > 0,
+    certificaciones: certificacionesPublicas.length > 0,
+    logros: logros.length > 0,
+    idiomas: idiomas.length > 0,
+  };
+
+  const seccionesActivas = sectionOrder.some((id) => isSectionPublic(id, cfg) && sectionHasContent[id]);
 
   const renderSection = (id: SectionId) => {
     switch (id) {
@@ -379,14 +430,17 @@ export default function Portafolio() {
                 <p className={styles.fieldLabel}>Nombre completo</p>
                 <p className={styles.fieldValue}>{nombreCompleto}</p>
               </div>
+
               <div className={styles.profileInfoCard}>
                 <p className={styles.fieldLabel}>Profesión</p>
                 <p className={styles.fieldValue}>{perfil?.profesion ?? "Sin información"}</p>
               </div>
+
               <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
                 <p className={styles.fieldLabel}>Descripción</p>
                 <p className={styles.fieldValueMuted}>{perfil?.descripcion ?? "Sin descripción"}</p>
               </div>
+
               <div className={styles.profileInfoCard}>
                 <p className={styles.fieldLabel}>Teléfono</p>
                 <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
@@ -397,7 +451,12 @@ export default function Portafolio() {
 
       case "habilidades":
         return (
-          <SectionShell key="habilidades" id="habilidades" title="Habilidades" count={habilidadesTecnicas.length + habilidadesBlandas.length}>
+          <SectionShell
+            key="habilidades"
+            id="habilidades"
+            title="Habilidades"
+            count={habilidadesTecnicas.length + habilidadesBlandas.length}
+          >
             <div className={styles.splitGrid}>
               <div className={styles.splitColumn}>
                 <p className={styles.splitLabel}>Técnicas</p>
@@ -411,6 +470,7 @@ export default function Portafolio() {
                   <EmptyState title="Sin habilidades técnicas" description="No hay habilidades técnicas visibles para esta vista previa." />
                 )}
               </div>
+
               <div className={styles.splitColumn}>
                 <p className={styles.splitLabel}>Blandas</p>
                 {habilidadesBlandas.length > 0 ? (
@@ -437,7 +497,10 @@ export default function Portafolio() {
                 ))}
               </div>
             ) : (
-              <EmptyState title="Sin proyectos visibles" description="Todavía no hay proyectos listos para mostrarse en esta vista previa." />
+              <EmptyState
+                title="Sin proyectos visibles"
+                description="Todavía no hay proyectos listos para mostrarse en esta vista previa."
+              />
             )}
           </SectionShell>
         );
@@ -459,7 +522,10 @@ export default function Portafolio() {
                 ))}
               </div>
             ) : (
-              <EmptyState title="Sin formación académica visible" description="No hay registros públicos de formación académica para esta vista previa." />
+              <EmptyState
+                title="Sin formación académica visible"
+                description="No hay registros públicos de formación académica para esta vista previa."
+              />
             )}
           </SectionShell>
         );
@@ -474,7 +540,10 @@ export default function Portafolio() {
                     key={experiencia.id_experiencia}
                     title={experiencia.puesto}
                     subtitle={experiencia.nombre_empresa}
-                    period={formatPeriodo(experiencia.fecha_inicio, experiencia.es_actual ? null : experiencia.fecha_fin ?? null)}
+                    period={formatPeriodo(
+                      experiencia.fecha_inicio,
+                      experiencia.es_actual ? null : experiencia.fecha_fin ?? null,
+                    )}
                     description={experiencia.descripcion}
                     meta={[
                       experiencia.tipo ?? "Experiencia",
@@ -513,7 +582,12 @@ export default function Portafolio() {
 
       case "certificaciones":
         return (
-          <SectionShell key="certificaciones" id="certificaciones" title="Certificaciones" count={certificacionesPublicas.length}>
+          <SectionShell
+            key="certificaciones"
+            id="certificaciones"
+            title="Certificaciones"
+            count={certificacionesPublicas.length}
+          >
             {certificacionesPublicas.length > 0 ? (
               <div className={styles.certGrid}>
                 {certificacionesPublicas.map((certificacion) => (
@@ -521,7 +595,10 @@ export default function Portafolio() {
                 ))}
               </div>
             ) : (
-              <EmptyState title="Sin certificaciones visibles" description="No hay certificaciones públicas disponibles para esta vista previa." />
+              <EmptyState
+                title="Sin certificaciones visibles"
+                description="No hay certificaciones públicas disponibles para esta vista previa."
+              />
             )}
           </SectionShell>
         );
@@ -540,9 +617,11 @@ export default function Portafolio() {
                     description={logro.descripcion}
                     meta={logro.identificador ? [`ID: ${logro.identificador}`] : []}
                     extra={
-                      logro.url_credencial
-                        ? <a href={logro.url_credencial} target="_blank" rel="noreferrer" className={styles.inlineLink}>Ver credencial</a>
-                        : undefined
+                      logro.url_credencial ? (
+                        <a href={logro.url_credencial} target="_blank" rel="noreferrer" className={styles.inlineLink}>
+                          Ver credencial
+                        </a>
+                      ) : undefined
                     }
                   />
                 ))}
@@ -561,7 +640,9 @@ export default function Portafolio() {
                 {idiomas.map((idioma) => (
                   <article key={idioma.id_usuario_idioma} className={styles.languageCard}>
                     <p className={styles.languageName}>{idioma.nombre}</p>
-                    <span className={styles.languageLevel}>{NIVEL_IDIOMA[idioma.nivel] ?? idioma.nivel.toUpperCase()}</span>
+                    <span className={styles.languageLevel}>
+                      {NIVEL_IDIOMA[idioma.nivel] ?? idioma.nivel.toUpperCase()}
+                    </span>
                   </article>
                 ))}
               </div>
@@ -641,9 +722,17 @@ export default function Portafolio() {
             <IconSort />
             Ordenar secciones
           </button>
+                  <button
+          type="button"
+          className={styles.secondaryButton}
+          onClick={() => navigate("/portafolio/visibilidad")}
+        >
+          Configurar visibilidad
+        </button>
           <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/editar")}>
             Publicar
           </button>
+
         </div>
       </header>
 
@@ -662,59 +751,62 @@ export default function Portafolio() {
 
           <nav className={styles.navCard} aria-label="Secciones del portafolio">
             <p className={styles.navTitle}>Secciones</p>
-            {sectionOrder.map((id) => (
-              <a key={id} href={`#${id}`} className={styles.navLink}>
-                {SECTION_LABELS[id]}
-              </a>
-            ))}
+            {sectionOrder.map((id) =>
+              isSectionPublic(id, cfg) ? (
+                <a key={id} href={`#${id}`} className={styles.navLink}>
+                  {SECTION_LABELS[id]}
+                </a>
+              ) : null,
+            )}
           </nav>
         </aside>
 
         <section className={styles.content}>
-          {sectionOrder.map((id) => renderSection(id))}
+          {sectionOrder.map((id) => (isSectionPublic(id, cfg) ? renderSection(id) : null))}
         </section>
       </main>
 
       {showOrderModal && (
         <div className={styles.modalOverlay} onClick={() => setShowOrderModal(false)}>
           <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-            <div>
-              <p className={styles.modalTitle}>Ordenar secciones</p>
-              <p className={styles.modalSub}>Arrastra cada sección al lugar que desees. El orden se guardará al confirmar.</p>
-            </div>
+            <h2 className={styles.modalTitle}>Ordenar secciones</h2>
+            <p className={styles.modalSub}>Arrastra cada sección para cambiar el orden de visualización.</p>
+
             <div className={styles.modalList}>
-              {dragOrder.map((id, i) => (
+              {dragOrder.map((id, index) => (
                 <div
                   key={id}
-                  draggable
-                  onDragStart={() => handleDragStart(i)}
-                  onDragOver={(e) => handleDragOver(e, i)}
-                  onDrop={() => handleDrop(i)}
-                  onDragEnd={handleDragEnd}
                   className={[
                     styles.modalItem,
-                    dragIndex === i ? styles.modalItemDragging : "",
-                    dragOverIndex === i && dragIndex !== i ? styles.modalItemOver : "",
+                    dragIndex === index ? styles.modalItemDragging : "",
+                    dragOverIndex === index ? styles.modalItemOver : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={() => handleDrop(index)}
+                  onDragEnd={handleDragEnd}
                 >
-                  <span className={styles.modalHandle}>
+                  <div className={styles.modalHandle} aria-hidden="true">
                     <span />
                     <span />
                     <span />
-                  </span>
+                  </div>
+
                   <span className={styles.modalItemLabel}>{SECTION_LABELS[id]}</span>
-                  <span className={styles.modalItemNum}>{i + 1}</span>
+                  <span className={styles.modalItemNum}>{index + 1}</span>
                 </div>
               ))}
             </div>
+
             <div className={styles.modalActions}>
-              <button type="button" className={styles.secondaryButton} onClick={() => setShowOrderModal(false)}>
-                Cancelar
-              </button>
               <button type="button" className={styles.secondaryButton} onClick={resetOrder}>
                 Restablecer
+              </button>
+              <button type="button" className={styles.secondaryButton} onClick={() => setShowOrderModal(false)}>
+                Cancelar
               </button>
               <button type="button" className={styles.primaryButton} onClick={saveOrder}>
                 Guardar orden
