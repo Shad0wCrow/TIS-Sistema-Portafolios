@@ -6,109 +6,12 @@ import ProjectCard from "../../components/portafolio/ProjectCard";
 import SkillChip   from "../../components/portafolio/SkillChip";
 import styles from "./Portafolio.module.css";
 
+import { IconBack, IconEdit, IconUser } from "./components/PortafolioIcons";
+import EmptyState from "./components/EmptyState";
+import EducacionItem from "./components/EducacionItem";
+import CursoItem from "./components/CursoItem";
+import LogroItem from "./components/LogroItem";
 
-
-
-const IconBack = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
-const IconEdit = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
-  </svg>
-);
-const IconUser = () => (
-  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-function EmptyState({ label }: { label: string }) {
-  return (
-    <div className={styles.emptyState}>
-      <span className={styles.emptyText}>No hay {label} registradas aún</span>
-    </div>
-  );
-}
-
-function formatFecha(fecha: string | null): string {
-  if (!fecha) return "Presente";
-  const [y, m] = fecha.split("-");
-  const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-  return `${meses[parseInt(m) - 1]} ${y}`;
-}
-
-// ── Componente de item de educación ──────────────────────────────────────────
-function EducacionItem({ edu }: { edu: Educacion }) {
-  return (
-    <div className={styles.timelineItem}>
-      <div className={styles.timelineIcono}>🎓</div>
-      <div className={styles.timelineInfo}>
-        <span className={styles.timelineTitulo}>{edu.titulo}</span>
-        <span className={styles.timelineInstitucion}>{edu.institucion}</span>
-        {edu.area_estudio && (
-          <span className={styles.timelineArea}>{edu.area_estudio}</span>
-        )}
-        <span className={styles.timelineFechas}>
-          {formatFecha(edu.fecha_inicio)} — {formatFecha(edu.fecha_fin)}
-        </span>
-        {edu.descripcion && (
-          <span className={styles.timelineDesc}>{edu.descripcion}</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Componente de item de curso ───────────────────────────────────────────────
-function CursoItem({ curso }: { curso: Curso }) {
-  const esActual = curso.fecha_fin === null;
-  return (
-    <div className={styles.timelineItem}>
-      <div className={styles.timelineIcono}>📚</div>
-      <div className={styles.timelineInfo}>
-        <div className={styles.timelineTituloRow}>
-          <span className={styles.timelineTitulo}>{curso.titulo}</span>
-          {esActual && <span className={styles.badgeActual}>En curso</span>}
-        </div>
-        <span className={styles.timelineInstitucion}>{curso.institucion}</span>
-        <span className={styles.timelineFechas}>
-          {formatFecha(curso.fecha_inicio)} — {esActual ? "En curso" : formatFecha(curso.fecha_fin)}
-        </span>
-        {curso.descripcion && (
-          <span className={styles.timelineDesc}>{curso.descripcion}</span>
-        )}
-      </div>
-    </div>
-  );
-}
-function LogroItem({ logro }: { logro: Logro }) {
-  return (
-    <div className={styles.timelineItem}>
-      <div className={styles.timelineIcono}>🏅</div>
-      <div className={styles.timelineInfo}>
-        <span className={styles.timelineTitulo}>{logro.titulo}</span>
-        <span className={styles.timelineInstitucion}>
-          {logro.entidad_nombre ?? "Entidad no especificada"}
-        </span>
-        {logro.fecha_obtencion && (
-          <span className={styles.timelineFechas}>
-            {formatFecha(logro.fecha_obtencion)}
-          </span>
-        )}
-        {logro.identificador && (
-          <span className={styles.timelineArea}>ID: {logro.identificador}</span>
-        )}
-        {logro.descripcion && (
-          <span className={styles.timelineDesc}>{logro.descripcion}</span>
-        )}
-      </div>
-    </div>
-  );
-}
 export default function Portafolio() {
   const navigate = useNavigate();
   const [data, setData]       = useState<PortafolioData | null>(null);
