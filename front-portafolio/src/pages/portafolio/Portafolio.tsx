@@ -52,6 +52,96 @@ export default function Portafolio() {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  // ── PDF export ──────────────────────────────────────────────────────────────
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPdf = async () => {
+  setExporting(true);
+  try {
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import("html2canvas"),
+      import("jspdf"),
+    ]);
+
+    const element = document.querySelector<HTMLElement>("#portafolio-content");
+    if (!element) throw new Error("Elemento no encontrado");
+
+    // Ocultar secciones sin contenido usando su id en el DOM
+    const sectionsToHide: HTMLElement[] = [];
+    (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
+      if (!sectionHasContent[id]) {
+        // Busca tanto el elemento con ese id como cualquier ancestro section/article/div con ese id
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.visibility = "hidden";
+          el.style.height = "0";
+          el.style.overflow = "hidden";
+          el.style.padding = "0";
+          el.style.margin = "0";
+          sectionsToHide.push(el);
+        }
+      }
+    });
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+      ignoreElements: (el) => el.classList.contains("pdf-ignore"),
+    });
+
+    // Restaurar todo
+    sectionsToHide.forEach((el) => {
+      el.style.visibility = "";
+      el.style.height = "";
+      el.style.overflow = "";
+      el.style.padding = "";
+      el.style.margin = "";
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.92);
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position -= pageHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const filename = `portafolio-${nombreCompleto.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    pdf.save(filename);
+  } catch (err) {
+    console.error("Error al exportar PDF:", err);
+    // Asegurarse de restaurar si hay error
+    (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.visibility = "";
+        el.style.height = "";
+        el.style.overflow = "";
+        el.style.padding = "";
+        el.style.margin = "";
+      }
+    });
+    alert("No se pudo generar el PDF. Intenta nuevamente.");
+  } finally {
+    setExporting(false);
+  }
+};
+  // ────────────────────────────────────────────────────────────────────────────
+
   const openOrderModal = () => {
     setDragOrder([...sectionOrder]);
     setShowOrderModal(true);
@@ -147,10 +237,12 @@ export default function Portafolio() {
   const seccionesActivas = sectionOrder.some((id) => isSectionPublic(id, cfg) && sectionHasContent[id]);
 
   const renderSection = (id: SectionId) => {
+    const isEmpty = !sectionHasContent[id];
+
     switch (id) {
       case "perfil":
         return (
-          <SectionShell key="perfil" id="perfil" title="Perfil profesional" count={perfil ? 1 : 0}>
+          <SectionShell key="perfil" id="perfil" title="Perfil profesional" count={perfil ? 1 : 0} data-empty={isEmpty ? "true" : undefined}>
             <div className={styles.profileGrid}>
               <div className={styles.profileInfoCard}>
                 <p className={styles.fieldLabel}>Nombre completo</p>
@@ -182,6 +274,7 @@ export default function Portafolio() {
             id="habilidades"
             title="Habilidades"
             count={habilidadesTecnicas.length + habilidadesBlandas.length}
+            data-empty={isEmpty ? "true" : undefined}
           >
             <div className={styles.splitGrid}>
               <div className={styles.splitColumn}>
@@ -215,7 +308,7 @@ export default function Portafolio() {
 
       case "proyectos":
         return (
-          <SectionShell key="proyectos" id="proyectos" title="Proyectos" count={proyectos.length}>
+          <SectionShell key="proyectos" id="proyectos" title="Proyectos" count={proyectos.length} data-empty={isEmpty ? "true" : undefined}>
             {proyectos.length > 0 ? (
               <div className={styles.projectGrid}>
                 {proyectos.map((proyecto) => (
@@ -233,7 +326,7 @@ export default function Portafolio() {
 
       case "educacion":
         return (
-          <SectionShell key="educacion" id="educacion" title="Formación académica" count={educaciones.length}>
+          <SectionShell key="educacion" id="educacion" title="Formación académica" count={educaciones.length} data-empty={isEmpty ? "true" : undefined}>
             {educaciones.length > 0 ? (
               <div className={styles.timelineList}>
                 {educaciones.map((educacion) => (
@@ -258,7 +351,7 @@ export default function Portafolio() {
 
       case "experiencia":
         return (
-          <SectionShell key="experiencia" id="experiencia" title="Experiencia laboral" count={experienciasPublicas.length}>
+          <SectionShell key="experiencia" id="experiencia" title="Experiencia laboral" count={experienciasPublicas.length} data-empty={isEmpty ? "true" : undefined}>
             {experienciasPublicas.length > 0 ? (
               <div className={styles.timelineList}>
                 {experienciasPublicas.map((experiencia) => (
@@ -286,7 +379,7 @@ export default function Portafolio() {
 
       case "cursos":
         return (
-          <SectionShell key="cursos" id="cursos" title="Cursos" count={cursos.length}>
+          <SectionShell key="cursos" id="cursos" title="Cursos" count={cursos.length} data-empty={isEmpty ? "true" : undefined}>
             {cursos.length > 0 ? (
               <div className={styles.timelineList}>
                 {cursos.map((curso) => (
@@ -313,6 +406,7 @@ export default function Portafolio() {
             id="certificaciones"
             title="Certificaciones"
             count={certificacionesPublicas.length}
+            data-empty={isEmpty ? "true" : undefined}
           >
             {certificacionesPublicas.length > 0 ? (
               <div className={styles.certGrid}>
@@ -331,7 +425,7 @@ export default function Portafolio() {
 
       case "logros":
         return (
-          <SectionShell key="logros" id="logros" title="Logros y reconocimientos" count={logros.length}>
+          <SectionShell key="logros" id="logros" title="Logros y reconocimientos" count={logros.length} data-empty={isEmpty ? "true" : undefined}>
             {logros.length > 0 ? (
               <div className={styles.timelineList}>
                 {logros.map((logro) => (
@@ -360,7 +454,7 @@ export default function Portafolio() {
 
       case "idiomas":
         return (
-          <SectionShell key="idiomas" id="idiomas" title="Idiomas" count={idiomas.length}>
+          <SectionShell key="idiomas" id="idiomas" title="Idiomas" count={idiomas.length} data-empty={isEmpty ? "true" : undefined}>
             {idiomas.length > 0 ? (
               <div className={styles.languagesGrid}>
                 {idiomas.map((idioma) => (
@@ -455,14 +549,22 @@ export default function Portafolio() {
           >
             Configurar visibilidad
           </button>
+          {/* ── Botón Exportar PDF ── */}
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={handleExportPdf}
+            disabled={exporting}
+          >
+            {exporting ? "Generando PDF…" : "⬇ Exportar PDF"}
+          </button>
           <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/editar")}>
             Publicar
           </button>
-
         </div>
       </header>
 
-      <main className={styles.main}>
+      <main id="portafolio-content" className={styles.main}>
         <aside className={styles.sidebar}>
           <div className={styles.sidebarCard}>
             <div className={styles.profileAvatar}>
