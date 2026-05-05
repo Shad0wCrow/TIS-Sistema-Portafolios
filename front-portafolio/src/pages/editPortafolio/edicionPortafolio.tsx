@@ -277,6 +277,12 @@ export default function EdicionPortafolio() {
             </span>
           </div>
           <div className={styles.topbarRight}>
+            <button type="button" className={styles.previewButton} onClick={() => navigate("/portafolio")}>
+              Vista previa
+            </button>
+            <button type="button" className={styles.publishButton} onClick={() => navigate("/portafolio/visibilidad")}>
+              Publicar
+            </button>
             <span className={styles.statusBadge}>
               <span className={styles.statusDot} />
               Activo

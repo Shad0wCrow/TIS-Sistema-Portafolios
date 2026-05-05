@@ -70,7 +70,7 @@ const Sidebar: React.FC = () => {
 
       case 'portafolio':
         if (hasPortafolio) {
-          navigate('/portafolio');
+          navigate('/portafolio/editar');
         } else {
           setShowModal(true);
         }
