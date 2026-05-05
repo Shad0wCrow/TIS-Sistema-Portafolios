@@ -1,20 +1,31 @@
 import styles from "./certificacionCard.module.css";
 import type { Certificacion } from "../../../types/portafolioTypes";
 
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
+
 interface CertificacionCardProps {
   certificaciones: Certificacion[];
   onAdd: () => void;
   onRemove: (id: number) => void;
+  activeAction?: SectionAction;
 }
 
 function formatFecha(fecha: string | null): string {
   if (!fecha) return "";
   const [y, m] = fecha.split("-");
-  const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   return `${meses[parseInt(m) - 1]} ${y}`;
 }
 
-export default function CertificacionCard({ certificaciones, onAdd, onRemove }: CertificacionCardProps) {
+export default function CertificacionCard({
+  certificaciones,
+  onAdd,
+  onRemove,
+  activeAction,
+}: CertificacionCardProps) {
+  const showAdd = activeAction === "registrar" ;
+  const showRemove = activeAction === "eliminar";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -24,9 +35,12 @@ export default function CertificacionCard({ certificaciones, onAdd, onRemove }: 
             {certificaciones.length} registro{certificaciones.length !== 1 ? "s" : ""}
           </span>
         </div>
-        <button className={styles.btnAdd} onClick={onAdd}>
-          <span>+</span> Agregar
-        </button>
+
+        {showAdd && (
+          <button className={styles.btnAdd} onClick={onAdd} type="button">
+            <span>+</span> Agregar
+          </button>
+        )}
       </div>
 
       {certificaciones.length === 0 ? (
@@ -69,16 +83,24 @@ export default function CertificacionCard({ certificaciones, onAdd, onRemove }: 
               </div>
 
               <div className={styles.itemActions}>
-                <span className={`${styles.badge} ${cert.visibilidad === "publico" ? styles.badgePublic : styles.badgePrivate}`}>
+                <span
+                  className={`${styles.badge} ${
+                    cert.visibilidad === "publico" ? styles.badgePublic : styles.badgePrivate
+                  }`}
+                >
                   {cert.visibilidad === "publico" ? "Público" : "Privado"}
                 </span>
-                <button
-                  className={styles.btnRemove}
-                  onClick={() => onRemove(cert.id_certificacion)}
-                  title="Eliminar"
-                >
-                  ×
-                </button>
+
+                {showRemove && (
+                  <button
+                    className={styles.btnRemove}
+                    onClick={() => onRemove(cert.id_certificacion)}
+                    title="Eliminar"
+                    type="button"
+                  >
+                    Eliminar
+                  </button>
+                )}
               </div>
             </li>
           ))}

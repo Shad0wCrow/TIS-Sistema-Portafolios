@@ -18,7 +18,7 @@ import type {
   Curso,
   Logro,
   Idioma,
-  Certificacion
+  Certificacion,
 } from "../../types/portafolioTypes";
 
 import {
@@ -26,9 +26,15 @@ import {
   SECTION_LABELS,
   normalizarCertificaciones,
 } from "./hooks/usePortafolioHandlers";
-import type { AlertState, ModalProyectoState, ModalExperienciaState, ActiveSection } from "./hooks/usePortafolioHandlers";
+import type {
+  AlertState,
+  ModalProyectoState,
+  ModalExperienciaState,
+  ActiveSection,
+} from "./hooks/usePortafolioHandlers";
 
 import SidebarEdicion from "./components/sidebarEdicion";
+import type { SectionAction } from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
 import ProjectRowList from "./components/projectRowList";
 import ExperienciaRowList from "./components/experienciaRowList";
@@ -51,15 +57,15 @@ import ModalCertificacion from "./components/modalCertificacion";
 import PerfilSection from "./components/PerfilSection";
 import ModalError from "./components/ModalError";
 
-
-
 export default function EdicionPortafolio() {
   const navigate = useNavigate();
+
   const [data, setData] = useState<PortafolioData | null>(null);
   const [catalogo, setCatalogo] = useState<HabilidadCatalogo[]>([]);
   const [loadingPage, setLoadingPage] = useState(true);
   const [errorPage, setErrorPage] = useState("");
   const [activeSection, setActiveSection] = useState<ActiveSection>("perfil");
+  const [activeAction, setActiveAction] = useState<SectionAction>("mostrar");
 
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
   const [modalEditarHab, setModalEditarHab] = useState<HabilidadItem | null>(null);
@@ -67,7 +73,7 @@ export default function EdicionPortafolio() {
   const [modalExp, setModalExp] = useState<ModalExperienciaState>(null);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [modalEducacion, setModalEducacion] = useState(false);
   const [modalCurso, setModalCurso] = useState(false);
@@ -91,7 +97,6 @@ export default function EdicionPortafolio() {
       getExperiencias(),
       getCertificaciones(),
     ]);
-
     setData(portafolioRes);
     setExperiencias(experienciasRes);
     setCertificaciones(normalizarCertificaciones(certRes));
@@ -106,7 +111,6 @@ export default function EdicionPortafolio() {
           getExperiencias(),
           getCertificaciones(),
         ]);
-
         setData(portafolioRes);
         setCatalogo(catalogoRes.habilidades ?? []);
         setExperiencias(experienciasRes);
@@ -120,19 +124,22 @@ export default function EdicionPortafolio() {
     cargar();
   }, []);
 
-  const perfil              = data?.perfil ?? null;
+  const perfil = data?.perfil ?? null;
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
-  const habilidadesBlandas  = data?.habilidades_blandas ?? [];
-  const proyectos           = data?.proyectos ?? [];
-  const educaciones         = (data?.educaciones ?? []) as Educacion[];
-  const cursos              = (data?.cursos ?? []) as Curso[];
-  const logros              = (data?.logros ?? []) as Logro[];
-  const idiomas             = (data?.idiomas ?? []) as Idioma[];
+  const habilidadesBlandas = data?.habilidades_blandas ?? [];
+  const proyectos = data?.proyectos ?? [];
+  const educaciones = (data?.educaciones ?? []) as Educacion[];
+  const cursos = (data?.cursos ?? []) as Curso[];
+  const logros = (data?.logros ?? []) as Logro[];
+  const idiomas = (data?.idiomas ?? []) as Idioma[];
 
-  const certConImagenes = certificaciones.map((c) => {
+  const certConImagenes = useMemo(() => {
     const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-    return { ...c, imagen_url: stored[c.id_certificacion] ?? null };
-  });
+    return certificaciones.map((c) => ({
+      ...c,
+      imagen_url: stored[c.id_certificacion] ?? null,
+    }));
+  }, [certificaciones]);
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
@@ -181,25 +188,69 @@ export default function EdicionPortafolio() {
     refreshData,
   });
 
+  const openRegistrarModal = (section: ActiveSection) => {
+    switch (section) {
+      case "habilidades":
+        setModalHab("tecnica");
+        break;
+      case "proyectos":
+        setModalProy("nuevo");
+        break;
+      case "experiencia":
+        setModalExp("nueva");
+        break;
+      case "educacion":
+        setModalEducacion(true);
+        break;
+      case "cursos":
+        setModalCurso(true);
+        break;
+      case "logros":
+        setModalLogro(true);
+        break;
+      case "idiomas":
+        setModalIdioma(true);
+        break;
+      case "certificaciones":
+        setModalCertificacion(true);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleActionChange = (action: SectionAction) => {
+    setActiveAction(action);
+    if (action === "registrar") {
+      openRegistrarModal(activeSection);
+    }
+  };
+
+  const handleSectionChange = (section: ActiveSection) => {
+    setActiveSection(section);
+    setActiveAction("mostrar");
+  };
+
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
-  if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
-  if (!data)       return null;
+  if (errorPage) return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
+  if (!data) return null;
 
   return (
     <div className={styles.layout}>
-
       <SidebarEdicion
         perfil={perfil}
         nombreCompleto={nombreCompleto}
         activeSection={activeSection}
+        activeAction={activeAction}
         proyectosCount={proyectos.length}
         educacionCount={educaciones.length}
         cursosCount={cursos.length}
         logrosCount={logros.length}
         IdiomasCount={idiomas.length}
         certificacionesCount={certConImagenes.length}
-        onSectionChange={setActiveSection}
         experienciaCount={experiencias.length}
+        onSectionChange={handleSectionChange}
+        onActionChange={handleActionChange}
         onBack={() => navigate(-1)}
       />
 
@@ -209,7 +260,20 @@ export default function EdicionPortafolio() {
             <span className={styles.breadcrumb}>
               Portafolio
               <span className={styles.breadcrumbSep}>/</span>
-              <span className={styles.breadcrumbCurrent}>{SECTION_LABELS[activeSection]}</span>
+              <span className={styles.breadcrumbCurrent}>
+                {SECTION_LABELS[activeSection]}
+              </span>
+              {activeAction !== "mostrar" && (
+                <>
+                  <span className={styles.breadcrumbSep}>/</span>
+                  <span
+                    className={styles.breadcrumbCurrent}
+                    style={{ textTransform: "capitalize" }}
+                  >
+                    {activeAction}
+                  </span>
+                </>
+              )}
             </span>
           </div>
           <div className={styles.topbarRight}>
@@ -219,9 +283,8 @@ export default function EdicionPortafolio() {
             </span>
           </div>
         </div>
-        
-        <div className={styles.content}>
 
+        <div className={styles.content}>
           {activeSection === "perfil" && (
             <PerfilSection perfil={perfil} nombreCompleto={nombreCompleto} />
           )}
@@ -238,16 +301,43 @@ export default function EdicionPortafolio() {
                 <SkillCard
                   tipo="tecnica"
                   lista={habilidadesTecnicas}
-                  onAdd={() => setModalHab("tecnica")}
-                  onRemove={handleRemoveHabilidad}
-                  onEdit={(h) => setModalEditarHab(h)}
+                  onAdd={() => {
+                    if (activeAction === "registrar" || activeAction === "mostrar") {
+                      setModalHab("tecnica");
+                    }
+                  }}
+                  onRemove={(id) => {
+                    if (activeAction === "eliminar" || activeAction === "mostrar") {
+                      handleRemoveHabilidad(id);
+                    }
+                  }}
+                  onEdit={(h) => {
+                    if (activeAction === "editar" || activeAction === "mostrar") {
+                      setModalEditarHab(h);
+                    }
+                  }}
+                  activeAction={activeAction}
                 />
+
                 <SkillCard
                   tipo="blanda"
                   lista={habilidadesBlandas}
-                  onAdd={() => setModalHab("blanda")}
-                  onRemove={handleRemoveHabilidad}
-                  onEdit={(h) => setModalEditarHab(h)}
+                  onAdd={() => {
+                    if (activeAction === "registrar" || activeAction === "mostrar") {
+                      setModalHab("blanda");
+                    }
+                  }}
+                  onRemove={(id) => {
+                    if (activeAction === "eliminar" || activeAction === "mostrar") {
+                      handleRemoveHabilidad(id);
+                    }
+                  }}
+                  onEdit={(h) => {
+                    if (activeAction === "editar" || activeAction === "mostrar") {
+                      setModalEditarHab(h);
+                    }
+                  }}
+                  activeAction={activeAction}
                 />
               </div>
             </div>
@@ -263,9 +353,22 @@ export default function EdicionPortafolio() {
               </div>
               <ProjectRowList
                 proyectos={proyectos}
-                onEdit={(p) => setModalProy(p)}
-                onRemove={handleRemoveProyecto}
-                onAdd={() => setModalProy("nuevo")}
+                onEdit={(p) => {
+                  if (activeAction === "editar" || activeAction === "mostrar") {
+                    setModalProy(p);
+                  }
+                }}
+                onRemove={(id) => {
+                  if (activeAction === "eliminar" || activeAction === "mostrar") {
+                    handleRemoveProyecto(id);
+                  }
+                }}
+                onAdd={() => {
+                  if (activeAction === "registrar" || activeAction === "mostrar") {
+                    setModalProy("nuevo");
+                  }
+                }}
+                activeAction={activeAction}
               />
             </div>
           )}
@@ -280,9 +383,18 @@ export default function EdicionPortafolio() {
               </div>
               <ExperienciaRowList
                 experiencias={experiencias}
-                onEdit={(e) => setModalExp(e)}
-                onRemove={handleRemoveExperiencia}
-                onAdd={() => setModalExp("nueva")}
+                onEdit={() => {}}
+                onRemove={(id) => {
+                  if (activeAction === "eliminar" || activeAction === "mostrar") {
+                    handleRemoveExperiencia(id);
+                  }
+                }}
+                onAdd={() => {
+                  if (activeAction === "registrar" || activeAction === "mostrar") {
+                    setModalExp("nueva");
+                  }
+                }}
+                activeAction={activeAction === "editar" ? "mostrar" : activeAction}
               />
             </div>
           )}
@@ -297,8 +409,17 @@ export default function EdicionPortafolio() {
               </div>
               <EducacionCard
                 educaciones={educaciones}
-                onAdd={() => setModalEducacion(true)}
-                onRemove={handleRemoveEducacion}
+                onAdd={() => {
+                  if (activeAction === "registrar" || activeAction === "mostrar") {
+                    setModalEducacion(true);
+                  }
+                }}
+                onRemove={(id) => {
+                  if (activeAction === "eliminar" || activeAction === "mostrar") {
+                    handleRemoveEducacion(id);
+                  }
+                }}
+                activeAction={activeAction}
               />
             </div>
           )}
@@ -313,8 +434,17 @@ export default function EdicionPortafolio() {
               </div>
               <CursoCard
                 cursos={cursos}
-                onAdd={() => setModalCurso(true)}
-                onRemove={handleRemoveCurso}
+                onAdd={() => {
+                  if (activeAction === "registrar" || activeAction === "mostrar") {
+                    setModalCurso(true);
+                  }
+                }}
+                onRemove={(id) => {
+                  if (activeAction === "eliminar" || activeAction === "mostrar") {
+                    handleRemoveCurso(id);
+                  }
+                }}
+                activeAction={activeAction}
               />
             </div>
           )}
@@ -329,8 +459,17 @@ export default function EdicionPortafolio() {
               </div>
               <LogroCard
                 logros={logros}
-                onAdd={() => setModalLogro(true)}
-                onRemove={handleRemoveLogro}
+                onAdd={() => {
+                  if (activeAction === "registrar" || activeAction === "mostrar") {
+                    setModalLogro(true);
+                  }
+                }}
+                onRemove={(id) => {
+                  if (activeAction === "eliminar" || activeAction === "mostrar") {
+                    handleRemoveLogro(id);
+                  }
+                }}
+                activeAction={activeAction}
               />
             </div>
           )}
@@ -345,11 +484,20 @@ export default function EdicionPortafolio() {
               </div>
               <IdiomaCard
                 idiomas={idiomas}
-                onAdd={() => setModalIdioma(true)}
-                onRemove={handleRemoveIdioma}
+                onAdd={() => {
+                  if (activeAction === "registrar" || activeAction === "mostrar") {
+                    setModalIdioma(true);
+                  }
+                }}
+                onRemove={(id) => {
+                  if (activeAction === "eliminar" || activeAction === "mostrar") {
+                    handleRemoveIdioma(id);
+                  }
+                }}
+                activeAction={activeAction}
               />
             </div>
-          )}  
+          )}
 
           {activeSection === "certificaciones" && (
             <div className={styles.section}>
@@ -361,8 +509,17 @@ export default function EdicionPortafolio() {
               </div>
               <CertificacionCard
                 certificaciones={certConImagenes}
-                onAdd={() => setModalCertificacion(true)}
-                onRemove={handleRemoveCertificacion}
+                onAdd={() => {
+                  if (activeAction === "registrar" || activeAction === "mostrar") {
+                    setModalCertificacion(true);
+                  }
+                }}
+                onRemove={(id) => {
+                  if (activeAction === "eliminar" || activeAction === "mostrar") {
+                    handleRemoveCertificacion(id);
+                  }
+                }}
+                activeAction={activeAction}
               />
             </div>
           )}
@@ -373,11 +530,15 @@ export default function EdicionPortafolio() {
         <ModalAgregarHabilidad
           tipo={modalHab}
           catalogo={catalogo}
-          onClose={() => { setModalHab(null); setWarningHabilidad(undefined); }}
+          onClose={() => {
+            setModalHab(null);
+            setWarningHabilidad(undefined);
+          }}
           onSave={handleAddHabilidad}
           duplicadoWarning={warningHabilidad}
         />
       )}
+
       {modalEditarHab && (
         <ModalEditarHabilidad
           habilidad={modalEditarHab}
@@ -385,18 +546,26 @@ export default function EdicionPortafolio() {
           onSave={handleEditHabilidad}
         />
       )}
+
       {modalProy !== null && (
         <ModalProyecto
           proyecto={modalProy === "nuevo" ? null : modalProy}
-          onClose={() => { setModalProy(null); setWarningProyecto(undefined); }}
+          onClose={() => {
+            setModalProy(null);
+            setWarningProyecto(undefined);
+          }}
           onSave={handleSaveProyecto}
           duplicadoWarning={warningProyecto}
         />
       )}
+
       {modalExp !== null && (
         <ModalExperiencia
-          experiencia={modalExp === "nueva" ? null : modalExp}
-          onClose={() => { setModalExp(null); setWarningExperiencia(undefined); }}
+          experiencia={null}
+          onClose={() => {
+            setModalExp(null);
+            setWarningExperiencia(undefined);
+          }}
           onSave={handleSaveExperiencia}
           duplicadoWarning={warningExperiencia}
         />
@@ -404,7 +573,10 @@ export default function EdicionPortafolio() {
 
       {modalEducacion && (
         <ModalEducacion
-          onClose={() => { setModalEducacion(false); setWarningEducacion(undefined); }}
+          onClose={() => {
+            setModalEducacion(false);
+            setWarningEducacion(undefined);
+          }}
           onSave={handleSaveEducacion}
           duplicadoWarning={warningEducacion}
         />
@@ -412,7 +584,10 @@ export default function EdicionPortafolio() {
 
       {modalCurso && (
         <ModalCurso
-          onClose={() => { setModalCurso(false); setWarningCurso(undefined); }}
+          onClose={() => {
+            setModalCurso(false);
+            setWarningCurso(undefined);
+          }}
           onSave={handleSaveCurso}
           duplicadoWarning={warningCurso}
         />
@@ -420,7 +595,10 @@ export default function EdicionPortafolio() {
 
       {modalLogro && (
         <ModalLogro
-          onClose={() => { setModalLogro(false); setWarningLogro(undefined); }}
+          onClose={() => {
+            setModalLogro(false);
+            setWarningLogro(undefined);
+          }}
           onSave={handleAddLogro}
           logrosExistentes={logros}
           duplicadoWarning={warningLogro}
@@ -429,7 +607,10 @@ export default function EdicionPortafolio() {
 
       {modalIdioma && (
         <ModalIdioma
-          onClose={() => { setModalIdioma(false); setWarningIdioma(undefined); }}
+          onClose={() => {
+            setModalIdioma(false);
+            setWarningIdioma(undefined);
+          }}
           onSave={handleAddIdioma}
           duplicadoWarning={warningIdioma}
         />
@@ -460,7 +641,10 @@ export default function EdicionPortafolio() {
 
       {modalCertificacion && (
         <ModalCertificacion
-          onClose={() => { setModalCertificacion(false); setWarningCertificacion(undefined); }}
+          onClose={() => {
+            setModalCertificacion(false);
+            setWarningCertificacion(undefined);
+          }}
           onSave={handleSaveCertificacion}
           duplicadoWarning={warningCertificacion}
         />

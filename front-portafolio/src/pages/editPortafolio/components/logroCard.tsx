@@ -1,10 +1,13 @@
 import styles from "./logroCard.module.css";
 import type { Logro } from "../../../types/portafolioTypes";
 
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
+
 interface LogroCardProps {
   logros: Logro[];
   onAdd: () => void;
   onRemove: (id: number) => void;
+  activeAction?: SectionAction;
 }
 
 function formatFecha(fecha: string | null): string {
@@ -14,7 +17,15 @@ function formatFecha(fecha: string | null): string {
   return `${meses[parseInt(m) - 1]} ${y}`;
 }
 
-export default function LogroCard({ logros, onAdd, onRemove }: LogroCardProps) {
+export default function LogroCard({
+  logros,
+  onAdd,
+  onRemove,
+  activeAction,
+}: LogroCardProps) {
+  const showAdd = activeAction === "registrar"; 
+  const showRemove = activeAction === "eliminar";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -25,9 +36,11 @@ export default function LogroCard({ logros, onAdd, onRemove }: LogroCardProps) {
           </span>
         </div>
 
-        <button className={styles.btnAdd} onClick={onAdd}>
-          <span>+</span> Agregar
-        </button>
+        {showAdd && (
+          <button className={styles.btnAdd} onClick={onAdd} type="button">
+            <span>+</span> Agregar
+          </button>
+        )}
       </div>
 
       {logros.length === 0 ? (
@@ -81,13 +94,16 @@ export default function LogroCard({ logros, onAdd, onRemove }: LogroCardProps) {
                   {logro.visibilidad === "publico" ? "Público" : "Privado"}
                 </span>
 
-                <button
-                  className={styles.btnRemove}
-                  onClick={() => onRemove(logro.id_logro)}
-                  title="Eliminar"
-                >
-                  Eliminar
-                </button>
+                {showRemove && (
+                  <button
+                    className={styles.btnRemove}
+                    onClick={() => onRemove(logro.id_logro)}
+                    title="Eliminar"
+                    type="button"
+                  >
+                    Eliminar
+                  </button>
+                )}
               </div>
             </li>
           ))}
