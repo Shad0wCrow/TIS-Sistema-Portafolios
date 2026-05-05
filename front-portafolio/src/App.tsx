@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import CreateAccount from "./pages/createAccount/createAccount";
 import EdicionPortafolio from "./pages/editPortafolio/edicionPortafolio";
 import Portafolio from "./pages/portafolio/Portafolio";
+import PortafolioPublico from "./pages/portafolio/PortafolioPublico";
 import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
 import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicacion";
 
@@ -60,6 +61,8 @@ function App() {
           </PortafolioRoute>
         }
       />
+
+      <Route path="/portafolio/publico/:slug" element={<PortafolioPublico />} />
 
       <Route
         path="/portafolio/editar"

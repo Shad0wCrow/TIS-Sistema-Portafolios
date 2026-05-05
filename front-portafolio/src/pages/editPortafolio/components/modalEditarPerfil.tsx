@@ -1,8 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
-import { updatePerfil, getSugerenciasProfecion } from "../../../services/portafolioservice";
+import { updatePerfil } from "../../../services/portafolioservice";
 import type { PortafolioData } from "../../../types/portafolioTypes";
-import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
 
 interface ModalEditarPerfilProps {
   perfil: PortafolioData["perfil"] | null;

@@ -77,6 +77,9 @@ export interface Certificacion {
   id_certificacion: number;
   nombre: string;
   nombre_entidad: string;
+  entidadEmisora?: {
+    nombre?: string | null;
+  } | null;
   fecha_obtencion: string;
   fecha_expiracion: string | null;
   url_certificado: string | null;
@@ -107,6 +110,17 @@ export interface PortafolioData {
   logros: Logro[];
   idiomas: Idioma[];
   certificaciones: Certificacion[];
+  experiencias?: Experiencia[];
+  configuracion?: ConfiguracionSecciones;
+}
+
+export interface EstadoPublicacionPortafolio {
+  publicado: boolean;
+  slug_publico: string | null;
+  url_publica: string | null;
+  api_url_publica?: string | null;
+  publicado_en: string | null;
+  despublicado_en: string | null;
 }
 
 export type EstadoVisibilidad = 'publico' | 'privado';

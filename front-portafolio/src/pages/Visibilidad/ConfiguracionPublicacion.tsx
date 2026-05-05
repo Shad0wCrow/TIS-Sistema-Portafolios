@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './configuracionPublicacion.module.css';
-import { getVisibilidadSecciones, updateVisibilidadSecciones } from '../../services/portafolioservice';
-import type { ConfiguracionSecciones, EstadoVisibilidad } from '../../types/portafolioTypes';
+import {
+  despublicarPortafolio,
+  getEstadoPublicacion,
+  getVisibilidadSecciones,
+  publicarPortafolio,
+  updateVisibilidadSecciones,
+} from '../../services/portafolioservice';
+import type { ConfiguracionSecciones, EstadoPublicacionPortafolio, EstadoVisibilidad } from '../../types/portafolioTypes';
 import { SECCION_LABELS } from '../../types/portafolioTypes';
 
 // ─── Iconos ───────────────────────────────────────────────────────────────────
@@ -34,6 +40,24 @@ function IconCheck() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+function IconGlobe() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 0 20" />
+      <path d="M12 2a15.3 15.3 0 0 0 0 20" />
+    </svg>
+  );
+}
+function IconCopy() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
     </svg>
   );
 }
@@ -97,9 +121,12 @@ function Toggle({
 export default function ConfiguracionPublicacion() {
   const navigate = useNavigate();
   const [config, setConfig]               = useState<ConfiguracionSecciones>(DEFAULTS);
+  const [publicacion, setPublicacion]     = useState<EstadoPublicacionPortafolio | null>(null);
   const [loading, setLoading]             = useState(true);
   const [saving, setSaving]               = useState(false);
+  const [publishing, setPublishing]       = useState(false);
   const [savedOk, setSavedOk]             = useState(false);
+  const [copied, setCopied]               = useState(false);
   const [error, setError]                 = useState('');
   const [validationErr, setValidationErr] = useState('');
 
@@ -110,8 +137,11 @@ export default function ConfiguracionPublicacion() {
       navigate('/login');
       return;
     }
-    getVisibilidadSecciones()
-      .then(setConfig)
+    Promise.all([getVisibilidadSecciones(), getEstadoPublicacion()])
+      .then(([seccionesData, publicacionData]) => {
+        setConfig(seccionesData);
+        setPublicacion(publicacionData);
+      })
       .catch(() => setError('No se pudo cargar la configuración. Intenta de nuevo.'))
       .finally(() => setLoading(false));
   }, [navigate]);
@@ -165,6 +195,69 @@ export default function ConfiguracionPublicacion() {
     navigate('/portafolio');
   };
 
+  const getErrorMessage = (err: unknown, fallback: string) => {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'response' in err &&
+      (err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }).response?.data
+    ) {
+      const data = (err as { response: { data: { message?: string; errors?: Record<string, string[]> } } }).response.data;
+      const firstFieldError = data.errors ? Object.values(data.errors)[0]?.[0] : '';
+      return firstFieldError || data.message || fallback;
+    }
+    return fallback;
+  };
+
+  const handlePublicar = async () => {
+    if (!validar()) return;
+    setPublishing(true);
+    setError('');
+    setValidationErr('');
+    try {
+      await updateVisibilidadSecciones(config);
+      const estado = await publicarPortafolio();
+      setPublicacion(estado);
+      setSavedOk(true);
+      setTimeout(() => setSavedOk(false), 3000);
+    } catch (err) {
+      setValidationErr(getErrorMessage(err, 'No se pudo publicar el portafolio. Intenta nuevamente.'));
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleDespublicar = async () => {
+    setPublishing(true);
+    setError('');
+    setValidationErr('');
+    try {
+      const estado = await despublicarPortafolio();
+      setPublicacion(estado);
+    } catch (err) {
+      setError(getErrorMessage(err, 'No se pudo despublicar el portafolio. Intenta nuevamente.'));
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleCopiarUrl = async () => {
+    if (!publicacion?.url_publica) return;
+    try {
+      await navigator.clipboard.writeText(publicacion.url_publica);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setError('No se pudo copiar el enlace. Selecciona la URL manualmente.');
+    }
+  };
+
+  const handleAbrirPublico = () => {
+    if (publicacion?.slug_publico) {
+      window.open(`/portafolio/publico/${publicacion.slug_publico}`, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const publicasCount = SECCIONES.filter((k) => esPublico(config[k])).length;
 
   if (loading) {
@@ -181,7 +274,7 @@ export default function ConfiguracionPublicacion() {
       {/* Topbar */}
       <header className={styles.topbar}>
         <div className={styles.topbarLeft}>
-          <button type="button" className={styles.backBtn} onClick={() => navigate(-1)}>
+          <button type="button" className={styles.backBtn} onClick={() => navigate('/portafolio')}>
             <IconArrowLeft />
             Volver
           </button>
@@ -210,6 +303,57 @@ export default function ConfiguracionPublicacion() {
       {/* Cuerpo */}
       <main className={styles.main}>
         <div className={styles.card}>
+          <section className={styles.publishPanel} aria-labelledby="publish-title">
+            <div className={styles.publishHeader}>
+              <div className={styles.publishIcon}>
+                <IconGlobe />
+              </div>
+              <div className={styles.publishCopy}>
+                <p className={styles.cardEyebrow}>Estado de publicación</p>
+                <h2 id="publish-title" className={styles.cardTitle}>Publicar portafolio</h2>
+                <p className={styles.cardSubtitle}>
+                  Comparte un enlace público con reclutadores, clientes o cualquier persona interesada.
+                </p>
+              </div>
+              <span className={`${styles.statusPill} ${publicacion?.publicado ? styles.statusPublished : styles.statusDraft}`}>
+                {publicacion?.publicado ? 'Publicado' : 'Despublicado'}
+              </span>
+            </div>
+
+            {publicacion?.url_publica && (
+              <div className={styles.urlBox}>
+                <span className={styles.urlText}>{publicacion.url_publica}</span>
+                <button type="button" className={styles.iconActionBtn} onClick={handleCopiarUrl} aria-label="Copiar enlace público">
+                  {copied ? <IconCheck /> : <IconCopy />}
+                </button>
+              </div>
+            )}
+
+            <div className={styles.publishActions}>
+              <button type="button" className={styles.btnPrimary} onClick={handlePublicar} disabled={publishing || saving}>
+                <IconGlobe />
+                {publishing ? 'Procesando…' : publicacion?.publicado ? 'Actualizar publicación' : 'Publicar Portafolio'}
+              </button>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={handleAbrirPublico}
+                disabled={!publicacion?.publicado || !publicacion?.slug_publico}
+              >
+                <IconEye />
+                Abrir enlace
+              </button>
+              <button
+                type="button"
+                className={styles.btnDanger}
+                onClick={handleDespublicar}
+                disabled={publishing || !publicacion?.publicado}
+              >
+                Despublicar
+              </button>
+            </div>
+          </section>
+
           <div className={styles.cardHeader}>
             <div>
               <h2 className={styles.cardTitle}>Secciones visibles en tu portafolio</h2>
