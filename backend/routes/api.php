@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\CursoController;
 use App\Http\Controllers\Api\LogroController;
 use App\Http\Controllers\Api\IdiomaController;
 use App\Http\Controllers\Api\VisibilidadController;
+use App\Http\Controllers\Api\PortafolioPublicacionController;
+use App\Http\Controllers\Api\PortafolioPublicoController;
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
@@ -21,6 +23,7 @@ Route::get('/health', function () {
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
+Route::get('/public/portafolios/{slug}', [PortafolioPublicoController::class, 'show']);
 
 // Rutas protegidas 
 Route::middleware('auth:sanctum')->group(function () {
@@ -36,6 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Pantalla "Edición de Portafolio" 
     Route::get('/portafolio',                     [PortafolioController::class, 'show']);
+    Route::get('/portafolio/publicacion',         [PortafolioPublicacionController::class, 'show']);
+    Route::post('/portafolio/publicar',           [PortafolioPublicacionController::class, 'publicar']);
+    Route::post('/portafolio/despublicar',        [PortafolioPublicacionController::class, 'despublicar']);
     Route::put('/portafolio/perfil',              [PortafolioController::class, 'updatePerfil']);
     Route::post('/portafolio/habilidades',         [PortafolioController::class, 'addHabilidad']);
     Route::delete('/portafolio/habilidades/{id}', [PortafolioController::class, 'removeHabilidad']);

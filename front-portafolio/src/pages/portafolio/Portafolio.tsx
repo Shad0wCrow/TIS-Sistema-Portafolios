@@ -88,7 +88,7 @@ export default function Portafolio() {
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
-      ignoreElements: (el) => el.classList.contains("pdf-ignore"),
+      ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
     });
 
     // Restaurar todo
@@ -504,7 +504,7 @@ export default function Portafolio() {
             Debes activar al menos una sección para visualizar cómo quedará tu portafolio antes de publicarlo.
           </p>
           <div className={styles.emptyPreviewActions}>
-            <button type="button" className={styles.secondaryButton} onClick={() => navigate(-1)}>
+            <button type="button" className={styles.secondaryButton} onClick={() => navigate("/portafolio/editar")}>
               <IconArrowLeft />
               Volver
             </button>
@@ -530,7 +530,7 @@ export default function Portafolio() {
         </div>
 
         <div className={styles.topActions}>
-          <button type="button" className={styles.secondaryButton} onClick={() => navigate(-1)}>
+          <button type="button" className={styles.secondaryButton} onClick={() => navigate("/portafolio/editar")}>
             <IconArrowLeft />
             Volver
           </button>
@@ -558,7 +558,7 @@ export default function Portafolio() {
           >
             {exporting ? "Generando PDF…" : "⬇ Exportar PDF"}
           </button>
-          <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/editar")}>
+          <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/visibilidad")}>
             Publicar
           </button>
         </div>
