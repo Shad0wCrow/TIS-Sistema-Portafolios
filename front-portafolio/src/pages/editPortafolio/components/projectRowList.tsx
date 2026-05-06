@@ -154,13 +154,6 @@ export default function ProjectRowList({
           ))}
         </ul>
       )}
-
-      <div className={styles.cardFooter}>
-        <button type="button" className={styles.addBtn} onClick={onAdd}>
-          <IconPlus />
-          Agregar proyecto
-        </button>
-      </div>
     </div>
   );
 }

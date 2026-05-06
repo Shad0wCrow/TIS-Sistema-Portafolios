@@ -12,6 +12,7 @@ interface ModalProyectoProps {
 
 interface FormErrors {
   titulo?: string;
+  fecha_inicio?: string;
   fecha_fin?: string;
 }
 
@@ -40,6 +41,9 @@ export default function ModalProyecto({ proyecto, onClose, onSave, duplicadoWarn
     const newErrors: FormErrors = {};
     if (!form.titulo.trim()) {
       newErrors.titulo = "El título del proyecto es obligatorio.";
+    }
+    if (!form.fecha_inicio) {
+      newErrors.fecha_inicio = "La fecha de inicio es obligatoria.";
     }
     if (form.fecha_inicio && form.fecha_fin && form.fecha_inicio > form.fecha_fin) {
       newErrors.fecha_fin = "La fecha de fin no puede ser anterior a la fecha de inicio.";
@@ -118,7 +122,7 @@ return (
 
         {/* FECHA INICIO */}
         <div className={styles.modalField}>
-          <label htmlFor="proj-finicio">Fecha inicio</label>
+          <label htmlFor="proj-finicio">Fecha inicio *</label>
           <input
             id="proj-finicio"
             type="date"
@@ -126,7 +130,14 @@ return (
             value={form.fecha_inicio}
             onChange={handle}
             disabled={!!proyecto}
+            aria-describedby={errors.fecha_inicio ? "proj-finicio-err" : undefined}
+            style={errors.fecha_inicio ? { borderColor: "var(--red, #e53e3e)" } : {}}
           />
+          {errors.fecha_inicio && (
+            <span id="proj-finicio-err" style={{ fontSize: 11, color: "var(--red, #e53e3e)", marginTop: 2 }}>
+              {errors.fecha_inicio}
+            </span>
+          )}
         </div>
 
         {/* FECHA FIN */}
