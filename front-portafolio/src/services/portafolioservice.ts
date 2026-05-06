@@ -3,7 +3,9 @@ import axios from "axios";
 import type {
   ConfiguracionSecciones,
   EstadoPublicacionPortafolio,
+  EstadoGuardadoPortafolio,
   PortafolioData,
+  PortafolioGuardadoResumen,
   PortafolioPublicoResumen,
 } from '../types/portafolioTypes';
 
@@ -418,6 +420,49 @@ export const getPortafoliosPublicos = async (limite = 12): Promise<PortafolioPub
     params: { limite },
   });
   return res.data.portafolios ?? [];
+};
+
+export const getDashboardPortafolios = async (limite = 12): Promise<{
+  publicacion: EstadoPublicacionPortafolio;
+  portafolios: PortafolioPublicoResumen[];
+}> => {
+  const res = await axios.get(`${API}/dashboard/portafolios`, {
+    headers: authHeaders(),
+    params: { limite },
+  });
+
+  return {
+    publicacion: res.data.publicacion,
+    portafolios: res.data.portafolios ?? [],
+  };
+};
+
+export const getPortafoliosGuardados = async (): Promise<PortafolioGuardadoResumen[]> => {
+  const res = await axios.get(`${API}/portafolios/guardados`, {
+    headers: authHeaders(),
+  });
+  return res.data.guardados ?? [];
+};
+
+export const getEstadoGuardado = async (slug: string): Promise<EstadoGuardadoPortafolio> => {
+  const res = await axios.get(`${API}/portafolios/${slug}/guardado`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const guardarPortafolio = async (slug: string): Promise<EstadoGuardadoPortafolio> => {
+  const res = await axios.post(`${API}/portafolios/${slug}/guardar`, {}, {
+    headers: authHeaders(),
+  });
+  return res.data.data;
+};
+
+export const eliminarPortafolioGuardado = async (slug: string): Promise<EstadoGuardadoPortafolio> => {
+  const res = await axios.delete(`${API}/portafolios/${slug}/guardar`, {
+    headers: authHeaders(),
+  });
+  return res.data.data;
 };
 
 export const publicarPortafolio = async (): Promise<EstadoPublicacionPortafolio> => {

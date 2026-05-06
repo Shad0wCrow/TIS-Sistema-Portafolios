@@ -4,6 +4,7 @@ import Landing from "./pages/Landing/Landing";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import Guardados from "./pages/Guardados/Guardados";
 import CreateAccount from "./pages/createAccount/createAccount";
 import EdicionPortafolio from "./pages/editPortafolio/edicionPortafolio";
 import Portafolio from "./pages/portafolio/Portafolio";
@@ -34,6 +35,7 @@ function App() {
       />
 
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/guardados" element={<Guardados />} />
 
       <Route
         path="/perfil/editar"

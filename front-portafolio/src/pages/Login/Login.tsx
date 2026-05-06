@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/auth";
 import "./Login.css";
 import fondoLanding from "../../assets/landing-bg.png";
 import AuthLayout from "../../components/layout/AuthLayout";
 
+const DASHBOARD_CACHE_KEY = "dashboardPortafoliosCache";
+
 function Login() {
+  const navigate = useNavigate();
   const [correo, setCorreo] = useState("");
   const [contrasenia, setContrasenia] = useState("");
   const [error, setError] = useState("");
@@ -22,8 +25,16 @@ function Login() {
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.removeItem("hasPortafolio"); 
       localStorage.removeItem("hasProfile");
+      sessionStorage.removeItem(DASHBOARD_CACHE_KEY);
+      if (data.dashboard) {
+        sessionStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify({
+          publicacion: data.dashboard.publicacion ?? null,
+          portafolios: data.dashboard.portafolios ?? [],
+          cachedAt: Date.now(),
+        }));
+      }
       
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Error al iniciar sesión");
     } finally {

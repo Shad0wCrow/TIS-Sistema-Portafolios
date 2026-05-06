@@ -18,6 +18,7 @@ import type {
 } from "../../types/portafolioTypes";
 import ProjectCard from "../../components/portafolio/ProjectCard";
 import SkillChip from "../../components/portafolio/SkillChip";
+import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import styles from "./Portafolio.module.css";
 
 import { IconArrowLeft, IconSort, IconPencil, IconEye, IconUser } from "./components/PortafolioIcons";
@@ -478,14 +479,7 @@ export default function Portafolio() {
   };
 
   if (loading) {
-    return (
-      <div className={styles.stateScreen}>
-        <div className={styles.stateCard}>
-          <span className={styles.loadingDot} />
-          <p>Cargando vista previa del portafolio</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Cargando vista previa del portafolio..." />;
   }
 
   if (error) {
