@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import type { ConfiguracionSecciones } from '../types/portafolioTypes';
+import type { ConfiguracionSecciones, EstadoPublicacionPortafolio, PortafolioData } from '../types/portafolioTypes';
 
 const API = "http://localhost:8000/api";
 
@@ -398,4 +398,53 @@ export const updateVisibilidadSecciones = async (
     headers: authHeaders(),
   });
   return res.data.configuracion;
+};
+
+export const getEstadoPublicacion = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.get(`${API}/portafolio/publicacion`, {
+    headers: authHeaders(),
+  });
+  return res.data.publicacion;
+};
+
+export const publicarPortafolio = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.post(`${API}/portafolio/publicar`, {}, {
+    headers: authHeaders(),
+  });
+  return res.data.publicacion;
+};
+
+export const despublicarPortafolio = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.post(`${API}/portafolio/despublicar`, {}, {
+    headers: authHeaders(),
+  });
+  return res.data.publicacion;
+};
+
+export const getPortafolioPublico = async (slug: string): Promise<PortafolioData> => {
+  const res = await axios.get(`${API}/public/portafolios/${slug}`);
+  const portafolio = res.data.portafolio ?? {};
+  type PublicRecord = Record<string, any>;
+
+  return {
+    ...portafolio,
+    perfil: portafolio.perfil ?? null,
+    habilidades_tecnicas: portafolio.habilidades_tecnicas ?? [],
+    habilidades_blandas: portafolio.habilidades_blandas ?? [],
+    proyectos: portafolio.proyectos ?? [],
+    educaciones: portafolio.educaciones ?? [],
+    cursos: portafolio.cursos ?? [],
+    idiomas: portafolio.idiomas ?? [],
+    experiencias: portafolio.experiencias ?? [],
+    configuracion: portafolio.configuracion,
+    certificaciones: (portafolio.certificaciones ?? []).map((cert: PublicRecord) => ({
+      ...cert,
+      nombre_entidad: cert.nombre_entidad ?? cert.entidad_emisora?.nombre ?? cert.entidadEmisora?.nombre ?? "",
+      imagen_url: cert.imagen_url ?? null,
+    })),
+    logros: (portafolio.logros ?? []).map((logro: PublicRecord) => ({
+      ...logro,
+      entidad_nombre: logro.entidad_nombre ?? logro.entidad_emisora?.nombre ?? logro.entidadEmisora?.nombre ?? null,
+    })),
+  };
 };
