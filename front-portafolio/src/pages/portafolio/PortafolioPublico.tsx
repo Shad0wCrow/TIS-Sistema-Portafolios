@@ -101,6 +101,13 @@ export default function PortafolioPublico() {
   const logros = (data?.logros ?? emptyData.logros) as Logro[];
   const idiomas = (data?.idiomas ?? emptyData.idiomas) as Idioma[];
   const certificaciones = (data?.certificaciones ?? emptyData.certificaciones) as Certificacion[];
+  const certificacionesConImagenes = useMemo(() => {
+    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+    return certificaciones.map((c) => ({
+      ...c,
+      imagen_url: c.imagen_url || stored[c.id_certificacion] || null,
+    }));
+  }, [certificaciones]);
   const experiencias = (data?.experiencias ?? emptyData.experiencias) as Experiencia[];
 
   const nombreCompleto = useMemo(() => {
@@ -115,7 +122,7 @@ export default function PortafolioPublico() {
     educacion: educaciones.length > 0,
     experiencia: experiencias.length > 0,
     cursos: cursos.length > 0,
-    certificaciones: certificaciones.length > 0,
+    certificaciones: certificacionesConImagenes.length > 0,
     logros: logros.length > 0,
     idiomas: idiomas.length > 0,
   };
@@ -278,7 +285,7 @@ export default function PortafolioPublico() {
         return (
           <SectionShell key="certificaciones" id="certificaciones" title="Certificaciones" count={certificaciones.length}>
             <div className={styles.certGrid}>
-              {certificaciones.map((certificacion) => (
+              {certificacionesConImagenes.map((certificacion) => (
                 <CertificacionCard key={certificacion.id_certificacion} cert={certificacion} />
               ))}
             </div>
