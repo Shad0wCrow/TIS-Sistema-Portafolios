@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\IdiomaController;
 use App\Http\Controllers\Api\VisibilidadController;
 use App\Http\Controllers\Api\PortafolioPublicacionController;
 use App\Http\Controllers\Api\PortafolioPublicoController;
+use App\Http\Controllers\Api\PortafoliosPublicosController;
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
@@ -39,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Pantalla "Edición de Portafolio" 
     Route::get('/portafolio',                     [PortafolioController::class, 'show']);
+    Route::get('/portafolios/publicos',           [PortafoliosPublicosController::class, 'index']);
     Route::get('/portafolio/publicacion',         [PortafolioPublicacionController::class, 'show']);
     Route::post('/portafolio/publicar',           [PortafolioPublicacionController::class, 'publicar']);
     Route::post('/portafolio/despublicar',        [PortafolioPublicacionController::class, 'despublicar']);
