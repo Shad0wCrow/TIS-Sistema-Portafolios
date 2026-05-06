@@ -19,6 +19,11 @@ class PortafolioPublicacionRepository
             ->first();
     }
 
+    public function buscarPorSlug(string $slug): ?PortafolioPublicacion
+    {
+        return PortafolioPublicacion::where('slug_publico', $slug)->first();
+    }
+
     public function existeSlug(string $slug): bool
     {
         return PortafolioPublicacion::where('slug_publico', $slug)->exists();

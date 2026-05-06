@@ -134,6 +134,16 @@ export interface PortafolioPublicoResumen {
   publicado_en: string | null;
 }
 
+export interface PortafolioGuardadoResumen extends PortafolioPublicoResumen {
+  id_guardado: number;
+  disponible: boolean;
+  guardado_en: string | null;
+}
+
+export interface EstadoGuardadoPortafolio {
+  guardado: boolean;
+}
+
 export type EstadoVisibilidad = 'publico' | 'privado';
  
 export interface ConfiguracionSecciones {
