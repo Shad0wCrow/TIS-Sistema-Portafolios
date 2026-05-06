@@ -25,6 +25,8 @@
   --sidebar-text2:     #7da896;
   --sidebar-active-bg: #1a3d2b;
   --sidebar-active:    #6fcfa0;
+
+  --extra:            #38a46e;
 }
 
 .layout * {
@@ -85,6 +87,40 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.previewButton,
+.publishButton {
+  height: 30px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.previewButton {
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+}
+
+.previewButton:hover {
+  border-color: var(--accent-md);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.publishButton {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.publishButton:hover {
+  background: #155236;
+  border-color: #155236;
 }
 
 .statusBadge {

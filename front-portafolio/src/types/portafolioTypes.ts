@@ -33,9 +33,118 @@ export interface Proyecto {
   roles: string[];
 }
 
+export interface Curso {
+  id_educacion: number;
+  institucion: string;
+  titulo: string;
+  area_estudio: "curso";
+  fecha_inicio: string;
+  fecha_fin: string | null;
+  descripcion: string | null;
+  visibilidad: "publico" | "privado";
+}
+
+export interface Logro {
+  id_logro: number;
+  titulo: string;
+  descripcion: string | null;
+  fecha_obtencion: string | null;
+  entidad_nombre?: string | null;
+  url_credencial?: string | null;
+  identificador?: string | null;
+  visibilidad: "publico" | "privado";
+}
+
+export interface Educacion {
+  id_educacion: number;
+  institucion: string;
+  titulo: string;
+  area_estudio: string | null;
+  fecha_inicio: string;
+  fecha_fin: string | null;
+  descripcion: string | null;
+  visibilidad: "publico" | "privado";
+}
+
+export interface Idioma {
+  id_usuario_idioma: number;
+  nombre: string;
+  nivel: "a1" | "a2" | "b1" | "b2" | "c1" | "c2" | "nativo";
+  visibilidad: "publico" | "privado";
+}
+
+export interface Certificacion {
+  id_certificacion: number;
+  nombre: string;
+  nombre_entidad: string;
+  entidadEmisora?: {
+    nombre?: string | null;
+  } | null;
+  fecha_obtencion: string;
+  fecha_expiracion: string | null;
+  url_certificado: string | null;
+  imagen_url: string | null;
+  visibilidad: "publico" | "privado";
+}
+
+export interface Experiencia {
+  id_experiencia: number;
+  nombre_empresa: string;
+  puesto: string;
+  tipo?: string;
+  descripcion?: string | null;
+  fecha_inicio: string;
+  fecha_fin?: string | null;
+  es_actual?: boolean;
+  ubicacion?: string | null;
+  visibilidad?: "publico" | "privado";
+}
+
 export interface PortafolioData {
   perfil: Perfil | null;
   habilidades_tecnicas: HabilidadItem[];
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
+  educaciones: Educacion[];
+  cursos: Curso[];
+  logros: Logro[];
+  idiomas: Idioma[];
+  certificaciones: Certificacion[];
+  experiencias?: Experiencia[];
+  configuracion?: ConfiguracionSecciones;
 }
+
+export interface EstadoPublicacionPortafolio {
+  publicado: boolean;
+  slug_publico: string | null;
+  url_publica: string | null;
+  api_url_publica?: string | null;
+  publicado_en: string | null;
+  despublicado_en: string | null;
+}
+
+export type EstadoVisibilidad = 'publico' | 'privado';
+ 
+export interface ConfiguracionSecciones {
+  seccion_perfil:          EstadoVisibilidad;
+  seccion_habilidades:     EstadoVisibilidad;
+  seccion_proyectos:       EstadoVisibilidad;
+  seccion_educacion:       EstadoVisibilidad;
+  seccion_experiencia:     EstadoVisibilidad;
+  seccion_cursos:          EstadoVisibilidad;
+  seccion_certificaciones: EstadoVisibilidad;
+  seccion_logros:          EstadoVisibilidad;
+  seccion_idiomas:         EstadoVisibilidad;
+}
+ 
+export const SECCION_LABELS: Record<keyof ConfiguracionSecciones, string> = {
+  seccion_perfil:          'Perfil profesional',
+  seccion_habilidades:     'Habilidades',
+  seccion_proyectos:       'Proyectos',
+  seccion_educacion:       'Formación académica',
+  seccion_experiencia:     'Experiencia laboral',
+  seccion_cursos:          'Cursos',
+  seccion_certificaciones: 'Certificaciones',
+  seccion_logros:          'Logros y reconocimientos',
+  seccion_idiomas:         'Idiomas',
+};

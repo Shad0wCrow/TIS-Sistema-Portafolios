@@ -1,52 +1,109 @@
 import styles from "./skillCard.module.css";
-import { IconPlus, IconPencil } from "./icons";
-import type { HabilidadUsuario } from "../../types/portafolioTypes";
+import type { HabilidadItem } from "../../../types/portafolioTypes";
 
 interface SkillCardProps {
   tipo: "tecnica" | "blanda";
-  lista: HabilidadUsuario[];
+  lista: HabilidadItem[];
   onAdd: () => void;
   onRemove: (id: number) => void;
+  onEdit: (habilidad: HabilidadItem) => void;
 }
 
-export default function SkillCard({ tipo, lista, onAdd, onRemove }: SkillCardProps) {
-  const titulo = tipo === "tecnica" ? "Habilidades técnicas" : "Habilidades blandas";
+const IconTecnica = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+  </svg>
+);
+
+const IconBlanda = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const NIVEL_LABEL: Record<string, string> = {
+  basico: "Básico",
+  intermedio: "Intermedio",
+  avanzado: "Avanzado",
+  experto: "Experto",
+};
+
+export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: SkillCardProps) {
+  const titulo = tipo === "tecnica" ? "Habilidades Técnicas" : "Habilidades Blandas";
   const emptyLabel = tipo === "tecnica" ? "habilidades técnicas" : "habilidades blandas";
+  const emptySubLabel =
+    tipo === "tecnica"
+      ? "Agrega lenguajes, frameworks y herramientas que dominas."
+      : "Agrega habilidades interpersonales y de trabajo en equipo.";
 
   return (
-    <div className={styles.skillCard}>
-      <div className={styles.skillCardHead}>
-        <span className={styles.skillCardTitle}>{titulo}</span>
-        <span className={styles.skillCountBadge}>{lista.length}</span>
-      </div>
-      <div className={styles.skillBody}>
-        {lista.length === 0
-          ? <p className={styles.skillEmpty}>Sin {emptyLabel}</p>
-          : (
-            <div className={styles.skillTags}>
-              {lista.map((h) => (
-                <div key={h.id_usuario_habilidad} className={styles.skillTag}>
-                  <span>{h.nombre}</span>
-                  <button
-                    className={styles.skillTagDel}
-                    onClick={() => onRemove(h.id_usuario_habilidad)}
-                    title="Eliminar"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-      </div>
-      <div className={styles.skillFooter}>
-        <button className={`${styles.btnSm} ${styles.btnSmAccent}`} onClick={onAdd}>
-          <IconPlus /> Agregar
-        </button>
-        <button className={`${styles.btnSm} ${styles.btnSmGhost}`} onClick={onAdd}>
-          <IconPencil /> Editar
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div>
+          <span className={styles.cardTitle}>{titulo}</span>
+          <span className={styles.cardCount}>
+            {lista.length} registro{lista.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+        <button className={styles.btnAdd} onClick={onAdd}>
+          <span>+</span> Agregar
         </button>
       </div>
+
+      {lista.length === 0 ? (
+        <div className={styles.emptyState}>
+          <span className={styles.emptyIcon}>
+            {tipo === "tecnica" ? "💻" : "🤝"}
+          </span>
+          <p className={styles.emptyText}>No hay {emptyLabel} registradas.</p>
+          <p className={styles.emptySubText}>{emptySubLabel}</p>
+        </div>
+      ) : (
+        <ul className={styles.list}>
+          {lista.map((h) => (
+            <li key={h.id_usuario_habilidad} className={styles.item}>
+              <div className={styles.itemIconWrap}>
+                {tipo === "tecnica" ? <IconTecnica /> : <IconBlanda />}
+              </div>
+
+              <div className={styles.itemInfo}>
+                <span className={styles.itemTitle}>{h.nombre}</span>
+                {h.nivel && (
+                  <span className={styles.itemSub}>
+                    {NIVEL_LABEL[h.nivel] ?? h.nivel}
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.itemActions}>
+                {h.nivel && (
+                  <span className={`${styles.badge} ${styles[`badgeNivel_${h.nivel}`] ?? styles.badgeDefault}`}>
+                    {NIVEL_LABEL[h.nivel] ?? h.nivel}
+                  </span>
+                )}
+                <button
+                  className={styles.btnEdit}
+                  onClick={() => onEdit(h)}
+                  title="Editar nivel"
+                >
+                  Editar
+                </button>
+                <button
+                  className={styles.btnRemove}
+                  onClick={() => onRemove(h.id_usuario_habilidad)}
+                  title="Eliminar"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

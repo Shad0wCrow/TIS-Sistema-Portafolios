@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Proyecto;
 use Illuminate\Http\Request;
-
+use Carbon\Carbon;
 
 class ProyectoController extends Controller
 {
@@ -64,8 +64,13 @@ class ProyectoController extends Controller
                 'categoria_id'         => $data['categoria_id'] ?? null,
                 'titulo'               => $data['titulo'],
                 'descripcion'          => $data['descripcion'] ?? null,
-                'fecha_inicio'         => $data['fecha_inicio'] ?? null,
-                'fecha_fin'            => $data['fecha_fin'] ?? null,
+                'fecha_inicio' => isset($data['fecha_inicio'])
+    ? Carbon::parse($data['fecha_inicio'])->format('Y-m-d')
+    : null,
+
+'fecha_fin' => isset($data['fecha_fin'])
+    ? Carbon::parse($data['fecha_fin'])->format('Y-m-d')
+    : null,
                 'estado'               => $data['estado'] ?? 'en_progreso',
                 'repositorio_url'      => $data['repositorio_url'] ?? null,
                 'demo_url'             => $data['demo_url'] ?? null,

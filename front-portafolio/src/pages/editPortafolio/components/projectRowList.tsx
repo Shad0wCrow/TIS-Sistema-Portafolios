@@ -1,6 +1,6 @@
 import styles from "./projectRow.module.css";
-import { IconPencil, IconPlus, IconImagen } from "./icons";
-import type { Proyecto } from "../../types/portafolioTypes";
+import { IconPencil, IconPlus } from "./icons";
+import type { Proyecto } from "../../../types/portafolioTypes";
 
 interface ProjectRowListProps {
   proyectos: Proyecto[];
@@ -9,76 +9,151 @@ interface ProjectRowListProps {
   onAdd: () => void;
 }
 
-export default function ProjectRowList({ proyectos, onEdit, onRemove, onAdd }: ProjectRowListProps) {
+const ESTADO_LABEL: Record<Proyecto["estado"], string> = {
+  en_progreso: "En progreso",
+  finalizado: "Finalizado",
+  pausado: "Pausado",
+};
+
+function formatFecha(fecha: string | null): string {
+  if (!fecha) return "Actualidad";
+  return fecha;
+}
+
+function ProjectIcon() {
   return (
-    <div className={styles.projectsCard}>
-      <div className={styles.projectsList}>
-        {proyectos.length === 0 ? (
-          <div className={styles.projEmpty}>
-            <p>No hay proyectos aún. ¡Agrega tu primer proyecto!</p>
-          </div>
-        ) : (
-          proyectos.map((p) => (
-            <article key={p.id_proyecto} className={styles.projectRow}>
-              <div className={styles.projMain}>
-                <div className={styles.projTitleRow}>
-                  <div>
-                    <p className={styles.projTitle}>{p.titulo}</p>
-                    <p className={styles.projDates}>{p.fecha_inicio ?? "año ini"} — {p.fecha_fin ?? "año fin"}</p>
-                  </div>
-                  <div className={styles.projActions}>
-                    <button
-                      className={`${styles.projBtn} ${styles.projBtnDel}`}
-                      onClick={() => onRemove(p.id_proyecto)}
-                      title="Eliminar"
-                    >
-                      ×
-                    </button>
-                    <button
-                      className={`${styles.projBtn} ${styles.projBtnEdit}`}
-                      onClick={() => onEdit(p)}
-                      title="Editar"
-                    >
-                      <IconPencil />
-                    </button>
-                  </div>
-                </div>
-                <div className={styles.projRoles}>
-                  <span className={styles.projRolesLabel}>Roles</span>
-                  {p.roles.length === 0
-                    ? <span className={styles.projRoleEmpty}>Sin roles</span>
-                    : (
-                      <div className={styles.projRoleList}>
-                        {p.roles.map((r, i) => (
-                          <span key={i} className={styles.projRolePill}>{r}</span>
-                        ))}
-                      </div>
-                    )}
-                </div>
-              </div>
-              <div className={styles.projDesc}>{p.descripcion || "Sin descripción"}</div>
-              <div className={styles.projMedia}>
-                <div className={styles.projImgBox}>
-                  {p.imagen_principal_url
-                    ? <img src={p.imagen_principal_url} alt={p.titulo} />
-                    : <IconImagen />}
-                </div>
-                {p.demo_url && (
-                  <a href={p.demo_url} target="_blank" rel="noreferrer" className={styles.projLink}>
-                    Ver proyecto
-                  </a>
-                )}
-              </div>
-            </article>
-          ))
-        )}
-      </div>
-      <div className={styles.projectsFooter}>
-        <button className={styles.addProjBtn} onClick={onAdd}>
-          <IconPlus />
-          Agregar proyecto
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M7 8h10" />
+      <path d="M7 12h6" />
+      <path d="M7 16h8" />
+    </svg>
+  );
+}
+
+export default function ProjectRowList({
+  proyectos,
+  onEdit,
+  onRemove,
+  onAdd,
+}: ProjectRowListProps) {
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div>
+          <span className={styles.cardTitle}>Proyectos</span>
+          <span className={styles.cardCount}>
+            {proyectos.length} registro{proyectos.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        <button type="button" className={styles.btnAdd} onClick={onAdd}>
+          <span>+</span> Agregar
         </button>
       </div>
+
+      {proyectos.length === 0 ? (
+        <div className={styles.emptyState}>
+          <span className={styles.emptyIcon}>🗂️</span>
+          <p className={styles.emptyText}>No hay proyectos registrados.</p>
+          <p className={styles.emptySubText}>
+            Agrega proyectos personales, académicos o profesionales.
+          </p>
+        </div>
+      ) : (
+        <ul className={styles.list}>
+          {proyectos.map((p) => (
+            <li key={p.id_proyecto} className={styles.item}>
+              <div className={styles.itemIcon}>
+                <ProjectIcon />
+              </div>
+
+              <div className={styles.itemInfo}>
+                <div className={styles.itemTitleRow}>
+                  <span className={styles.itemTitle}>{p.titulo}</span>
+                  <span className={`${styles.estadoBadge} ${styles[`estado_${p.estado}`]}`}>
+                    {ESTADO_LABEL[p.estado]}
+                  </span>
+                </div>
+
+                <span className={styles.itemSub}>
+                  {formatFecha(p.fecha_inicio)} — {formatFecha(p.fecha_fin)}
+                </span>
+
+                {p.descripcion && (
+                  <span className={styles.itemDesc}>{p.descripcion}</span>
+                )}
+
+                {p.roles?.length > 0 && (
+                  <div className={styles.roleList}>
+                    {p.roles.map((r, i) => (
+                      <span key={i} className={styles.rolePill}>
+                        {r}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {(p.demo_url || p.repositorio_url) && (
+                  <div className={styles.linkRow}>
+                    {p.demo_url && (
+                      <a
+                        href={p.demo_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.demoLink}
+                      >
+                        Ver demo ↗
+                      </a>
+                    )}
+
+                    {p.repositorio_url && (
+                      <a
+                        href={p.repositorio_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.repoLink}
+                      >
+                        Repositorio ↗
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.itemActions}>
+                <button
+                  type="button"
+                  className={styles.btnEdit}
+                  onClick={() => onEdit(p)}
+                  title="Editar"
+                >
+                  <IconPencil />
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.btnRemove}
+                  onClick={() => onRemove(p.id_proyecto)}
+                  title="Eliminar"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

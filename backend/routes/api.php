@@ -6,7 +6,15 @@ use App\Http\Controllers\Api\PerfilController;
 use App\Http\Controllers\Api\HabilidadController;
 use App\Http\Controllers\Api\ProyectoController;
 use App\Http\Controllers\Api\PortafolioController;
-
+use App\Http\Controllers\Api\EducacionController;
+use App\Http\Controllers\Api\ExperienciaController;
+use App\Http\Controllers\Api\CertificacionController;
+use App\Http\Controllers\Api\CursoController;
+use App\Http\Controllers\Api\LogroController;
+use App\Http\Controllers\Api\IdiomaController;
+use App\Http\Controllers\Api\VisibilidadController;
+use App\Http\Controllers\Api\PortafolioPublicacionController;
+use App\Http\Controllers\Api\PortafolioPublicoController;
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
@@ -15,6 +23,7 @@ Route::get('/health', function () {
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
+Route::get('/public/portafolios/{slug}', [PortafolioPublicoController::class, 'show']);
 
 // Rutas protegidas 
 Route::middleware('auth:sanctum')->group(function () {
@@ -30,6 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Pantalla "Edición de Portafolio" 
     Route::get('/portafolio',                     [PortafolioController::class, 'show']);
+    Route::get('/portafolio/publicacion',         [PortafolioPublicacionController::class, 'show']);
+    Route::post('/portafolio/publicar',           [PortafolioPublicacionController::class, 'publicar']);
+    Route::post('/portafolio/despublicar',        [PortafolioPublicacionController::class, 'despublicar']);
     Route::put('/portafolio/perfil',              [PortafolioController::class, 'updatePerfil']);
     Route::post('/portafolio/habilidades',         [PortafolioController::class, 'addHabilidad']);
     Route::delete('/portafolio/habilidades/{id}', [PortafolioController::class, 'removeHabilidad']);
@@ -51,4 +63,51 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/proyectos/{id}',           [ProyectoController::class, 'show']);
     Route::put('/proyectos/{id}',           [ProyectoController::class, 'update']);
     Route::delete('/proyectos/{id}',        [ProyectoController::class, 'destroy']);
-});
+
+   
+
+    Route::get('/educacion/sugerencias', [EducacionController::class, 'sugerencias']);
+    Route::get('/educacion', [EducacionController::class, 'index']);
+    Route::get('/educacion/{id}', [EducacionController::class, 'show']);
+    Route::post('/educacion', [EducacionController::class, 'store']);
+    Route::delete('/educacion/{id}', [EducacionController::class, 'destroy']);
+
+
+    Route::get('/cursos/sugerencias', [CursoController::class, 'sugerencias']);
+    Route::get('/cursos', [CursoController::class, 'index']);
+    Route::get('/cursos/{id}', [CursoController::class, 'show']);
+    Route::post('/cursos', [CursoController::class, 'store']);
+    Route::delete('/cursos/{id}', [CursoController::class, 'destroy']);
+
+    Route::get('/logros/sugerencias', [LogroController::class, 'sugerencias']);
+    Route::get('/logros', [LogroController::class, 'index']);
+    Route::get('/logros/{id}', [LogroController::class, 'show']);
+    Route::post('/logros', [LogroController::class, 'store']);
+    Route::delete('/logros/{id}', [LogroController::class, 'destroy']);
+
+    Route::get('/experiencias/sugerencias', [ExperienciaController::class, 'sugerencias']);
+    Route::get('/experiencias', [ExperienciaController::class, 'index']);
+    Route::get('/experiencias/{id}', [ExperienciaController::class, 'show']);
+    Route::put('/experiencias/{id}', [ExperienciaController::class, 'update']);
+    Route::post('/experiencias', [ExperienciaController::class, 'store']);
+    Route::delete('/experiencias/{id}', [ExperienciaController::class, 'destroy']);
+
+    Route::get('/certificaciones/sugerencias', [CertificacionController::class, 'sugerencias']);
+    Route::get('/certificaciones', [CertificacionController::class, 'index']);
+    Route::get('/certificaciones/{id}', [CertificacionController::class, 'show']);
+    Route::post('/certificaciones', [CertificacionController::class, 'store']);
+    Route::delete('/certificaciones/{id}', [CertificacionController::class, 'destroy']);
+
+    Route::get('/idiomas/sugerencias', [IdiomaController::class, 'sugerencias']);
+    Route::get('/idiomas', [IdiomaController::class, 'index']);
+    Route::get('/idiomas/{id}', [IdiomaController::class, 'show']);
+    Route::post('/idiomas', [IdiomaController::class, 'store']);
+    Route::delete('/idiomas/{id}', [IdiomaController::class, 'destroy']);
+
+    // HU-23: Configuración de visibilidad de secciones del portafolio
+    Route::get('/visibilidad/secciones',  [VisibilidadController::class, 'show']);
+    Route::put('/visibilidad/secciones',  [VisibilidadController::class, 'update']);
+
+    Route::get('/perfil/sugerencias-profesion', [PerfilController::class, 'sugerenciasProfecion']);
+
+    });

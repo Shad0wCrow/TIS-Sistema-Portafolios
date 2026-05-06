@@ -4,38 +4,54 @@ import styles from "./edicionPortafolio.module.css";
 import skillStyles from "./components/skillCard.module.css";
 import {
   getPortafolio,
-  updatePerfil,
   getCatalogoHabilidades,
-  addHabilidad,
-  removeHabilidad,
-  addProyecto,
-  updateProyecto,
-  removeProyecto,
+  getExperiencias,
+  getCertificaciones,
 } from "../../services/portafolioservice";
+
 import type {
   PortafolioData,
   HabilidadCatalogo,
-  Proyecto,
+  HabilidadItem,
+  Experiencia,
+  Educacion,
+  Curso,
+  Logro,
+  Idioma,
+  Certificacion
 } from "../../types/portafolioTypes";
+
+import {
+  usePortafolioHandlers,
+  SECTION_LABELS,
+  normalizarCertificaciones,
+} from "./hooks/usePortafolioHandlers";
+import type { AlertState, ModalProyectoState, ModalExperienciaState, ActiveSection } from "./hooks/usePortafolioHandlers";
+
 import SidebarEdicion from "./components/sidebarEdicion";
 import SkillCard from "./components/skillCard";
 import ProjectRowList from "./components/projectRowList";
-import ModalEditarPerfil from "./components/modalEditarPerfil";
+import ExperienciaRowList from "./components/experienciaRowList";
 import ModalAgregarHabilidad from "./components/modalAgregarHabilidad";
+import ModalEditarHabilidad from "./components/ModalEditarHabilidad";
 import ModalProyecto from "./components/modalProyecto";
-import { IconPersona, IconPencil } from "./components/icons";
+import ModalExperiencia from "./components/modalExperiencia";
+import ModalEducacion from "./components/modalEducacion";
+import ModalCurso from "./components/modalCurso";
+import EducacionCard from "./components/educacionCard";
+import CursoCard from "./components/cursoCard";
 import ModalAlert from "./components/modalAlert";
+import ModalSuccess from "./components/modalSuccess";
+import ModalLogro from "./components/modalLogro";
+import LogroCard from "./components/logroCard";
+import ModalIdioma from "./components/modalIdioma";
+import IdiomaCard from "./components/idiomaCard";
+import CertificacionCard from "./components/certificacionCard";
+import ModalCertificacion from "./components/modalCertificacion";
+import PerfilSection from "./components/PerfilSection";
+import ModalError from "./components/ModalError";
 
-type AlertState = { mensaje: string; onConfirm: () => void } | null;
 
-type ModalProyectoState = Proyecto | null | "nuevo";
-type ActiveSection = "perfil" | "habilidades" | "proyectos";
-
-const SECTION_LABELS: Record<ActiveSection, string> = {
-  perfil: "Perfil",
-  habilidades: "Habilidades",
-  proyectos: "Proyectos",
-};
 
 export default function EdicionPortafolio() {
   const navigate = useNavigate();
@@ -45,21 +61,56 @@ export default function EdicionPortafolio() {
   const [errorPage, setErrorPage] = useState("");
   const [activeSection, setActiveSection] = useState<ActiveSection>("perfil");
 
-  const [modalPerfil, setModalPerfil] = useState(false);
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
+  const [modalEditarHab, setModalEditarHab] = useState<HabilidadItem | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
+  const [modalExp, setModalExp] = useState<ModalExperienciaState>(null);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
-  const refreshData = async () => setData(await getPortafolio());
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); 
+  const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
+  const [modalEducacion, setModalEducacion] = useState(false);
+  const [modalCurso, setModalCurso] = useState(false);
+  const [modalLogro, setModalLogro] = useState(false);
+  const [modalIdioma, setModalIdioma] = useState(false);
+  const [modalCertificacion, setModalCertificacion] = useState(false);
+  const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
+
+  const [warningHabilidad, setWarningHabilidad] = useState<string | undefined>();
+  const [warningProyecto, setWarningProyecto] = useState<string | undefined>();
+  const [warningExperiencia, setWarningExperiencia] = useState<string | undefined>();
+  const [warningEducacion, setWarningEducacion] = useState<string | undefined>();
+  const [warningCurso, setWarningCurso] = useState<string | undefined>();
+  const [warningLogro, setWarningLogro] = useState<string | undefined>();
+  const [warningIdioma, setWarningIdioma] = useState<string | undefined>();
+  const [warningCertificacion, setWarningCertificacion] = useState<string | undefined>();
+
+  const refreshData = async () => {
+    const [portafolioRes, experienciasRes, certRes] = await Promise.all([
+      getPortafolio(),
+      getExperiencias(),
+      getCertificaciones(),
+    ]);
+
+    setData(portafolioRes);
+    setExperiencias(experienciasRes);
+    setCertificaciones(normalizarCertificaciones(certRes));
+  };
 
   useEffect(() => {
     const cargar = async () => {
       try {
-        const [portafolioRes, catalogoRes] = await Promise.all([
+        const [portafolioRes, catalogoRes, experienciasRes, certRes] = await Promise.all([
           getPortafolio(),
           getCatalogoHabilidades(),
+          getExperiencias(),
+          getCertificaciones(),
         ]);
+
         setData(portafolioRes);
         setCatalogo(catalogoRes.habilidades ?? []);
+        setExperiencias(experienciasRes);
+        setCertificaciones(normalizarCertificaciones(certRes));
       } catch {
         setErrorPage("Error al cargar el portafolio. Verifica tu conexión.");
       } finally {
@@ -69,60 +120,70 @@ export default function EdicionPortafolio() {
     cargar();
   }, []);
 
-  const perfil = data?.perfil ?? null;
+  const perfil              = data?.perfil ?? null;
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
-  const habilidadesBlandas = data?.habilidades_blandas ?? [];
-  const proyectos = data?.proyectos ?? [];
+  const habilidadesBlandas  = data?.habilidades_blandas ?? [];
+  const proyectos           = data?.proyectos ?? [];
+  const educaciones         = (data?.educaciones ?? []) as Educacion[];
+  const cursos              = (data?.cursos ?? []) as Curso[];
+  const logros              = (data?.logros ?? []) as Logro[];
+  const idiomas             = (data?.idiomas ?? []) as Idioma[];
+
+  const certConImagenes = certificaciones.map((c) => {
+    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
+    return { ...c, imagen_url: stored[c.id_certificacion] ?? null };
+  });
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Nombre completo";
   }, [perfil]);
 
-  const handleSavePerfil = async (formData: Parameters<typeof updatePerfil>[0]) => {
-    await updatePerfil(formData);
-    await refreshData();
-  };
-
-  const handleAddHabilidad = async (habilidadId: number, nivel: string) => {
-    await addHabilidad({ habilidad_id: habilidadId, nivel });
-    await refreshData();
-  };
-
-  const handleRemoveHabilidad = async (id: number) => {
-  setModalAlert({
-    mensaje: "Esta habilidad será eliminada de tu perfil.",
-    onConfirm: async () => {
-      setModalAlert(null);
-      await removeHabilidad(id);
-      await refreshData();
-    },
+  const {
+    handleAddHabilidad,
+    handleEditHabilidad,
+    handleRemoveHabilidad,
+    handleSaveProyecto,
+    handleRemoveProyecto,
+    handleSaveExperiencia,
+    handleRemoveExperiencia,
+    handleSaveEducacion,
+    handleRemoveEducacion,
+    handleSaveCurso,
+    handleRemoveCurso,
+    handleRemoveLogro,
+    handleAddLogro,
+    handleAddIdioma,
+    handleRemoveIdioma,
+    handleSaveCertificacion,
+    handleRemoveCertificacion,
+  } = usePortafolioHandlers({
+    data,
+    setData,
+    catalogo,
+    experiencias,
+    setExperiencias,
+    certificaciones,
+    setCertificaciones,
+    modalProy,
+    modalExp,
+    setModalAlert,
+    setSuccessMessage,
+    setErrorMessage,
+    setWarningHabilidad,
+    setWarningProyecto,
+    setWarningExperiencia,
+    setWarningEducacion,
+    setWarningCurso,
+    setWarningLogro,
+    setWarningIdioma,
+    setWarningCertificacion,
+    refreshData,
   });
-};
-
-  const handleSaveProyecto = async (formData: Parameters<typeof addProyecto>[0]) => {
-    if (modalProy && modalProy !== "nuevo") {
-      await updateProyecto(modalProy.id_proyecto, formData);
-    } else {
-      await addProyecto(formData);
-    }
-    await refreshData();
-  };
-
-  const handleRemoveProyecto = async (id: number) => {
-  setModalAlert({
-    mensaje: "Este proyecto será eliminado permanentemente.",
-    onConfirm: async () => {
-      setModalAlert(null);
-      await removeProyecto(id);
-      await refreshData();
-    },
-  });
-};
 
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
-  if (errorPage) return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
-  if (!data) return null;
+  if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
+  if (!data)       return null;
 
   return (
     <div className={styles.layout}>
@@ -132,8 +193,14 @@ export default function EdicionPortafolio() {
         nombreCompleto={nombreCompleto}
         activeSection={activeSection}
         proyectosCount={proyectos.length}
+        educacionCount={educaciones.length}
+        cursosCount={cursos.length}
+        logrosCount={logros.length}
+        IdiomasCount={idiomas.length}
+        certificacionesCount={certConImagenes.length}
         onSectionChange={setActiveSection}
-        onBack={() => navigate(-1)}
+        experienciaCount={experiencias.length}
+        onBack={() => navigate("/dashboard")}
       />
 
       <main className={styles.main}>
@@ -146,57 +213,23 @@ export default function EdicionPortafolio() {
             </span>
           </div>
           <div className={styles.topbarRight}>
+            <button type="button" className={styles.previewButton} onClick={() => navigate("/portafolio")}>
+              Vista previa
+            </button>
+            <button type="button" className={styles.publishButton} onClick={() => navigate("/portafolio/visibilidad")}>
+              Publicar
+            </button>
             <span className={styles.statusBadge}>
               <span className={styles.statusDot} />
               Activo
             </span>
           </div>
         </div>
-
+        
         <div className={styles.content}>
 
           {activeSection === "perfil" && (
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionTitle}>Perfil profesional</span>
-              </div>
-              <div className={styles.profileGrid}>
-                <div className={styles.profilePhoto}>
-                  <div className={styles.profilePhotoCircle}>
-                    {perfil?.foto_url
-                      ? <img src={perfil.foto_url} alt="Foto perfil" />
-                      : <IconPersona />}
-                  </div>
-                  <span className={styles.profilePhotoLabel}>Foto de perfil</span>
-                </div>
-                <div className={styles.profileInfo}>
-                  <div className={styles.infoField}>
-                    <span className={styles.infoLabel}>Nombre completo</span>
-                    <span className={styles.infoValue}>{nombreCompleto}</span>
-                  </div>
-                  <div className={styles.infoField}>
-                    <span className={styles.infoLabel}>Profesión</span>
-                    <span className={styles.infoValue}>{perfil?.profesion ?? "—"}</span>
-                  </div>
-                  <div className={`${styles.infoField} ${styles.infoFieldFull}`}>
-                    <span className={styles.infoLabel}>Descripción</span>
-                    <span className={`${styles.infoValue} ${styles.infoValueDim}`}>
-                      {perfil?.descripcion || "Sin descripción"}
-                    </span>
-                  </div>
-                </div>
-                <div className={styles.profileActions}>
-                  <div className={styles.contactBlock}>
-                    <p className={styles.contactLabel}>Teléfono</p>
-                    <p className={styles.contactValue}>{perfil?.celular ?? "—"}</p>
-                  </div>
-                  <button className={styles.editBtn} onClick={() => setModalPerfil(true)}>
-                    <IconPencil />
-                    Editar perfil
-                  </button>
-                </div>
-              </div>
-            </div>
+            <PerfilSection perfil={perfil} nombreCompleto={nombreCompleto} />
           )}
 
           {activeSection === "habilidades" && (
@@ -213,12 +246,14 @@ export default function EdicionPortafolio() {
                   lista={habilidadesTecnicas}
                   onAdd={() => setModalHab("tecnica")}
                   onRemove={handleRemoveHabilidad}
+                  onEdit={(h) => setModalEditarHab(h)}
                 />
                 <SkillCard
                   tipo="blanda"
                   lista={habilidadesBlandas}
                   onAdd={() => setModalHab("blanda")}
                   onRemove={handleRemoveHabilidad}
+                  onEdit={(h) => setModalEditarHab(h)}
                 />
               </div>
             </div>
@@ -241,28 +276,199 @@ export default function EdicionPortafolio() {
             </div>
           )}
 
+          {activeSection === "experiencia" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Experiencia Laboral</span>
+                <span className={styles.sectionMeta}>
+                  {experiencias.length} entrada{experiencias.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <ExperienciaRowList
+                experiencias={experiencias}
+                onEdit={(e) => setModalExp(e)}
+                onRemove={handleRemoveExperiencia}
+                onAdd={() => setModalExp("nueva")}
+              />
+            </div>
+          )}
+
+          {activeSection === "educacion" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Formación Académica</span>
+                <span className={styles.sectionMeta}>
+                  {educaciones.length} registro{educaciones.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <EducacionCard
+                educaciones={educaciones}
+                onAdd={() => setModalEducacion(true)}
+                onRemove={handleRemoveEducacion}
+              />
+            </div>
+          )}
+
+          {activeSection === "cursos" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Cursos</span>
+                <span className={styles.sectionMeta}>
+                  {cursos.length} registro{cursos.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <CursoCard
+                cursos={cursos}
+                onAdd={() => setModalCurso(true)}
+                onRemove={handleRemoveCurso}
+              />
+            </div>
+          )}
+
+          {activeSection === "logros" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Logros</span>
+                <span className={styles.sectionMeta}>
+                  {logros.length} logro{logros.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <LogroCard
+                logros={logros}
+                onAdd={() => setModalLogro(true)}
+                onRemove={handleRemoveLogro}
+              />
+            </div>
+          )}
+
+          {activeSection === "idiomas" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Idiomas</span>
+                <span className={styles.sectionMeta}>
+                  {idiomas.length} idioma{idiomas.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <IdiomaCard
+                idiomas={idiomas}
+                onAdd={() => setModalIdioma(true)}
+                onRemove={handleRemoveIdioma}
+              />
+            </div>
+          )}  
+
+          {activeSection === "certificaciones" && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Certificaciones</span>
+                <span className={styles.sectionMeta}>
+                  {certConImagenes.length} registro{certConImagenes.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <CertificacionCard
+                certificaciones={certConImagenes}
+                onAdd={() => setModalCertificacion(true)}
+                onRemove={handleRemoveCertificacion}
+              />
+            </div>
+          )}
         </div>
       </main>
 
-      {modalPerfil && (
-        <ModalEditarPerfil perfil={perfil} onClose={() => setModalPerfil(false)} onSave={handleSavePerfil} />
-      )}
       {modalHab && (
-        <ModalAgregarHabilidad tipo={modalHab} catalogo={catalogo} onClose={() => setModalHab(null)} onSave={handleAddHabilidad} />
+        <ModalAgregarHabilidad
+          tipo={modalHab}
+          catalogo={catalogo}
+          onClose={() => { setModalHab(null); setWarningHabilidad(undefined); }}
+          onSave={handleAddHabilidad}
+          duplicadoWarning={warningHabilidad}
+        />
+      )}
+      {modalEditarHab && (
+        <ModalEditarHabilidad
+          habilidad={modalEditarHab}
+          onClose={() => setModalEditarHab(null)}
+          onSave={handleEditHabilidad}
+        />
       )}
       {modalProy !== null && (
         <ModalProyecto
           proyecto={modalProy === "nuevo" ? null : modalProy}
-          onClose={() => setModalProy(null)}
+          onClose={() => { setModalProy(null); setWarningProyecto(undefined); }}
           onSave={handleSaveProyecto}
+          duplicadoWarning={warningProyecto}
         />
       )}
+      {modalExp !== null && (
+        <ModalExperiencia
+          experiencia={modalExp === "nueva" ? null : modalExp}
+          onClose={() => { setModalExp(null); setWarningExperiencia(undefined); }}
+          onSave={handleSaveExperiencia}
+          duplicadoWarning={warningExperiencia}
+        />
+      )}
+
+      {modalEducacion && (
+        <ModalEducacion
+          onClose={() => { setModalEducacion(false); setWarningEducacion(undefined); }}
+          onSave={handleSaveEducacion}
+          duplicadoWarning={warningEducacion}
+        />
+      )}
+
+      {modalCurso && (
+        <ModalCurso
+          onClose={() => { setModalCurso(false); setWarningCurso(undefined); }}
+          onSave={handleSaveCurso}
+          duplicadoWarning={warningCurso}
+        />
+      )}
+
+      {modalLogro && (
+        <ModalLogro
+          onClose={() => { setModalLogro(false); setWarningLogro(undefined); }}
+          onSave={handleAddLogro}
+          logrosExistentes={logros}
+          duplicadoWarning={warningLogro}
+        />
+      )}
+
+      {modalIdioma && (
+        <ModalIdioma
+          onClose={() => { setModalIdioma(false); setWarningIdioma(undefined); }}
+          onSave={handleAddIdioma}
+          duplicadoWarning={warningIdioma}
+        />
+      )}
+
       {modalAlert && (
         <ModalAlert
           title="¿Confirmar eliminación?"
           message={modalAlert.mensaje}
           onConfirm={modalAlert.onConfirm}
           onCancel={() => setModalAlert(null)}
+        />
+      )}
+
+      {successMessage && (
+        <ModalSuccess
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
+      {errorMessage && (
+        <ModalError
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+
+      {modalCertificacion && (
+        <ModalCertificacion
+          onClose={() => { setModalCertificacion(false); setWarningCertificacion(undefined); }}
+          onSave={handleSaveCertificacion}
+          duplicadoWarning={warningCertificacion}
         />
       )}
     </div>

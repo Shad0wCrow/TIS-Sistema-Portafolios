@@ -6,9 +6,10 @@ interface Props {
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
     onBlur?: () => void
     error?: boolean
+    disabled?: boolean
 }
 
-export default function Input({ placeholder, classname, type, value, onChange, onBlur, error }: Props) {
+export default function Input({ placeholder, classname, type, value, onChange, onBlur, error, disabled }: Props) {
     return (
         <input
             type={type}
@@ -17,6 +18,7 @@ export default function Input({ placeholder, classname, type, value, onChange, o
             value={value}
             onChange={onChange}
             onBlur={onBlur}
+            disabled={disabled}
         />
     )
 }

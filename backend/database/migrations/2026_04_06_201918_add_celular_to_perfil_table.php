@@ -13,7 +13,7 @@ class AddCelularToPerfilTable extends Migration
      */
     public function up()
     {
-        Schema::table('perfil', function (Blueprint $table) {
+        Schema::table('perfils', function (Blueprint $table) {
             //
         });
     }

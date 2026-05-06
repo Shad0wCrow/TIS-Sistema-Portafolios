@@ -84,15 +84,19 @@ export default function ModalEditarPerfil({ perfil, onClose, onSave }: ModalEdit
         <div className={styles.modalGrid}>
           <div className={styles.modalField}>
             <label>Nombre</label>
-            <input name="nombre_perfil" value={form.nombre_perfil} onChange={handle} />
+            <input name="nombre_perfil" value={form.nombre_perfil} onChange={handle} disabled />
           </div>
           <div className={styles.modalField}>
             <label>Apellido</label>
-            <input name="apellido_perfil" value={form.apellido_perfil} onChange={handle} />
+            <input name="apellido_perfil" value={form.apellido_perfil} onChange={handle} disabled />
           </div>
           <div className={styles.modalField}>
             <label>Profesión</label>
-            <input name="profesion" value={form.profesion} onChange={handle} />
+              <input
+              name="profesion"
+              value={form.profesion}
+              disabled
+            />
           </div>
           <div className={styles.modalField}>
             <label>Teléfono</label>
@@ -111,7 +115,12 @@ export default function ModalEditarPerfil({ perfil, onClose, onSave }: ModalEdit
         <div className={styles.modalActions}>
           <button className={styles.btnCancel} onClick={onClose}>Cancelar</button>
           <button className={styles.btnSave} onClick={submit} disabled={loading}>
-            {loading ? "Guardando..." : "Guardar cambios"}
+            {loading ? (
+              <span className={styles.loadingContent}>
+                <span className={styles.spinner} aria-hidden="true" />
+                Guardando...
+              </span>
+            ) : "Guardar cambios"}
           </button>
         </div>
       </div>
