@@ -17,6 +17,24 @@ const authHeaders = () => {
   return { Authorization: `Bearer ${token}` };
 };
 
+const buildPublicPortfolioUrl = (slug: string | null | undefined): string | null => {
+  if (!slug) return null;
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
+  return `${origin}/portafolio/publico/${slug}`;
+};
+
+const normalizePublicationState = (
+  publicacion: EstadoPublicacionPortafolio
+): EstadoPublicacionPortafolio => ({
+  ...publicacion,
+  url_publica: buildPublicPortfolioUrl(publicacion.slug_publico) ?? publicacion.url_publica,
+});
+
+const normalizePublicPortfolioSummary = <T extends PortafolioPublicoResumen>(portafolio: T): T => ({
+  ...portafolio,
+  url_publica: buildPublicPortfolioUrl(portafolio.slug_publico) ?? portafolio.url_publica,
+});
+
 export const getPortafolio = async () => {
   const res = await axios.get(`${API}/portafolio`, { headers: authHeaders() });
   return res.data;
@@ -411,7 +429,7 @@ export const getEstadoPublicacion = async (): Promise<EstadoPublicacionPortafoli
   const res = await axios.get(`${API}/portafolio/publicacion`, {
     headers: authHeaders(),
   });
-  return res.data.publicacion;
+  return normalizePublicationState(res.data.publicacion);
 };
 
 export const getPortafoliosPublicos = async (limite = 12): Promise<PortafolioPublicoResumen[]> => {
@@ -419,7 +437,7 @@ export const getPortafoliosPublicos = async (limite = 12): Promise<PortafolioPub
     headers: authHeaders(),
     params: { limite },
   });
-  return res.data.portafolios ?? [];
+  return (res.data.portafolios ?? []).map(normalizePublicPortfolioSummary);
 };
 
 export const getDashboardPortafolios = async (limite = 12): Promise<{
@@ -432,8 +450,8 @@ export const getDashboardPortafolios = async (limite = 12): Promise<{
   });
 
   return {
-    publicacion: res.data.publicacion,
-    portafolios: res.data.portafolios ?? [],
+    publicacion: normalizePublicationState(res.data.publicacion),
+    portafolios: (res.data.portafolios ?? []).map(normalizePublicPortfolioSummary),
   };
 };
 
@@ -441,7 +459,7 @@ export const getPortafoliosGuardados = async (): Promise<PortafolioGuardadoResum
   const res = await axios.get(`${API}/portafolios/guardados`, {
     headers: authHeaders(),
   });
-  return res.data.guardados ?? [];
+  return (res.data.guardados ?? []).map(normalizePublicPortfolioSummary);
 };
 
 export const getEstadoGuardado = async (slug: string): Promise<EstadoGuardadoPortafolio> => {
@@ -469,14 +487,14 @@ export const publicarPortafolio = async (): Promise<EstadoPublicacionPortafolio>
   const res = await axios.post(`${API}/portafolio/publicar`, {}, {
     headers: authHeaders(),
   });
-  return res.data.publicacion;
+  return normalizePublicationState(res.data.publicacion);
 };
 
 export const despublicarPortafolio = async (): Promise<EstadoPublicacionPortafolio> => {
   const res = await axios.post(`${API}/portafolio/despublicar`, {}, {
     headers: authHeaders(),
   });
-  return res.data.publicacion;
+  return normalizePublicationState(res.data.publicacion);
 };
 
 export const getPortafolioPublico = async (slug: string): Promise<PortafolioData> => {
