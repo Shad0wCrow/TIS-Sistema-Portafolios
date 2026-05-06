@@ -123,6 +123,27 @@ export interface EstadoPublicacionPortafolio {
   despublicado_en: string | null;
 }
 
+export interface PortafolioPublicoResumen {
+  id_publicacion: number;
+  slug_publico: string;
+  url_publica: string;
+  nombre: string;
+  profesion: string | null;
+  descripcion: string | null;
+  foto_url: string | null;
+  publicado_en: string | null;
+}
+
+export interface PortafolioGuardadoResumen extends PortafolioPublicoResumen {
+  id_guardado: number;
+  disponible: boolean;
+  guardado_en: string | null;
+}
+
+export interface EstadoGuardadoPortafolio {
+  guardado: boolean;
+}
+
 export type EstadoVisibilidad = 'publico' | 'privado';
  
 export interface ConfiguracionSecciones {

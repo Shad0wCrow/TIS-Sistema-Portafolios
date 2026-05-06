@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
 import { addEducacion, getSugerenciasInstitucion } from "../../../services/portafolioservice";
 import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
@@ -23,6 +23,7 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
     area_estudio: "",
     fecha_inicio: "",
     fecha_fin: "",
+    es_actual: false,
     descripcion: "",
     visibilidad: "privado" as "publico" | "privado",
   });
@@ -30,25 +31,43 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
+  useEffect(() => {
+    if (form.es_actual) {
+      setForm(prev => ({ ...prev, fecha_fin: "" }));
+      setErrors(prev => ({ ...prev, fecha_fin: undefined }));
+    }
+  }, [form.es_actual]);
+
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    const target = e.target;
+    const { name } = target;
+    const value = target.type === "checkbox"
+      ? (target as HTMLInputElement).checked
+      : target.value;
+
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (name !== "es_actual" && errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
     }
   };
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
+    const hoy = new Date().toISOString().split("T")[0];
 
     if (!form.institucion.trim()) newErrors.institucion = "La institución es obligatoria.";
     if (!form.titulo.trim()) newErrors.titulo = "El título o carrera es obligatorio.";
     if (!form.fecha_inicio) newErrors.fecha_inicio = "La fecha de inicio es obligatoria.";
 
-    if (form.fecha_inicio && form.fecha_fin && form.fecha_inicio > form.fecha_fin) {
-      newErrors.fecha_fin = "La fecha de fin no puede ser anterior a la fecha de inicio.";
+    if (form.fecha_inicio && form.fecha_fin) {
+      if (form.fecha_inicio > form.fecha_fin) {
+        newErrors.fecha_fin = "La fecha de fin no puede ser anterior a la fecha de inicio.";
+      }
+      if (!form.es_actual && form.fecha_fin > hoy) {
+        newErrors.fecha_fin = "La fecha de fin no puede ser futura si no está marcada como «actual».";
+      }
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -63,7 +82,8 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
         titulo: form.titulo.trim(),
         area_estudio: form.area_estudio.trim() || undefined,
         fecha_inicio: form.fecha_inicio,
-        fecha_fin: form.fecha_fin || undefined,
+        fecha_fin: form.es_actual ? undefined : (form.fecha_fin || undefined),
+        es_actual: form.es_actual as any,
         descripcion: form.descripcion.trim() || undefined,
         visibilidad: form.visibilidad,
       });
@@ -188,20 +208,37 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
               </div>
 
               <div className={styles.modalField}>
-                <label htmlFor="edu-ffin">Fecha de fin</label>
+                <label htmlFor="edu-ffin">Fecha de fin {form.es_actual ? "(actualidad)" : ""}</label>
                 <input
                   id="edu-ffin"
                   type="date"
                   name="fecha_fin"
                   value={form.fecha_fin}
                   onChange={handleChange}
-                  style={errors.fecha_fin ? { borderColor: "var(--red, #e53e3e)" } : {}}
+                  disabled={form.es_actual}
+                  style={{
+                    ...(errors.fecha_fin ? { borderColor: "var(--red, #e53e3e)" } : {}),
+                    ...(form.es_actual ? { opacity: 0.45, cursor: "not-allowed" } : {}),
+                  }}
                 />
                 {errors.fecha_fin && (
                   <span style={{ fontSize: 11, color: "var(--red, #e53e3e)", marginTop: 2 }}>
                     {errors.fecha_fin}
                   </span>
                 )}
+              </div>
+
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+                  <input
+                    type="checkbox"
+                    name="es_actual"
+                    checked={form.es_actual}
+                    onChange={handleChange}
+                    style={{ width: 15, height: 15, accentColor: "var(--accent)", cursor: "pointer" }}
+                  />
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>Actualmente estudiando aquí</span>
+                </label>
               </div>
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>

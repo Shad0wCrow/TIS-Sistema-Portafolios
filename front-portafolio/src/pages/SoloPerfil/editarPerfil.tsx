@@ -4,6 +4,7 @@ import styles from "./editarperfil.module.css";
 import { getPortafolio, updatePerfil, getSugerenciasProfecion } from "../../services/portafolioservice";
 import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput";
 import Input from "../../components/ui/Input/input";
+import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import { IconPersona } from "../editPortafolio/components/icons";
 
 const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
@@ -210,7 +211,7 @@ export default function EditarPerfil() {
     }
 
     if (loadingPage)
-        return <div className={styles.stateScreen}>Cargando perfil...</div>;
+        return <PageLoader message="Cargando perfil..." />;
     if (errorPage)
         return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
 

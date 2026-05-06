@@ -1,6 +1,13 @@
 import axios from "axios";
 
-import type { ConfiguracionSecciones, EstadoPublicacionPortafolio, PortafolioData } from '../types/portafolioTypes';
+import type {
+  ConfiguracionSecciones,
+  EstadoPublicacionPortafolio,
+  EstadoGuardadoPortafolio,
+  PortafolioData,
+  PortafolioGuardadoResumen,
+  PortafolioPublicoResumen,
+} from '../types/portafolioTypes';
 
 const API = "http://localhost:8000/api";
 
@@ -9,6 +16,24 @@ const authHeaders = () => {
   if (!token) throw new Error("No autenticado");
   return { Authorization: `Bearer ${token}` };
 };
+
+const buildPublicPortfolioUrl = (slug: string | null | undefined): string | null => {
+  if (!slug) return null;
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
+  return `${origin}/portafolio/publico/${slug}`;
+};
+
+const normalizePublicationState = (
+  publicacion: EstadoPublicacionPortafolio
+): EstadoPublicacionPortafolio => ({
+  ...publicacion,
+  url_publica: buildPublicPortfolioUrl(publicacion.slug_publico) ?? publicacion.url_publica,
+});
+
+const normalizePublicPortfolioSummary = <T extends PortafolioPublicoResumen>(portafolio: T): T => ({
+  ...portafolio,
+  url_publica: buildPublicPortfolioUrl(portafolio.slug_publico) ?? portafolio.url_publica,
+});
 
 export const getPortafolio = async () => {
   const res = await axios.get(`${API}/portafolio`, { headers: authHeaders() });
@@ -404,21 +429,72 @@ export const getEstadoPublicacion = async (): Promise<EstadoPublicacionPortafoli
   const res = await axios.get(`${API}/portafolio/publicacion`, {
     headers: authHeaders(),
   });
-  return res.data.publicacion;
+  return normalizePublicationState(res.data.publicacion);
+};
+
+export const getPortafoliosPublicos = async (limite = 12): Promise<PortafolioPublicoResumen[]> => {
+  const res = await axios.get(`${API}/portafolios/publicos`, {
+    headers: authHeaders(),
+    params: { limite },
+  });
+  return (res.data.portafolios ?? []).map(normalizePublicPortfolioSummary);
+};
+
+export const getDashboardPortafolios = async (limite = 12): Promise<{
+  publicacion: EstadoPublicacionPortafolio;
+  portafolios: PortafolioPublicoResumen[];
+}> => {
+  const res = await axios.get(`${API}/dashboard/portafolios`, {
+    headers: authHeaders(),
+    params: { limite },
+  });
+
+  return {
+    publicacion: normalizePublicationState(res.data.publicacion),
+    portafolios: (res.data.portafolios ?? []).map(normalizePublicPortfolioSummary),
+  };
+};
+
+export const getPortafoliosGuardados = async (): Promise<PortafolioGuardadoResumen[]> => {
+  const res = await axios.get(`${API}/portafolios/guardados`, {
+    headers: authHeaders(),
+  });
+  return (res.data.guardados ?? []).map(normalizePublicPortfolioSummary);
+};
+
+export const getEstadoGuardado = async (slug: string): Promise<EstadoGuardadoPortafolio> => {
+  const res = await axios.get(`${API}/portafolios/${slug}/guardado`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const guardarPortafolio = async (slug: string): Promise<EstadoGuardadoPortafolio> => {
+  const res = await axios.post(`${API}/portafolios/${slug}/guardar`, {}, {
+    headers: authHeaders(),
+  });
+  return res.data.data;
+};
+
+export const eliminarPortafolioGuardado = async (slug: string): Promise<EstadoGuardadoPortafolio> => {
+  const res = await axios.delete(`${API}/portafolios/${slug}/guardar`, {
+    headers: authHeaders(),
+  });
+  return res.data.data;
 };
 
 export const publicarPortafolio = async (): Promise<EstadoPublicacionPortafolio> => {
   const res = await axios.post(`${API}/portafolio/publicar`, {}, {
     headers: authHeaders(),
   });
-  return res.data.publicacion;
+  return normalizePublicationState(res.data.publicacion);
 };
 
 export const despublicarPortafolio = async (): Promise<EstadoPublicacionPortafolio> => {
   const res = await axios.post(`${API}/portafolio/despublicar`, {}, {
     headers: authHeaders(),
   });
-  return res.data.publicacion;
+  return normalizePublicationState(res.data.publicacion);
 };
 
 export const getPortafolioPublico = async (slug: string): Promise<PortafolioData> => {

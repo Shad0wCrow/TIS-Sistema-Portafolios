@@ -18,6 +18,7 @@ export interface MenuItem {
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const menuItems: MenuItem[] = [
     { id: 'inicio',     name: 'Inicio',    icon: HomeIcon      },
@@ -30,6 +31,7 @@ const Sidebar: React.FC = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
+    if (localStorage.getItem('hasProfile') !== null) return;
 
     const syncProfileState = async () => {
       try {
@@ -77,15 +79,11 @@ const Sidebar: React.FC = () => {
         break;
 
       case 'bookmarks':
-        navigate('/dashboard');
+        navigate('/guardados');
         break;
 
       case 'salir':
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('hasPortafolio');
-        localStorage.removeItem('hasProfile');
-        navigate('/login');
+        setShowLogoutConfirm(true);
         break;
 
       default:
@@ -101,6 +99,16 @@ const Sidebar: React.FC = () => {
 
   const handleOmitir = () => {
     setShowModal(false);
+  };
+
+  const handleConfirmLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('hasPortafolio');
+    localStorage.removeItem('hasProfile');
+    sessionStorage.removeItem('dashboardPortafoliosCache');
+    setShowLogoutConfirm(false);
+    navigate('/login');
   };
 
   return (
@@ -130,6 +138,23 @@ const Sidebar: React.FC = () => {
           onCrear={handleCrear}
           onOmitir={handleOmitir}
         />
+      )}
+
+      {showLogoutConfirm && (
+        <div className="logout-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="logout-title">
+          <div className="logout-modal">
+            <h2 id="logout-title" className="logout-modal-title">Cerrar sesion</h2>
+            <p className="logout-modal-text">¿Estas seguro de que quieres salir?</p>
+            <div className="logout-modal-actions">
+              <button type="button" className="logout-modal-secondary" onClick={() => setShowLogoutConfirm(false)}>
+                Cancelar
+              </button>
+              <button type="button" className="logout-modal-primary" onClick={handleConfirmLogout}>
+                Salir
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./edicionPortafolio.module.css";
 import skillStyles from "./components/skillCard.module.css";
+import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import {
   getPortafolio,
   getCatalogoHabilidades,
@@ -181,7 +182,7 @@ export default function EdicionPortafolio() {
     refreshData,
   });
 
-  if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
+  if (loadingPage) return <PageLoader message="Cargando portafolio..." />;
   if (errorPage)   return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
   if (!data)       return null;
 

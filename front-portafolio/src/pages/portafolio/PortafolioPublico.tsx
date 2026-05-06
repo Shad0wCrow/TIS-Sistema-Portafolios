@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { getPortafolioPublico } from "../../services/portafolioservice";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  eliminarPortafolioGuardado,
+  getEstadoGuardado,
+  getPortafolioPublico,
+  guardarPortafolio,
+} from "../../services/portafolioservice";
 import type {
   Certificacion,
   Curso,
@@ -15,6 +20,7 @@ import type {
 } from "../../types/portafolioTypes";
 import ProjectCard from "../../components/portafolio/ProjectCard";
 import SkillChip from "../../components/portafolio/SkillChip";
+import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import styles from "./Portafolio.module.css";
 import { IconEye, IconUser } from "./components/PortafolioIcons";
 import { EmptyState, SectionShell, TimelineItem, CertificacionCard } from "./components/PortafolioSections";
@@ -51,10 +57,14 @@ const emptyData: Required<Pick<
 };
 
 export default function PortafolioPublico() {
+  const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const [data, setData] = useState<PortafolioData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [guardado, setGuardado] = useState(false);
+  const [savingGuardado, setSavingGuardado] = useState(false);
+  const [guardadoMessage, setGuardadoMessage] = useState("");
 
   useEffect(() => {
     if (!slug) {
@@ -70,6 +80,16 @@ export default function PortafolioPublico() {
         setError(message);
       })
       .finally(() => setLoading(false));
+  }, [slug]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!slug || !token) return;
+
+    getEstadoGuardado(slug)
+      .then((estado) => setGuardado(estado.guardado))
+      .catch(() => setGuardado(false));
   }, [slug]);
 
   const perfil = (data?.perfil ?? null) as Perfil | null;
@@ -101,6 +121,37 @@ export default function PortafolioPublico() {
   };
 
   const visibleSections = DEFAULT_SECTION_ORDER.filter((id) => sectionHasContent[id]);
+
+  const handleToggleGuardado = async () => {
+    if (!slug || savingGuardado) return;
+
+    if (!localStorage.getItem("token")) {
+      setGuardadoMessage("Inicia sesion o registrate para guardar este portafolio.");
+      return;
+    }
+
+    try {
+      setSavingGuardado(true);
+      setGuardadoMessage("");
+
+      if (guardado) {
+        await eliminarPortafolioGuardado(slug);
+        setGuardado(false);
+        setGuardadoMessage("Portafolio eliminado de guardados.");
+      } else {
+        await guardarPortafolio(slug);
+        setGuardado(true);
+        setGuardadoMessage("Portafolio guardado correctamente.");
+      }
+    } catch (err: any) {
+      const message = err?.response?.data?.errors?.portafolio?.[0]
+        ?? err?.response?.data?.message
+        ?? "No se pudo actualizar guardados.";
+      setGuardadoMessage(message);
+    } finally {
+      setSavingGuardado(false);
+    }
+  };
 
   const renderSection = (id: SectionId) => {
     switch (id) {
@@ -277,14 +328,7 @@ export default function PortafolioPublico() {
   };
 
   if (loading) {
-    return (
-      <div className={styles.stateScreen}>
-        <div className={styles.stateCard}>
-          <span className={styles.loadingDot} />
-          <p>Cargando portafolio</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Cargando portafolio..." />;
   }
 
   if (error || !data || visibleSections.length === 0) {
@@ -310,6 +354,22 @@ export default function PortafolioPublico() {
             <h1 className={styles.brandTitle}>Portafolio público</h1>
             <p className={styles.brandSubtitle}>Contenido compartido por {nombreCompleto}.</p>
           </div>
+        </div>
+        <div className={styles.publicActions}>
+          <button
+            type="button"
+            className={`${styles.savePortfolioBtn} ${guardado ? styles.savePortfolioBtnActive : ""}`}
+            onClick={handleToggleGuardado}
+            disabled={savingGuardado}
+          >
+            {savingGuardado ? "Guardando..." : guardado ? "Guardado" : "Guardar"}
+          </button>
+          {!localStorage.getItem("token") && (
+            <button type="button" className={styles.loginHintBtn} onClick={() => navigate("/login")}>
+              Iniciar sesion
+            </button>
+          )}
+          {guardadoMessage && <p className={styles.guardadoMessage}>{guardadoMessage}</p>}
         </div>
       </header>
 

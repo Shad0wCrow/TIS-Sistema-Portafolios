@@ -78,6 +78,7 @@ class HabilidadController extends Controller
                 'message' => 'Ya tienes esta habilidad agregada',
             ], 400);
         }
+        
 
         try {
             $usuarioHabilidad = UsuarioHabilidad::create([

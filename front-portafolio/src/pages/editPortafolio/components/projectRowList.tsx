@@ -1,5 +1,5 @@
 import styles from "./projectRow.module.css";
-import { IconPencil, IconPlus } from "./icons";
+import { IconPencil } from "./icons";
 import type { Proyecto } from "../../../types/portafolioTypes";
 
 interface ProjectRowListProps {

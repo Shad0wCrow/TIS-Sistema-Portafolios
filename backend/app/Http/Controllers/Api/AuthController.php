@@ -4,12 +4,26 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Usuario;
+use App\Services\PortafolioExploracionService;
+use App\Services\PortafolioPublicacionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private $publicacionService;
+    private $exploracionService;
+
+    public function __construct(
+        PortafolioPublicacionService $publicacionService,
+        PortafolioExploracionService $exploracionService
+    ) {
+        $this->publicacionService = $publicacionService;
+        $this->exploracionService = $exploracionService;
+    }
+
     public function register(Request $request)
     {
         $request->validate([
@@ -58,6 +72,7 @@ class AuthController extends Controller
             'message' => 'Login correcto',
             'token' => $token,
             'user' => $usuario,
+            'dashboard' => $this->dashboardInicial($usuario),
         ]);
     }
 
@@ -73,5 +88,22 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Sesión cerrada correctamente'
         ]);
+    }
+
+    private function dashboardInicial(Usuario $usuario): ?array
+    {
+        try {
+            return [
+                'publicacion' => $this->publicacionService->obtenerEstado($usuario),
+                'portafolios' => $this->exploracionService->listarPortafoliosAjenos($usuario->id_usuario, 12),
+            ];
+        } catch (\Throwable $exception) {
+            Log::warning('No se pudo precargar dashboard durante login', [
+                'usuario_id' => $usuario->id_usuario,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 }
