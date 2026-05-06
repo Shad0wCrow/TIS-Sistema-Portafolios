@@ -1,13 +1,19 @@
 import styles from "./idiomaCard.module.css";
 import type { Idioma } from "../../../types/portafolioTypes";
 
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
+
 interface IdiomaCardProps {
   idiomas: Idioma[];
   onAdd: () => void;
   onRemove?: (id: number) => void;
+  activeAction?: SectionAction;
 }
 
-export default function IdiomaCard({ idiomas, onAdd, onRemove }: IdiomaCardProps) {
+export default function IdiomaCard({ idiomas, onAdd, onRemove, activeAction }: IdiomaCardProps) {
+  const showAdd = activeAction === "registrar";
+  const showRemove = activeAction === "eliminar";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -17,16 +23,21 @@ export default function IdiomaCard({ idiomas, onAdd, onRemove }: IdiomaCardProps
             {idiomas.length} registro{idiomas.length !== 1 ? "s" : ""}
           </span>
         </div>
-        <button className={styles.btnAdd} onClick={onAdd}>
-          <span>+</span> Agregar
-        </button>
+
+        {showAdd && (
+          <button className={styles.btnAdd} onClick={onAdd} type="button">
+            <span>+</span> Agregar
+          </button>
+        )}
       </div>
 
       {idiomas.length === 0 ? (
         <div className={styles.emptyState}>
           <span className={styles.emptyIcon}>🌐</span>
           <p className={styles.emptyText}>No hay idiomas registrados.</p>
-          <p className={styles.emptySubText}>Agrega los idiomas que manejas y tu nivel de dominio.</p>
+          <p className={styles.emptySubText}>
+            Agrega los idiomas que manejas y tu nivel de dominio.
+          </p>
         </div>
       ) : (
         <ul className={styles.list}>
@@ -36,12 +47,10 @@ export default function IdiomaCard({ idiomas, onAdd, onRemove }: IdiomaCardProps
 
               <div className={styles.itemInfo}>
                 <span className={styles.itemTitle}>{idioma.nombre}</span>
-                {idioma.nivel && (
-                  <span className={styles.itemSub}>{idioma.nivel}</span>
-                )}
+                {idioma.nivel && <span className={styles.itemSub}>{idioma.nivel}</span>}
               </div>
 
-              {onRemove && (
+              {showRemove && onRemove && (
                 <button
                   type="button"
                   className={styles.btnRemove}
@@ -49,7 +58,7 @@ export default function IdiomaCard({ idiomas, onAdd, onRemove }: IdiomaCardProps
                   title="Eliminar idioma"
                   aria-label={`Eliminar ${idioma.nombre}`}
                 >
-                  ×
+                  Eliminar
                 </button>
               )}
             </li>

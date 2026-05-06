@@ -1,12 +1,15 @@
 import styles from "./skillCard.module.css";
 import type { HabilidadItem } from "../../../types/portafolioTypes";
 
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
+
 interface SkillCardProps {
   tipo: "tecnica" | "blanda";
   lista: HabilidadItem[];
   onAdd: () => void;
   onRemove: (id: number) => void;
   onEdit: (habilidad: HabilidadItem) => void;
+  activeAction?: SectionAction;
 }
 
 const IconTecnica = () => (
@@ -32,13 +35,24 @@ const NIVEL_LABEL: Record<string, string> = {
   experto: "Experto",
 };
 
-export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: SkillCardProps) {
+export default function SkillCard({
+  tipo,
+  lista,
+  onAdd,
+  onRemove,
+  onEdit,
+  activeAction,
+}: SkillCardProps) {
   const titulo = tipo === "tecnica" ? "Habilidades Técnicas" : "Habilidades Blandas";
   const emptyLabel = tipo === "tecnica" ? "habilidades técnicas" : "habilidades blandas";
   const emptySubLabel =
     tipo === "tecnica"
       ? "Agrega lenguajes, frameworks y herramientas que dominas."
       : "Agrega habilidades interpersonales y de trabajo en equipo.";
+
+  const showAdd = activeAction === "registrar";
+  const showEdit = activeAction === "editar";
+  const showRemove = activeAction === "eliminar";
 
   return (
     <div className={styles.card}>
@@ -49,9 +63,12 @@ export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: Skil
             {lista.length} registro{lista.length !== 1 ? "s" : ""}
           </span>
         </div>
-        <button className={styles.btnAdd} onClick={onAdd}>
-          <span>+</span> Agregar
-        </button>
+
+        {showAdd && (
+          <button className={styles.btnAdd} onClick={onAdd} type="button">
+            <span>+</span> Agregar
+          </button>
+        )}
       </div>
 
       {lista.length === 0 ? (
@@ -81,24 +98,36 @@ export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: Skil
 
               <div className={styles.itemActions}>
                 {h.nivel && (
-                  <span className={`${styles.badge} ${styles[`badgeNivel_${h.nivel}`] ?? styles.badgeDefault}`}>
+                  <span
+                    className={`${styles.badge} ${
+                      styles[`badgeNivel_${h.nivel}`] ?? styles.badgeDefault
+                    }`}
+                  >
                     {NIVEL_LABEL[h.nivel] ?? h.nivel}
                   </span>
                 )}
-                <button
-                  className={styles.btnEdit}
-                  onClick={() => onEdit(h)}
-                  title="Editar nivel"
-                >
-                  Editar
-                </button>
-                <button
-                  className={styles.btnRemove}
-                  onClick={() => onRemove(h.id_usuario_habilidad)}
-                  title="Eliminar"
-                >
-                  Eliminar
-                </button>
+
+                {showEdit && (
+                  <button
+                    className={styles.btnEdit}
+                    onClick={() => onEdit(h)}
+                    title="Editar nivel"
+                    type="button"
+                  >
+                    Editar
+                  </button>
+                )}
+
+                {showRemove && (
+                  <button
+                    className={styles.btnRemove}
+                    onClick={() => onRemove(h.id_usuario_habilidad)}
+                    title="Eliminar"
+                    type="button"
+                  >
+                    Eliminar
+                  </button>
+                )}
               </div>
             </li>
           ))}

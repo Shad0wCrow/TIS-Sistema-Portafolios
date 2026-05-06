@@ -2,11 +2,14 @@ import styles from "./projectRow.module.css";
 import { IconPencil } from "./icons";
 import type { Proyecto } from "../../../types/portafolioTypes";
 
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
+
 interface ProjectRowListProps {
   proyectos: Proyecto[];
   onEdit: (proyecto: Proyecto) => void;
   onRemove: (id: number) => void;
   onAdd: () => void;
+  activeAction?: SectionAction;
 }
 
 const ESTADO_LABEL: Record<Proyecto["estado"], string> = {
@@ -45,7 +48,12 @@ export default function ProjectRowList({
   onEdit,
   onRemove,
   onAdd,
+  activeAction,
 }: ProjectRowListProps) {
+  const showAdd = activeAction === "registrar";
+  const showEdit = activeAction === "editar";
+  const showRemove = activeAction === "eliminar"; 
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -56,9 +64,11 @@ export default function ProjectRowList({
           </span>
         </div>
 
-        <button type="button" className={styles.btnAdd} onClick={onAdd}>
-          <span>+</span> Agregar
-        </button>
+        {showAdd && (
+          <button type="button" className={styles.btnAdd} onClick={onAdd}>
+            <span>+</span> Agregar
+          </button>
+        )}
       </div>
 
       {proyectos.length === 0 ? (
@@ -89,9 +99,7 @@ export default function ProjectRowList({
                   {formatFecha(p.fecha_inicio)} — {formatFecha(p.fecha_fin)}
                 </span>
 
-                {p.descripcion && (
-                  <span className={styles.itemDesc}>{p.descripcion}</span>
-                )}
+                {p.descripcion && <span className={styles.itemDesc}>{p.descripcion}</span>}
 
                 {p.roles?.length > 0 && (
                   <div className={styles.roleList}>
@@ -130,30 +138,34 @@ export default function ProjectRowList({
                 )}
               </div>
 
-              <div className={styles.itemActions}>
-                <button
-                  type="button"
-                  className={styles.btnEdit}
-                  onClick={() => onEdit(p)}
-                  title="Editar"
-                >
-                  <IconPencil />
-                  Editar
-                </button>
+                <div className={styles.itemActions}>
+                  {showEdit && (
+                    <button
+                      type="button"
+                      className={styles.btnEdit}
+                      onClick={() => onEdit(p)}
+                      title="Editar"
+                    >
+                      Editar
+                    </button>
+                  )}
 
-                <button
-                  type="button"
-                  className={styles.btnRemove}
-                  onClick={() => onRemove(p.id_proyecto)}
-                  title="Eliminar"
-                >
-                  Eliminar
-                </button>
-              </div>
+                  {showRemove && (
+                    <button
+                      type="button"
+                      className={styles.btnRemove}
+                      onClick={() => onRemove(p.id_proyecto)}
+                      title="Eliminar"
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
             </li>
           ))}
         </ul>
       )}
+
     </div>
   );
 }

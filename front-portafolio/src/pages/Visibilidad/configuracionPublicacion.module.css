@@ -262,3 +262,210 @@
     align-items: flex-start;
   }
 }
+
+/* ── Toast de confirmación al copiar (CA-2) ──────────────────────── */
+.copiedToast {
+  margin: 8px 0 0;
+  padding: 8px 14px;
+  background: var(--accent-lt);
+  color: var(--accent);
+  border: 1px solid var(--accent-md);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: toastSlideIn 0.3s ease-out;
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Panel de compartir en redes sociales (CA-6) ─────────────────── */
+.sharePanel {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8faf9;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.sharePanelHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sharePanelHeader > svg {
+  width: 22px;
+  height: 22px;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.sharePanelTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sharePanelSub {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+
+.shareButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shareBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s, opacity 0.15s;
+}
+
+.shareBtn svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.shareBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.shareBtn:active {
+  transform: translateY(0);
+}
+
+/* CA-7: Accesibilidad - focus visible para navegación con Tab */
+.shareBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(26, 102, 68, 0.15);
+}
+
+.iconActionBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(26, 102, 68, 0.15);
+}
+
+/* Brand colors for each social network */
+.shareBtnLinkedIn {
+  background: #0A66C2;
+  color: #ffffff;
+}
+.shareBtnLinkedIn:hover {
+  background: #004182;
+  color: #ffffff;
+}
+
+.shareBtnWhatsApp {
+  background: #25D366;
+  color: #ffffff;
+}
+.shareBtnWhatsApp:hover {
+  background: #1da851;
+  color: #ffffff;
+}
+
+.shareBtnTwitter {
+  background: #0f1419;
+  color: #ffffff;
+}
+.shareBtnTwitter:hover {
+  background: #272c30;
+  color: #ffffff;
+}
+
+.shareBtnTelegram {
+  background: #0088cc;
+  color: #ffffff;
+}
+.shareBtnTelegram:hover {
+  background: #006da3;
+  color: #ffffff;
+}
+
+.shareBtnEmail {
+  background: var(--bg3);
+  color: var(--text);
+  border-color: var(--border);
+}
+.shareBtnEmail:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ── Aviso de portafolio no publicado (CA-5) ──────────────────────── */
+.unpublishedNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 18px;
+  background: #fff7e6;
+  border: 1px solid #fde8b3;
+  border-radius: 10px;
+}
+
+.unpublishedIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #fdecc8;
+  color: #a16207;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.unpublishedIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.unpublishedTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.unpublishedText {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #a16207;
+  line-height: 1.5;
+}
+
+/* ── Responsive para el panel de compartir ────────────────────────── */
+@media (max-width: 720px) {
+  .shareButtons {
+    flex-direction: column;
+  }
+  .shareBtn {
+    justify-content: center;
+  }
+}

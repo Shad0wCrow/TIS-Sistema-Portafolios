@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import type { Certificacion } from "../../../types/portafolioTypes";
 import { IconEye } from "./PortafolioIcons";
 import { formatFecha } from "./portafolioUtils";
@@ -91,12 +91,20 @@ function TimelineItem({
 // ── CertificacionCard ────────────────────────────────────────────────────────
 
 function CertificacionCard({ cert }: { cert: Certificacion }) {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const vencida = cert.fecha_expiracion ? new Date(cert.fecha_expiracion).getTime() < Date.now() : false;
 
   return (
     <article className={styles.certCard}>
       {cert.imagen_url ? (
-        <img className={styles.certImage} src={cert.imagen_url} alt={cert.nombre} />
+        <img
+          className={styles.certImage}
+          src={cert.imagen_url}
+          alt={cert.nombre}
+          onClick={() => setPreviewImage(cert.imagen_url)}
+          style={{ cursor: "zoom-in" }}
+          title="Clic para ampliar"
+        />
       ) : (
         <div className={styles.certImagePlaceholder}>
           <IconEye />
@@ -128,6 +136,20 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
           </a>
         )}
       </div>
+
+      {previewImage && (
+        <div
+          className={styles.imageZoomOverlay}
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className={styles.imageZoomContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.imageZoomClose} onClick={() => setPreviewImage(null)}>
+              &times;
+            </button>
+            <img src={previewImage} alt="Certificado ampliado" className={styles.imageZoomImg} />
+          </div>
+        </div>
+      )}
     </article>
   );
 }
