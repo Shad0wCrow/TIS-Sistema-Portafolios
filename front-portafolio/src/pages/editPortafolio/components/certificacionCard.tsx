@@ -1,3 +1,4 @@
+import { useState } from "react";
 import styles from "./certificacionCard.module.css";
 import type { Certificacion } from "../../../types/portafolioTypes";
 
@@ -25,6 +26,7 @@ export default function CertificacionCard({
 }: CertificacionCardProps) {
   const showAdd = activeAction === "registrar" ;
   const showRemove = activeAction === "eliminar";
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   return (
     <div className={styles.card}>
@@ -58,6 +60,9 @@ export default function CertificacionCard({
                   src={cert.imagen_url}
                   alt={cert.nombre}
                   className={styles.itemImage}
+                  onClick={() => setPreviewImage(cert.imagen_url || null)}
+                  style={{ cursor: "zoom-in" }}
+                  title="Clic para ver la imagen en grande"
                 />
               ) : (
                 <div className={styles.itemIcon}>🎓</div>
@@ -80,6 +85,27 @@ export default function CertificacionCard({
                     Ver certificado ↗
                   </a>
                 )}
+
+          {previewImage && (
+            <div 
+              onClick={() => setPreviewImage(null)}
+              style={{
+                position: "fixed", inset: 0, zIndex: 9999,
+                backgroundColor: "rgba(0,0,0,0.85)", display: "flex",
+                alignItems: "center", justifyContent: "center", padding: "20px"
+              }}
+            >
+              <div style={{ position: "relative", maxWidth: "90%", maxHeight: "90%" }} onClick={(e) => e.stopPropagation()}>
+                <button 
+                  onClick={() => setPreviewImage(null)}
+                  style={{ position: "absolute", top: "-40px", right: "-10px", background: "transparent", border: "none", color: "#fff", fontSize: "32px", cursor: "pointer" }}
+                >
+                  &times;
+                </button>
+                <img src={previewImage} alt="Certificación en grande" style={{ maxWidth: "100%", maxHeight: "85vh", objectFit: "contain", borderRadius: "8px", boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }} />
+              </div>
+            </div>
+          )}
               </div>
 
               <div className={styles.itemActions}>

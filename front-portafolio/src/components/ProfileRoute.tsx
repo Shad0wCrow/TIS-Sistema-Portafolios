@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import PageLoader from "./ui/PageLoader/PageLoader";
 
 export default function ProfileRoute({ children }: any) {
   const token = localStorage.getItem("token");
@@ -32,7 +33,7 @@ export default function ProfileRoute({ children }: any) {
   }
 
   if (loading) {
-    return <p>Cargando...</p>;
+    return <PageLoader message="Cargando perfil..." />;
   }
 
   if (!hasProfile) {

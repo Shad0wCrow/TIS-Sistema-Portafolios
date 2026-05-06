@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './configuracionPublicacion.module.css';
+import PageLoader from '../../components/ui/PageLoader/PageLoader';
 import {
   despublicarPortafolio,
   getEstadoPublicacion,
@@ -261,12 +262,7 @@ export default function ConfiguracionPublicacion() {
   const publicasCount = SECCIONES.filter((k) => esPublico(config[k])).length;
 
   if (loading) {
-    return (
-      <div className={styles.stateScreen}>
-        <span className={styles.loadingDot} />
-        <p>Cargando configuración…</p>
-      </div>
-    );
+    return <PageLoader message="Cargando configuracion..." />;
   }
 
   return (

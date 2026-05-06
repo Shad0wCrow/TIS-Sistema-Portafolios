@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./edicionPortafolio.module.css";
 import skillStyles from "./components/skillCard.module.css";
+import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import {
   getPortafolio,
   getCatalogoHabilidades,
@@ -277,10 +278,18 @@ export default function EdicionPortafolio() {
             </span>
           </div>
           <div className={styles.topbarRight}>
-            <button type="button" className={styles.previewButton} onClick={() => navigate("/portafolio")}>
+            <button
+              type="button"
+              className={styles.previewButton}
+              onClick={() => navigate("/portafolio")}
+            >
               Vista previa
             </button>
-            <button type="button" className={styles.publishButton} onClick={() => navigate("/portafolio/visibilidad")}>
+            <button
+              type="button"
+              className={styles.publishButton}
+              onClick={() => navigate("/portafolio/visibilidad")}
+            >
               Publicar
             </button>
             <span className={styles.statusBadge}>

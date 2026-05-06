@@ -1,5 +1,5 @@
 import styles from "./projectRow.module.css";
-import { IconPencil, IconPlus } from "./icons";
+import { IconPencil } from "./icons";
 import type { Proyecto } from "../../../types/portafolioTypes";
 
 type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
@@ -138,32 +138,34 @@ export default function ProjectRowList({
                 )}
               </div>
 
-              <div className={styles.itemActions}>
+                <div className={styles.itemActions}>
+                  {showEdit && (
+                    <button
+                      type="button"
+                      className={styles.btnEdit}
+                      onClick={() => onEdit(p)}
+                      title="Editar"
+                    >
+                      Editar
+                    </button>
+                  )}
 
-                {showRemove && (
-                  <button
-                    type="button"
-                    className={styles.btnRemove}
-                    onClick={() => onRemove(p.id_proyecto)}
-                    title="Eliminar"
-                  >
-                    Eliminar
-                  </button>
-                )}
-              </div>
+                  {showRemove && (
+                    <button
+                      type="button"
+                      className={styles.btnRemove}
+                      onClick={() => onRemove(p.id_proyecto)}
+                      title="Eliminar"
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
             </li>
           ))}
         </ul>
       )}
 
-      {showAdd && (
-        <div className={styles.cardFooter}>
-          <button type="button" className={styles.addBtn} onClick={onAdd}>
-            <IconPlus />
-            Agregar proyecto
-          </button>
-        </div>
-      )}
     </div>
   );
 }

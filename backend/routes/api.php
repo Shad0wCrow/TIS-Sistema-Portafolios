@@ -15,6 +15,9 @@ use App\Http\Controllers\Api\IdiomaController;
 use App\Http\Controllers\Api\VisibilidadController;
 use App\Http\Controllers\Api\PortafolioPublicacionController;
 use App\Http\Controllers\Api\PortafolioPublicoController;
+use App\Http\Controllers\Api\PortafoliosPublicosController;
+use App\Http\Controllers\Api\PortafolioGuardadoController;
+use App\Http\Controllers\Api\DashboardPortafolioController;
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
@@ -38,7 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/perfil',    [PerfilController::class, 'update']);
 
     // Pantalla "Edición de Portafolio" 
+    Route::get('/dashboard/portafolios',          [DashboardPortafolioController::class, 'show']);
     Route::get('/portafolio',                     [PortafolioController::class, 'show']);
+    Route::get('/portafolios/publicos',           [PortafoliosPublicosController::class, 'index']);
+    Route::get('/portafolios/guardados',          [PortafolioGuardadoController::class, 'index']);
+    Route::get('/portafolios/{slug}/guardado',    [PortafolioGuardadoController::class, 'estado']);
+    Route::post('/portafolios/{slug}/guardar',    [PortafolioGuardadoController::class, 'store']);
+    Route::delete('/portafolios/{slug}/guardar',  [PortafolioGuardadoController::class, 'destroy']);
     Route::get('/portafolio/publicacion',         [PortafolioPublicacionController::class, 'show']);
     Route::post('/portafolio/publicar',           [PortafolioPublicacionController::class, 'publicar']);
     Route::post('/portafolio/despublicar',        [PortafolioPublicacionController::class, 'despublicar']);

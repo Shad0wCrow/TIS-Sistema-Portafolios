@@ -1,0 +1,52 @@
+.screen {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: transparent;
+  color: var(--text2, #4a5e54);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.fullHeight {
+  min-height: 100vh;
+  background: var(--bg, #f4f6f5);
+}
+
+.card {
+  min-width: min(280px, 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid var(--border, #dde3e0);
+  border-radius: 8px;
+  background: var(--bg3, #ffffff);
+  padding: 18px 22px;
+  box-shadow: 0 18px 45px rgba(17, 31, 25, 0.06);
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 3px solid var(--accent-md, #b8deca);
+  border-top-color: var(--accent, #1a6644);
+  animation: spin .8s linear infinite;
+}
+
+.message {
+  margin: 0;
+  color: var(--text2, #4a5e54);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

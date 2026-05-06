@@ -67,6 +67,62 @@
   justify-content: flex-end;
 }
 
+.publicActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.savePortfolioBtn,
+.loginHintBtn {
+  min-height: 38px;
+  border-radius: 8px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.savePortfolioBtn {
+  border: 1px solid #1a6644;
+  background: #1a6644;
+  color: #fff;
+}
+
+.savePortfolioBtn:hover:not(:disabled) {
+  background: #155235;
+}
+
+.savePortfolioBtnActive {
+  border-color: #b8deca;
+  background: #e8f4ee;
+  color: #1a6644;
+}
+
+.loginHintBtn {
+  border: 1px solid rgba(145, 164, 153, 0.42);
+  background: #fff;
+  color: #1a6644;
+}
+
+.savePortfolioBtn:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+.guardadoMessage {
+  width: 100%;
+  margin: 0;
+  color: #4a5e54;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
 .main {
   width: min(1360px, calc(100% - 40px));
   margin: 0 auto;
