@@ -1,6 +1,11 @@
 import axios from "axios";
 
-import type { ConfiguracionSecciones, EstadoPublicacionPortafolio, PortafolioData } from '../types/portafolioTypes';
+import type {
+  ConfiguracionSecciones,
+  EstadoPublicacionPortafolio,
+  PortafolioData,
+  PortafolioPublicoResumen,
+} from '../types/portafolioTypes';
 
 const API = "http://localhost:8000/api";
 
@@ -405,6 +410,14 @@ export const getEstadoPublicacion = async (): Promise<EstadoPublicacionPortafoli
     headers: authHeaders(),
   });
   return res.data.publicacion;
+};
+
+export const getPortafoliosPublicos = async (limite = 12): Promise<PortafolioPublicoResumen[]> => {
+  const res = await axios.get(`${API}/portafolios/publicos`, {
+    headers: authHeaders(),
+    params: { limite },
+  });
+  return res.data.portafolios ?? [];
 };
 
 export const publicarPortafolio = async (): Promise<EstadoPublicacionPortafolio> => {
