@@ -239,14 +239,17 @@ export default function EditarPerfil() {
 
                     <div className={styles.content}>
 
+                        {/* ── Sección datos personales ── */}
                         <div className={styles.section}>
                             <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTitle}>Foto de perfil</span>
+                                <span className={styles.sectionTitle}>Datos personales</span>
                             </div>
-                            <div className={styles.fotoCard}>
-                                <div className={styles.fotoLeft}>
-                                    <div className={styles.fotoCircleWrap}>
-                                        <div className={styles.fotoCircle} onClick={handleOpenModal}>
+                            <div className={styles.formCard}>
+                                
+                                {/* ── Foto de perfil centrada arriba ── */}
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "32px", textAlign: "center" }}>
+                                    <div className={styles.fotoCircleWrap} style={{ marginBottom: "16px" }}>
+                                        <div className={styles.fotoCircle} onClick={handleOpenModal} style={{ margin: "0 auto", cursor: "pointer" }}>
                                             {fotoUrl.trim() ? (
                                                 <img
                                                     src={fotoUrl.trim()}
@@ -270,25 +273,13 @@ export default function EditarPerfil() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className={styles.fotoRight}>
-                                    <div className={styles.fotoMeta}>
-                                        <p className={styles.fotoTitle}>
-                                            {fotoUrl.trim() ? "Foto cargada" : "Sin foto de perfil"}
-                                        </p>
-                                        <p className={styles.fotoSubtitle}>
-                                            {fotoUrl.trim()
-                                                ? "Haz clic en la imagen o en el botón para cambiarla."
-                                                : "Sube una foto o pega una URL pública para mostrarla en tu portafolio."}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.fotoActions}>
+                                    
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
                                         <button
                                             className={styles.addFotoBtn}
                                             type="button"
                                             onClick={handleOpenModal}
+                                            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "6px", border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontWeight: 500 }}
                                         >
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -299,47 +290,26 @@ export default function EditarPerfil() {
                                         </button>
 
                                         {fotoUrl.trim() && (
-                                            <>
-                                                <button
-                                                    className={styles.fotoRemoveBtn}
-                                                    type="button"
-                                                    onClick={handleQuitarFoto}
-                                                >
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <polyline points="3 6 5 6 21 6"/>
-                                                        <path d="M19 6l-1 14H6L5 6"/>
-                                                        <path d="M10 11v6M14 11v6"/>
-                                                    </svg>
-                                                    Quitar
-                                                </button>
-                                                <div className={styles.fotoUrlPreview}>
-                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                                                    </svg>
-                                                    <span>
-                                                        {fotoUrl.trim().length > 38
-                                                            ? fotoUrl.trim().slice(0, 38) + "…"
-                                                            : fotoUrl.trim()}
-                                                    </span>
-                                                </div>
-                                            </>
+                                            <button
+                                                className={styles.fotoRemoveBtn}
+                                                type="button"
+                                                onClick={handleQuitarFoto}
+                                                style={{ display: "flex", alignItems: "center", gap: "4px", padding: "8px 16px", borderRadius: "6px", border: "none", background: "none", color: "#e11d48", cursor: "pointer", fontWeight: 500 }}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"/>
+                                                    <path d="M19 6l-1 14H6L5 6"/>
+                                                    <path d="M10 11v6M14 11v6"/>
+                                                </svg>
+                                                Quitar
+                                            </button>
                                         )}
                                     </div>
-
                                     {errors.foto && (
-                                        <span className={styles.fotoError}>{errors.foto}</span>
+                                        <span style={{ color: "#e11d48", fontSize: "13px", marginTop: "8px", display: "block" }}>{errors.foto}</span>
                                     )}
                                 </div>
-                            </div>
-                        </div>
 
-                        {/* ── Sección datos personales ── */}
-                        <div className={styles.section}>
-                            <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTitle}>Datos personales</span>
-                            </div>
-                            <div className={styles.formCard}>
                                 <div className={styles.grid}>
                                     <div className={styles.fieldGroup}>
                                         <label className={styles.label}>Nombre</label>
