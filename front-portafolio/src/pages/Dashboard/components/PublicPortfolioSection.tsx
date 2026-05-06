@@ -36,7 +36,9 @@ export default function PublicPortfolioSection({
   }, [portafolios, search]);
 
   return (
-    <section className="dashboard-section">
+   
+   
+   <section className="dashboard-section">
       <div className="feed-header">
         <div>
           <span className="publication-kicker">Portafolios</span>
