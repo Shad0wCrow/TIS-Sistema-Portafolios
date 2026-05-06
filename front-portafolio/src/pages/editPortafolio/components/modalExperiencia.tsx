@@ -67,9 +67,15 @@ export default function ModalExperiencia({ experiencia, onClose, onSave, duplica
 
   const validate = (): boolean => {
     const errs: typeof errors = {};
+    const hoy = new Date().toISOString().split("T")[0];
+
     if (!form.nombre_empresa.trim()) errs.nombre_empresa = "Requerido";
     if (!form.puesto.trim()) errs.puesto = "Requerido";
-    if (!form.fecha_inicio) errs.fecha_inicio = "Requerido";
+    if (!form.fecha_inicio) {
+      errs.fecha_inicio = "Requerido";
+    } else if (form.fecha_inicio > hoy) {
+      errs.fecha_inicio = "La fecha no puede ser futura";
+    }
     if (!form.es_actual && form.fecha_fin && form.fecha_fin < form.fecha_inicio) {
       errs.fecha_fin = "Debe ser posterior a la fecha de inicio";
     }
@@ -180,6 +186,7 @@ export default function ModalExperiencia({ experiencia, onClose, onSave, duplica
                 type="date"
                 className={`${styles.input} ${errors.fecha_inicio ? styles.inputError : ""}`}
                 value={form.fecha_inicio}
+                max={new Date().toISOString().split("T")[0]}
                 onChange={(e) => set("fecha_inicio", e.target.value)}
               />
               {errors.fecha_inicio && <span className={styles.error}>{errors.fecha_inicio}</span>}
