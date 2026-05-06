@@ -35,6 +35,7 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
   const [sugerencias, setSugerencias] = useState<string[]>([]);
   const [imagenBase64, setImagenBase64] = useState<string | null>(null);
   const [imagenPreview, setImagenPreview] = useState<string | null>(null);
+  const [verImagenGrande, setVerImagenGrande] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -208,7 +209,13 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
                 {errMsg(errors.imagen)}
                 {imagenPreview && (
                   <div style={{ marginTop: 8 }}>
-                    <img src={imagenPreview} alt="preview" style={{ maxWidth: 160, maxHeight: 100, borderRadius: 7, objectFit: "cover" }} />
+                    <img 
+                      src={imagenPreview} 
+                      alt="preview" 
+                      style={{ maxWidth: 160, maxHeight: 100, borderRadius: 7, objectFit: "cover", cursor: "zoom-in" }} 
+                      onClick={() => setVerImagenGrande(true)}
+                      title="Clic para ver la imagen en tamaño completo"
+                    />
                     <button type="button" onClick={() => { setImagenBase64(null); setImagenPreview(null); if (fileRef.current) fileRef.current.value = ""; }}
                       style={{ display: "block", marginTop: 4, fontSize: 11, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>
                       Quitar imagen
@@ -239,6 +246,27 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
               </button>
             </div>
           </>
+        )}
+
+        {verImagenGrande && imagenPreview && (
+          <div 
+            onClick={() => setVerImagenGrande(false)}
+            style={{
+              position: "fixed", inset: 0, zIndex: 10000,
+              backgroundColor: "rgba(0,0,0,0.85)", display: "flex",
+              alignItems: "center", justifyContent: "center", padding: "20px"
+            }}
+          >
+            <div style={{ position: "relative", maxWidth: "90%", maxHeight: "90%" }} onClick={(e) => e.stopPropagation()}>
+              <button 
+                onClick={() => setVerImagenGrande(false)}
+                style={{ position: "absolute", top: "-40px", right: "-10px", background: "transparent", border: "none", color: "#fff", fontSize: "32px", cursor: "pointer" }}
+              >
+                &times;
+              </button>
+              <img src={imagenPreview} alt="Vista previa grande" style={{ maxWidth: "100%", maxHeight: "85vh", objectFit: "contain", borderRadius: "8px" }} />
+            </div>
+          </div>
         )}
       </div>
     </div>
