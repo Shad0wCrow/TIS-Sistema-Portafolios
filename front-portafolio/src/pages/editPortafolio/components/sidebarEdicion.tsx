@@ -120,7 +120,8 @@ export default function SidebarEdicion({
       setOpenDropdown(null);
       return;
     }
-    
+      onSectionChange(key);
+      onActionChange("mostrar");
     setOpenDropdown((prev) => (prev === key ? null : key));
   };
 
