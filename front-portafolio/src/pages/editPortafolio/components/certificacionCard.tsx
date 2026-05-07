@@ -24,7 +24,7 @@ export default function CertificacionCard({
   onRemove,
   activeAction,
 }: CertificacionCardProps) {
-  const showAdd = activeAction === "registrar" ;
+  const showAdd = activeAction ===  "mostrar" && "registrar" ;
   const showRemove = activeAction === "eliminar";
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
