@@ -9,7 +9,7 @@ interface ModalLogroProps {
   logrosExistentes?: { identificador?: string | null }[];
   duplicadoWarning?: string;
 }
-
+//Comentario
 interface FormErrors {
   titulo?: string;
   nombre_entidad?: string;
