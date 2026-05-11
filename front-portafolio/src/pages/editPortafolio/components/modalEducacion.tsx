@@ -83,7 +83,7 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
         area_estudio: form.area_estudio.trim() || undefined,
         fecha_inicio: form.fecha_inicio,
         fecha_fin: form.es_actual ? undefined : (form.fecha_fin || undefined),
-        es_actual: form.es_actual as any,
+        
         descripcion: form.descripcion.trim() || undefined,
         visibilidad: form.visibilidad,
       });
