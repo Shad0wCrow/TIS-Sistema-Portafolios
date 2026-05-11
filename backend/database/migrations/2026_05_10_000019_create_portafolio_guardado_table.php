@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::create('portafolio_guardado', function (Blueprint $table) {
             $table->increments('id_guardado');
-            $table->integer('usuario_id');
-            $table->integer('publicacion_id');
+            $table->unsignedInteger('usuario_id');
+            $table->unsignedInteger('publicacion_id');
             $table->timestamp('creado_en')->nullable();
             $table->timestamp('actualizado_en')->nullable();
 
-            $table->unique(['usuario_id', 'publicacion_id'], 'uq_portafolio_guardado_usuario_publicacion');
+            $table->unique(['usuario_id', 'publicacion_id'], 'uq_portafolio_guardado');
             $table->index('usuario_id', 'idx_portafolio_guardado_usuario');
             $table->index('publicacion_id', 'idx_portafolio_guardado_publicacion');
             $table->foreign('usuario_id')->references('id_usuario')->on('usuario');

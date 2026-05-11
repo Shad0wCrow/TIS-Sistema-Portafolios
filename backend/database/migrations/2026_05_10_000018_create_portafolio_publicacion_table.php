@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('portafolio_publicacion', function (Blueprint $table) {
             $table->increments('id_publicacion');
-            $table->integer('usuario_id');
+            $table->unsignedInteger('usuario_id');
             $table->string('slug_publico', 120)->unique();
             $table->boolean('publicado')->default(false);
             $table->timestamp('publicado_en')->nullable();
@@ -18,8 +18,12 @@ return new class extends Migration
             $table->timestamp('creado_en')->nullable();
             $table->timestamp('actualizado_en')->nullable();
 
-            $table->unique('usuario_id');
+            $table->unique('usuario_id', 'uq_portafolio_publicacion_usuario');
             $table->foreign('usuario_id')->references('id_usuario')->on('usuario');
+        });
+
+        Schema::table('portafolio_publicacion', function (Blueprint $table) {
+            $table->index(['publicado', 'publicado_en'], 'idx_publicacion_publicado_fecha');
         });
     }
 
