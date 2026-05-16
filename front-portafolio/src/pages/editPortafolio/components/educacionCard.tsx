@@ -1,5 +1,6 @@
 import styles from "./educacionCard.module.css";
 import type { Educacion } from "../../../types/portafolioTypes";
+import { GRADO_LABELS } from "../../../types/portafolioTypes";
 
 type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
 
@@ -23,7 +24,7 @@ export default function EducacionCard({
   onRemove,
   activeAction,
 }: EducacionCardProps) {
-  const showAdd = activeAction === "registrar" ;
+  const showAdd    = activeAction === "registrar";
   const showRemove = activeAction === "eliminar";
 
   return (
@@ -59,6 +60,14 @@ export default function EducacionCard({
 
               <div className={styles.itemInfo}>
                 <span className={styles.itemTitle}>{edu.titulo}</span>
+
+                {/* HU-8: badge con el grado de formación */}
+                {edu.grado && (
+                  <span className={styles.itemGrado}>
+                    {GRADO_LABELS[edu.grado]}
+                  </span>
+                )}
+
                 <span className={styles.itemSub}>{edu.institucion}</span>
                 {edu.area_estudio && (
                   <span className={styles.itemArea}>{edu.area_estudio}</span>

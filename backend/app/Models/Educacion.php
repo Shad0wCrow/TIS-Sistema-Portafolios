@@ -15,6 +15,7 @@ class Educacion extends Model
         'institucion',
         'titulo',
         'area_estudio',
+        'grado',
         'fecha_inicio',
         'fecha_fin',
         'descripcion',

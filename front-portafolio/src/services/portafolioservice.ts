@@ -4,6 +4,7 @@ import type {
   ConfiguracionSecciones,
   EstadoPublicacionPortafolio,
   EstadoGuardadoPortafolio,
+  GradoEducacion,
   PortafolioData,
   PortafolioGuardadoResumen,
   PortafolioPublicoResumen,
@@ -181,7 +182,7 @@ export const getSugerenciasCurso = async (q: string): Promise<string[]> => {
   return res.data.sugerencias ?? [];
 };
 
-// ── Educación ─────────────────────────────────────────────────────────────────
+// ── Educación (Grado de Formación) ────────────────────────────────────────────
 export const getEducaciones = async () => {
   const res = await axios.get(`${API}/educacion`, {
     headers: authHeaders(),
@@ -200,16 +201,38 @@ export const getSugerenciasInstitucion = async (
   return res.data.sugerencias ?? [];
 };
 
+// HU-8: el campo "grado" ahora es obligatorio para educación formal.
 export const addEducacion = async (data: {
   institucion: string;
   titulo: string;
   area_estudio?: string;
+  grado: GradoEducacion;           // obligatorio
   fecha_inicio: string;
   fecha_fin?: string;
   descripcion?: string;
   visibilidad?: "publico" | "privado";
 }) => {
   const res = await axios.post(`${API}/educacion`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+// HU-8: update también requiere grado.
+export const updateEducacion = async (
+  id: number,
+  data: {
+    institucion?: string;
+    titulo?: string;
+    area_estudio?: string;
+    grado?: GradoEducacion;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    descripcion?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await axios.put(`${API}/educacion/${id}`, data, {
     headers: authHeaders(),
   });
   return res.data;
@@ -414,7 +437,7 @@ export const getVisibilidadSecciones = async (): Promise<ConfiguracionSecciones>
   });
   return res.data.configuracion;
 };
- 
+
 /** Guarda la configuración de secciones visibles del portafolio. */
 export const updateVisibilidadSecciones = async (
   data: ConfiguracionSecciones

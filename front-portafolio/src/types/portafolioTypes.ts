@@ -55,11 +55,37 @@ export interface Logro {
   visibilidad: "publico" | "privado";
 }
 
+
+export type GradoEducacion =
+  | "titulo_bachiller"
+  | "tecnico_medio"
+  | "titulo_superior"
+  | "licenciado"
+  | "especialidad"
+  | "maestria"
+  | "doctorado"
+  | "post_doctorado"
+  | "otro";
+
+
+export const GRADO_LABELS: Record<GradoEducacion, string> = {
+  titulo_bachiller: "Título de Bachiller",
+  tecnico_medio:    "Técnico Medio",
+  titulo_superior:  "Título Superior",
+  licenciado:       "Licenciado/a",
+  especialidad:     "Especialidad",
+  maestria:         "Maestría",
+  doctorado:        "Doctorado",
+  post_doctorado:   "Post Doctorado",
+  otro:            "Otro",
+};
+
 export interface Educacion {
   id_educacion: number;
   institucion: string;
   titulo: string;
   area_estudio: string | null;
+  grado: GradoEducacion | null;   // HU-8: null en registros históricos sin grado asignado
   fecha_inicio: string;
   fecha_fin: string | null;
   descripcion: string | null;
@@ -145,7 +171,7 @@ export interface EstadoGuardadoPortafolio {
 }
 
 export type EstadoVisibilidad = 'publico' | 'privado';
- 
+
 export interface ConfiguracionSecciones {
   seccion_perfil:          EstadoVisibilidad;
   seccion_habilidades:     EstadoVisibilidad;
@@ -157,7 +183,7 @@ export interface ConfiguracionSecciones {
   seccion_logros:          EstadoVisibilidad;
   seccion_idiomas:         EstadoVisibilidad;
 }
- 
+
 export const SECCION_LABELS: Record<keyof ConfiguracionSecciones, string> = {
   seccion_perfil:          'Perfil profesional',
   seccion_habilidades:     'Habilidades',
