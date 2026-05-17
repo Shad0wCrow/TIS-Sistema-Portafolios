@@ -14,6 +14,7 @@ class Educacion extends Model
         'usuario_id',
         'institucion',
         'titulo',
+        'rol_curso',
         'area_estudio',
         'grado',
         'fecha_inicio',

@@ -38,6 +38,7 @@ export interface Curso {
   institucion: string;
   titulo: string;
   area_estudio: "curso";
+  rol_curso: RolCurso | null;
   fecha_inicio: string;
   fecha_fin: string | null;
   descripcion: string | null;
@@ -80,6 +81,8 @@ export const GRADO_LABELS: Record<GradoEducacion, string> = {
   otro:            "Otro",
 };
 
+
+
 export interface Educacion {
   id_educacion: number;
   institucion: string;
@@ -91,6 +94,22 @@ export interface Educacion {
   descripcion: string | null;
   visibilidad: "publico" | "privado";
 }
+
+export type RolCurso =
+  | "estudiante"
+  | "auxiliar"
+  | "docente"
+  | "profesor"
+  | "no_aplica";
+
+export const ROL_CURSO_LABELS: Record<RolCurso, string> = {
+  estudiante: "Estudiante",
+  auxiliar:   "Auxiliar",
+  docente:    "Docente",
+  profesor:   "Profesor",
+  no_aplica:  "No aplica",
+};
+
 
 export interface Idioma {
   id_usuario_idioma: number;
