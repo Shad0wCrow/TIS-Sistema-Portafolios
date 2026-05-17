@@ -6,6 +6,7 @@ export interface Perfil {
   celular: string;
   descripcion: string;
   foto_url: string | null;
+  correo_contacto?: string | null;
 }
 
 export interface HabilidadItem {
@@ -147,6 +148,7 @@ export interface Experiencia {
 
 export interface PortafolioData {
   perfil: Perfil | null;
+  contacto_directo?: ContactoDirecto;
   habilidades_tecnicas: HabilidadItem[];
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
@@ -157,6 +159,11 @@ export interface PortafolioData {
   certificaciones: Certificacion[];
   experiencias?: Experiencia[];
   configuracion?: ConfiguracionSecciones;
+}
+
+export interface ContactoDirecto {
+  habilitado: boolean;
+  correo: string | null;
 }
 
 export interface EstadoPublicacionPortafolio {
@@ -192,6 +199,7 @@ export interface EstadoGuardadoPortafolio {
 export type EstadoVisibilidad = 'publico' | 'privado';
 
 export interface ConfiguracionSecciones {
+  mostrar_correo:          boolean;
   seccion_perfil:          EstadoVisibilidad;
   seccion_habilidades:     EstadoVisibilidad;
   seccion_proyectos:       EstadoVisibilidad;
@@ -204,6 +212,7 @@ export interface ConfiguracionSecciones {
 }
 
 export const SECCION_LABELS: Record<keyof ConfiguracionSecciones, string> = {
+  mostrar_correo:          'Contacto directo',
   seccion_perfil:          'Perfil profesional',
   seccion_habilidades:     'Habilidades',
   seccion_proyectos:       'Proyectos',

@@ -215,6 +215,37 @@
   min-width: 0;
 }
 
+.contactButton {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 16px;
+  border: 1px solid #1a6644;
+  border-radius: 12px;
+  background: #1a6644;
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.contactButton:hover:not(:disabled) {
+  background: #155235;
+  border-color: #155235;
+  transform: translateY(-1px);
+}
+
+.contactButton:focus-visible {
+  outline: 3px solid rgba(26, 102, 68, 0.28);
+  outline-offset: 2px;
+}
+
+.contactButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .profileStats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

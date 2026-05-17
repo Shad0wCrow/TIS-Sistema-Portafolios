@@ -58,7 +58,12 @@ function validar(form: FormState, fotoUrl: string): FormErrors {
     return errs;
 }
 
-export default function EditarPerfil() {
+interface EditarPerfilProps {
+    embedded?: boolean;
+    onBack?: () => void;
+}
+
+export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilProps) {
     const navigate = useNavigate();
 
     const [loadingPage, setLoadingPage] = useState(true);
@@ -217,7 +222,7 @@ export default function EditarPerfil() {
 
     return (
         <>
-            <div className={styles.layout}>
+            <div className={`${styles.layout} ${embedded ? styles.embedded : ""}`}>
                 <div className={styles.main}>
 
                     <div className={styles.topbar}>
@@ -438,7 +443,7 @@ export default function EditarPerfil() {
                         <div className={styles.footerActions}>
                             <button
                                 className={styles.cancelBtn}
-                                onClick={() => navigate("/dashboard")}
+                                onClick={() => embedded ? onBack?.() : navigate("/dashboard")}
                                 disabled={saving}
                             >
                                 Cancelar

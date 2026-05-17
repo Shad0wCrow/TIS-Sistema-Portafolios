@@ -6,6 +6,8 @@ import { getDashboardPortafolios, guardarPortafolio } from '../../services/porta
 import type { EstadoPublicacionPortafolio, PortafolioPublicoResumen } from '../../types/portafolioTypes';
 import MyPublicationPanel from './components/MyPublicationPanel';
 import PublicPortfolioSection from './components/PublicPortfolioSection';
+import EditarPerfil from '../SoloPerfil/editarPerfil';
+import CreateAccount from '../createAccount/createAccount';
 import "./Dashboard.css";
 
 const DASHBOARD_CACHE_KEY = 'dashboardPortafoliosCache';
@@ -48,6 +50,8 @@ const writeDashboardCache = (data: Omit<DashboardCache, 'cachedAt'>) => {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [activeView, setActiveView] = useState<'inicio' | 'perfil'>('inicio');
+  const [hasProfile, setHasProfile] = useState(localStorage.getItem('hasProfile') === 'true');
   const cachedDashboard = readDashboardCache();
   const [publicacion, setPublicacion] = useState<EstadoPublicacionPortafolio | null>(cachedDashboard?.publicacion ?? null);
   const [portafolios, setPortafolios] = useState<PortafolioPublicoResumen[]>(cachedDashboard?.portafolios ?? []);
@@ -108,35 +112,68 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleSidebarNavigate = (id: string) => {
+    if (id === 'inicio') {
+      setActiveView('inicio');
+      return;
+    }
+
+    if (id === 'perfil') {
+      setHasProfile(localStorage.getItem('hasProfile') === 'true');
+      setActiveView('perfil');
+      return;
+    }
+
+    if (id === 'bookmarks') {
+      navigate('/guardados');
+    }
+  };
+
+  const handleProfileCreated = () => {
+    localStorage.setItem('hasProfile', 'true');
+    setHasProfile(true);
+    setActiveView('perfil');
+  };
+
   return (
     <div className="dashboard-page">
       <Header />
       <div className="dashboard-layout">
-        <Sidebar />
+        <Sidebar activeItem={activeView === 'perfil' ? 'perfil' : 'inicio'} onNavigate={handleSidebarNavigate} />
         <main className="dashboard-main">
-          <section className="dashboard-content">
-            <div className="dashboard-feed">
-              <section className="dashboard-section">
-                <MyPublicationPanel
-                  publicacion={publicacion}
-                  loading={loadingPublicacion}
-                  copied={copied}
-                  onCopy={handleCopy}
-                  onOpen={abrirPortafolio}
-                  onConfigure={() => navigate('/portafolio/visibilidad')}
-                />
-              </section>
+          {activeView === 'perfil' ? (
+            <section className="dashboard-profile-content">
+              {hasProfile ? (
+                <EditarPerfil embedded onBack={() => setActiveView('inicio')} />
+              ) : (
+                <CreateAccount embedded onSaved={handleProfileCreated} />
+              )}
+            </section>
+          ) : (
+            <section className="dashboard-content">
+              <div className="dashboard-feed">
+                <section className="dashboard-section">
+                  <MyPublicationPanel
+                    publicacion={publicacion}
+                    loading={loadingPublicacion}
+                    copied={copied}
+                    onCopy={handleCopy}
+                    onOpen={abrirPortafolio}
+                    onConfigure={() => navigate('/portafolio/visibilidad')}
+                  />
+                </section>
 
-              <PublicPortfolioSection
-                portafolios={portafolios}
-                loading={loadingPortafolios}
-                error={portafoliosError}
-                savingSlug={savingSlug}
-                onOpen={abrirPortafolio}
-                onSave={guardarDesdeHome}
-              />
-            </div>
-          </section>
+                <PublicPortfolioSection
+                  portafolios={portafolios}
+                  loading={loadingPortafolios}
+                  error={portafoliosError}
+                  savingSlug={savingSlug}
+                  onOpen={abrirPortafolio}
+                  onSave={guardarDesdeHome}
+                />
+              </div>
+            </section>
+          )}
         </main>
       </div>
     </div>

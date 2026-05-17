@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import HomeIcon from '../../assets/icons/Home.svg';
 import UserIcon from '../../assets/icons/perfil.svg';
@@ -15,8 +15,14 @@ export interface MenuItem {
   id: string;
 }
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  activeItem?: string;
+  onNavigate?: (id: string) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showModal, setShowModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -55,12 +61,20 @@ const Sidebar: React.FC = () => {
 
     switch (id) {
       case 'inicio':
+        if (onNavigate) {
+          onNavigate('inicio');
+          return;
+        }
         navigate('/dashboard');
         break;
 
       case 'perfil':
         if (!token) {
           navigate('/login');
+          return;
+        }
+        if (onNavigate) {
+          onNavigate('perfil');
           return;
         }
         if (hasProfile) {
@@ -72,13 +86,17 @@ const Sidebar: React.FC = () => {
 
       case 'portafolio':
         if (hasPortafolio) {
-          navigate('/portafolio');
+          navigate('/portafolio/editar');
         } else {
           setShowModal(true);
         }
         break;
 
       case 'bookmarks':
+        if (onNavigate) {
+          onNavigate('bookmarks');
+          return;
+        }
         navigate('/guardados');
         break;
 
@@ -111,6 +129,15 @@ const Sidebar: React.FC = () => {
     navigate('/login');
   };
 
+  const routeActiveItem = (): string => {
+    if (location.pathname.startsWith('/guardados')) return 'bookmarks';
+    if (location.pathname.startsWith('/perfil') || location.pathname.startsWith('/createAccount')) return 'perfil';
+    if (location.pathname.startsWith('/portafolio')) return 'portafolio';
+    return 'inicio';
+  };
+
+  const selectedItem = activeItem ?? routeActiveItem();
+
   return (
     <>
       <aside className="dashboard-sidebar">
@@ -118,7 +145,7 @@ const Sidebar: React.FC = () => {
           {menuItems.map((item) => (
             <button
               key={item.id}
-              className="dashboard-menu-item"
+              className={`dashboard-menu-item ${selectedItem === item.id ? 'dashboard-menu-item-active' : ''}`}
               onClick={() => handleNavigation(item.id)}
               type="button"
             >

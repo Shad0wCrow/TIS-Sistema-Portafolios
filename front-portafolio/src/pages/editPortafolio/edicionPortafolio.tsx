@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./edicionPortafolio.module.css";
 import skillStyles from "./components/skillCard.module.css";
-import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import {
   getPortafolio,
   getCatalogoHabilidades,

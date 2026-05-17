@@ -120,7 +120,7 @@ function IconLock() {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-type SeccionKey = keyof ConfiguracionSecciones;
+type SeccionKey = Exclude<keyof ConfiguracionSecciones, 'mostrar_correo'>;
 
 const SECCIONES: SeccionKey[] = [
   'seccion_perfil',
@@ -135,6 +135,7 @@ const SECCIONES: SeccionKey[] = [
 ];
 
 const DEFAULTS: ConfiguracionSecciones = {
+  mostrar_correo:          false,
   seccion_perfil:          'publico',
   seccion_habilidades:     'publico',
   seccion_proyectos:       'publico',
@@ -213,7 +214,7 @@ export default function ConfiguracionPublicacion() {
   const todasPublicas = SECCIONES.every((k) => esPublico(config[k]));
   const handleToggleAll = () => {
     const nuevoValor: EstadoVisibilidad = todasPublicas ? 'privado' : 'publico';
-    const nuevo = {} as ConfiguracionSecciones;
+    const nuevo = { mostrar_correo: config.mostrar_correo } as ConfiguracionSecciones;
     SECCIONES.forEach((k) => { nuevo[k] = nuevoValor; });
     setConfig(nuevo);
     setValidationErr('');
@@ -316,6 +317,11 @@ export default function ConfiguracionPublicacion() {
   };
 
   const publicasCount = SECCIONES.filter((k) => esPublico(config[k])).length;
+  const handleToggleContacto = () => {
+    setValidationErr('');
+    setSavedOk(false);
+    setConfig((prev) => ({ ...prev, mostrar_correo: !prev.mostrar_correo }));
+  };
 
   if (loading) {
     return <PageLoader message="Cargando configuracion..." />;
@@ -508,6 +514,27 @@ export default function ConfiguracionPublicacion() {
 
           {error         && <p className={styles.errorMsg}>{error}</p>}
           {validationErr && <p className={styles.validationMsg}>{validationErr}</p>}
+
+          <div className={styles.sectionRow}>
+            <label htmlFor="toggle-contacto-directo" className={styles.sectionLabel}>
+              <span className={`${styles.sectionName} ${config.mostrar_correo ? styles.sectionNameActive : ''}`}>
+                Contacto directo
+              </span>
+              <span className={`${styles.sectionBadge} ${config.mostrar_correo ? styles.badgePublico : styles.badgePrivado}`}>
+                {config.mostrar_correo ? 'Activo' : 'Inactivo'}
+              </span>
+            </label>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={config.mostrar_correo}
+              id="toggle-contacto-directo"
+              className={`${styles.toggle} ${config.mostrar_correo ? styles.toggleOn : styles.toggleOff}`}
+              onClick={handleToggleContacto}
+            >
+              <span className={styles.toggleThumb} />
+            </button>
+          </div>
 
           <ul className={styles.sectionList} role="list">
             {SECCIONES.map((key) => {
