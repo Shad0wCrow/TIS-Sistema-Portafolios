@@ -8,6 +8,15 @@ use Illuminate\Http\Request;
 
 class CursoController extends Controller
 {
+    // HU-14: valores válidos del ENUM rol_curso
+    private const ROLES_VALIDOS = [
+        'estudiante',
+        'auxiliar',
+        'docente',
+        'profesor',
+        'no_aplica',
+    ];
+
     /**
      * Lista todos los cursos del usuario autenticado.
      */
@@ -49,7 +58,7 @@ class CursoController extends Controller
 
     /**
      * Registra un nuevo curso para el usuario autenticado.
-     * Los cursos se almacenan en la tabla educacion con area_estudio='curso'.
+     * HU-14: el campo rol_curso es obligatorio.
      */
     public function store(Request $request)
     {
@@ -58,6 +67,7 @@ class CursoController extends Controller
         $data = $request->validate([
             'nombre_curso' => 'required|string|max:150',
             'institucion'  => 'required|string|max:150',
+            'rol_curso'    => 'required|in:' . implode(',', self::ROLES_VALIDOS),
             'fecha_inicio' => 'required|date',
             'fecha_fin'    => 'nullable|date|after_or_equal:fecha_inicio',
             'es_actual'    => 'nullable|boolean',
@@ -80,6 +90,7 @@ class CursoController extends Controller
             'institucion'  => $data['institucion'],
             'titulo'       => $data['nombre_curso'],
             'area_estudio' => 'curso',
+            'rol_curso'    => $data['rol_curso'],
             'fecha_inicio' => $data['fecha_inicio'],
             'fecha_fin'    => $esActual ? null : ($data['fecha_fin'] ?? null),
             'descripcion'  => $data['descripcion'] ?? null,
@@ -111,6 +122,48 @@ class CursoController extends Controller
         }
 
         return response()->json(['curso' => $curso]);
+    }
+
+    /**
+     * Actualiza un curso existente del usuario autenticado.
+     * HU-14: rol_curso también es editable.
+     */
+    public function update(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $curso = Educacion::where('id_educacion', $id)
+            ->where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->where('area_estudio', 'curso')
+            ->first();
+
+        if (!$curso) {
+            return response()->json(['message' => 'Curso no encontrado'], 404);
+        }
+
+        $data = $request->validate([
+            'nombre_curso' => 'sometimes|required|string|max:150',
+            'institucion'  => 'sometimes|required|string|max:150',
+            'rol_curso'    => 'sometimes|required|in:' . implode(',', self::ROLES_VALIDOS),
+            'fecha_inicio' => 'sometimes|required|date',
+            'fecha_fin'    => 'nullable|date|after_or_equal:fecha_inicio',
+            'es_actual'    => 'nullable|boolean',
+            'descripcion'  => 'nullable|string',
+            'visibilidad'  => 'nullable|in:publico,privado',
+        ]);
+
+        if (isset($data['nombre_curso'])) {
+            $data['titulo'] = $data['nombre_curso'];
+            unset($data['nombre_curso']);
+        }
+
+        $curso->update($data);
+
+        return response()->json([
+            'message' => 'Curso actualizado correctamente',
+            'curso'   => $curso->fresh(),
+        ]);
     }
 
     /**

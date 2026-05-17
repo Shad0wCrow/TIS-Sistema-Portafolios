@@ -8,6 +8,7 @@ import type {
   PortafolioData,
   PortafolioGuardadoResumen,
   PortafolioPublicoResumen,
+  RolCurso,
 } from '../types/portafolioTypes';
 
 const API = "http://localhost:8000/api";
@@ -154,6 +155,7 @@ export const removeProyecto = async (id: number) => {
 export const addCurso = async (data: {
   nombre_curso: string;
   institucion: string;
+  rol_curso?: RolCurso;
   fecha_inicio: string;
   fecha_fin?: string;
   es_actual?: boolean;

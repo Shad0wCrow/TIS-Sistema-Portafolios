@@ -1,5 +1,6 @@
 import styles from "./cursoCard.module.css";
 import type { Curso } from "../../../types/portafolioTypes";
+import { ROL_CURSO_LABELS } from "../../../types/portafolioTypes";
 
 type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
 
@@ -23,13 +24,8 @@ function formatFechaInicio(fecha: string): string {
   return `${meses[parseInt(m) - 1]} ${y}`;
 }
 
-export default function CursoCard({
-  cursos,
-  onAdd,
-  onRemove,
-  activeAction,
-}: CursoCardProps) {
-  const showAdd = activeAction === "registrar";
+export default function CursoCard({ cursos, onAdd, onRemove, activeAction }: CursoCardProps) {
+  const showAdd    = activeAction === "registrar";
   const showRemove = activeAction === "eliminar";
 
   return (
@@ -67,6 +63,14 @@ export default function CursoCard({
 
                 <div className={styles.itemInfo}>
                   <span className={styles.itemTitle}>{curso.titulo}</span>
+
+                  {/* HU-14: badge con el rol en el curso */}
+                  {curso.rol_curso && curso.rol_curso !== "no_aplica" && (
+                    <span className={styles.itemRol}>
+                      {ROL_CURSO_LABELS[curso.rol_curso]}
+                    </span>
+                  )}
+
                   <span className={styles.itemSub}>{curso.institucion}</span>
                   <span className={styles.itemDates}>
                     {formatFechaInicio(curso.fecha_inicio)} — {formatFecha(curso.fecha_fin, esActual)}
