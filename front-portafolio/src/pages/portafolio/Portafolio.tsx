@@ -560,7 +560,7 @@ export default function Portafolio() {
           >
             {exporting ? "Generando PDF…" : "⬇ Exportar PDF"}
           </button>
-          <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/visibilidad")}>
+          <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/publicar")}>
             Publicar
           </button>
         </div>

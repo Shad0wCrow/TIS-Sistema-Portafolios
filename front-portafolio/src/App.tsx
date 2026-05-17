@@ -11,6 +11,7 @@ import Portafolio from "./pages/portafolio/Portafolio";
 import PortafolioPublico from "./pages/portafolio/PortafolioPublico";
 import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
 import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicacion";
+import PublicarPortafolio from "./pages/Publicar/PublicarPortafolio";
 
 
 import CreateAccountRoute from "./components/CreateAccountRoute";
@@ -60,6 +61,15 @@ function App() {
         element={
           <PortafolioRoute>
             <ConfiguracionPublicacion />
+          </PortafolioRoute>
+        }
+      />
+
+      <Route
+        path="/portafolio/publicar"
+        element={
+          <PortafolioRoute>
+            <PublicarPortafolio />
           </PortafolioRoute>
         }
       />

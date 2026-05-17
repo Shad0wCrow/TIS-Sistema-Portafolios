@@ -123,7 +123,7 @@ const Dashboard: React.FC = () => {
                   copied={copied}
                   onCopy={handleCopy}
                   onOpen={abrirPortafolio}
-                  onConfigure={() => navigate('/portafolio/visibilidad')}
+                  onConfigure={() => navigate('/portafolio/publicar')}
                 />
               </section>
 
