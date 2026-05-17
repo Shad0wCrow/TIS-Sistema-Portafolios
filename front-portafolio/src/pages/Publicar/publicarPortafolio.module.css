@@ -332,3 +332,71 @@
   .shareButtons { flex-direction: column; }
   .shareBtn { justify-content: center; }
 }
+
+/* ── Añadir al final de tu archivo CSS actual ── */
+
+/* Contenedor de Tabs */
+.tabsWrapper {
+  display: flex;
+  background-color: #e9eceb;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  margin-bottom: 8px; /* Separación con la card */
+}
+
+/* Botones de Tab */
+.tabBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tabBtn:hover {
+  color: var(--text);
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Tab Activo */
+.tabBtnActive {
+  background-color: var(--bg3);
+  color: var(--accent);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.tabBtnActive:hover {
+  background-color: var(--bg3);
+  color: var(--accent);
+}
+
+/* Animación de entrada suave para el contenido */
+.fadeEnter {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

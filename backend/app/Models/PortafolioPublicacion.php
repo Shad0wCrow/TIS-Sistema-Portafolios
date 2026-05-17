@@ -16,12 +16,14 @@ class PortafolioPublicacion extends Model
         'usuario_id',
         'slug_publico',
         'publicado',
+        'enlace_activo',
         'publicado_en',
         'despublicado_en',
     ];
 
     protected $casts = [
         'publicado' => 'boolean',
+        'enlace_activo' => 'boolean',
         'publicado_en' => 'datetime',
         'despublicado_en' => 'datetime',
     ];

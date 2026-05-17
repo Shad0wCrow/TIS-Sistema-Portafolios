@@ -29,7 +29,9 @@ const normalizePublicationState = (
   publicacion: EstadoPublicacionPortafolio
 ): EstadoPublicacionPortafolio => ({
   ...publicacion,
-  url_publica: buildPublicPortfolioUrl(publicacion.slug_publico) ?? publicacion.url_publica,
+  url_publica: publicacion.enlace_activo
+    ? buildPublicPortfolioUrl(publicacion.slug_publico) ?? publicacion.url_publica
+    : null,
 });
 
 const normalizePublicPortfolioSummary = <T extends PortafolioPublicoResumen>(portafolio: T): T => ({
@@ -517,6 +519,20 @@ export const publicarPortafolio = async (): Promise<EstadoPublicacionPortafolio>
 
 export const despublicarPortafolio = async (): Promise<EstadoPublicacionPortafolio> => {
   const res = await axios.post(`${API}/portafolio/despublicar`, {}, {
+    headers: authHeaders(),
+  });
+  return normalizePublicationState(res.data.publicacion);
+};
+
+export const generarEnlacePublico = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.post(`${API}/portafolio/enlace/generar`, {}, {
+    headers: authHeaders(),
+  });
+  return normalizePublicationState(res.data.publicacion);
+};
+
+export const revocarEnlacePublico = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.post(`${API}/portafolio/enlace/revocar`, {}, {
     headers: authHeaders(),
   });
   return normalizePublicationState(res.data.publicacion);

@@ -161,6 +161,7 @@ export interface PortafolioData {
 
 export interface EstadoPublicacionPortafolio {
   publicado: boolean;
+  enlace_activo: boolean;
   slug_publico: string | null;
   url_publica: string | null;
   api_url_publica?: string | null;

@@ -23,7 +23,9 @@ class PortafolioPublicoController extends Controller
     public function show(string $slug)
     {
         try {
-            $publicacion = $this->publicacionRepository->buscarPublicadoPorSlug($slug);
+            // Acepta el portafolio si está publicado en plataforma O si tiene enlace activo.
+            $publicacion = $this->publicacionRepository->buscarPublicadoPorSlug($slug)
+                        ?? $this->publicacionRepository->buscarPorSlugConEnlaceActivo($slug);
 
             if (!$publicacion) {
                 return response()->json([
@@ -36,7 +38,7 @@ class PortafolioPublicoController extends Controller
             ]);
         } catch (\Throwable $exception) {
             Log::error('Error al consultar portafolio publico', [
-                'slug' => $slug,
+                'slug'  => $slug,
                 'error' => $exception->getMessage(),
             ]);
 
