@@ -247,6 +247,34 @@
   width: 100%;
 }
 
+.dashboard-views-card {
+  width: fit-content;
+  min-width: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg3);
+  box-shadow: 0 14px 32px rgba(17, 31, 25, 0.05);
+}
+
+.dashboard-views-label {
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.dashboard-views-value {
+  color: var(--accent);
+  font-size: 26px;
+  line-height: 1;
+}
+
 .empty-state-container {
   display: flex;
   flex-direction: column;
@@ -501,6 +529,10 @@
   opacity: .82;
 }
 
+.portfolio-card-private {
+  background: var(--bg4);
+}
+
 .portfolio-card-action:focus-visible,
 .publication-primary-btn:focus-visible,
 .publication-secondary-btn:focus-visible,
@@ -594,6 +626,11 @@
   padding: 0;
 }
 
+.portfolio-link:disabled {
+  cursor: not-allowed;
+  color: var(--text3);
+}
+
 .portfolio-save-btn {
   border: 1px solid var(--accent-md);
   background: var(--accent-lt);
@@ -611,6 +648,10 @@
 .portfolio-save-btn:disabled {
   cursor: wait;
   opacity: .68;
+}
+
+.portfolio-card-private .portfolio-save-btn:disabled {
+  cursor: not-allowed;
 }
 
 .portfolio-delete-btn {

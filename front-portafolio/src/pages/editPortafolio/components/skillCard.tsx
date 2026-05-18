@@ -38,7 +38,6 @@ const NIVEL_LABEL: Record<string, string> = {
 export default function SkillCard({
   tipo,
   lista,
-  onAdd,
   onRemove,
   onEdit,
   activeAction,
@@ -50,7 +49,6 @@ export default function SkillCard({
       ? "Agrega lenguajes, frameworks y herramientas que dominas."
       : "Agrega habilidades interpersonales y de trabajo en equipo.";
 
-  const showAdd = activeAction === "registrar";
   const showEdit = activeAction === "editar";
   const showRemove = activeAction === "eliminar";
 

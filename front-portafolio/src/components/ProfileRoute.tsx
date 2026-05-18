@@ -2,12 +2,17 @@ import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import PageLoader from "./ui/PageLoader/PageLoader";
 
-export default function ProfileRoute({ children }: any) {
+export default function ProfileRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem("token");
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
 
   useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     const checkProfile = async () => {
       try {
         const res = await fetch("http://localhost:8000/api/perfil/me", {
@@ -17,7 +22,10 @@ export default function ProfileRoute({ children }: any) {
         });
 
         const data = await res.json();
-        setHasProfile(data.has_profile);
+        const exists = Boolean(data.has_profile);
+        localStorage.setItem("hasProfile", exists ? "true" : "false");
+        if (exists) localStorage.setItem("hasPortafolio", "true");
+        setHasProfile(exists);
       } catch (error) {
         console.error(error);
       } finally {
@@ -26,7 +34,7 @@ export default function ProfileRoute({ children }: any) {
     };
 
     checkProfile();
-  }, []);
+  }, [token]);
 
   if (!token) {
     return <Navigate to="/login" />;

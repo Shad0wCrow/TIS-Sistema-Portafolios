@@ -28,6 +28,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/public/portafolios/{slug}', [PortafolioPublicoController::class, 'show']);
 Route::post('/public/portafolios/{slug}/contacto', [PortafolioPublicoController::class, 'registrarContacto']);
+Route::post('/public/portafolios/{slug}/visualizacion', [PortafolioPublicoController::class, 'registrarVisualizacion']);
 
 // Rutas protegidas 
 Route::middleware('auth:sanctum')->group(function () {

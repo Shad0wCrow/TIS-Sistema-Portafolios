@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Perfil;
+use App\Models\PerfilEnlace;
 use App\Models\UsuarioHabilidad;
 use App\Models\Proyecto;
 use App\Models\ProyectoUsuario;
 use App\Models\Educacion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Logro;
 use App\Models\UsuarioIdioma;
 class PortafolioController extends Controller
@@ -19,6 +21,7 @@ class PortafolioController extends Controller
 
         $perfil = Perfil::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
+            ->with('enlacesPersonalizados')
             ->first();
 
         // habilidades
@@ -141,8 +144,14 @@ class PortafolioController extends Controller
             'profesion'       => 'sometimes|string|max:150',
             'celular'         => 'sometimes|string|max:20',
             'descripcion'     => 'sometimes|string|max:200',
+            'ciudad'          => 'sometimes|nullable|string|max:100',
+            'pais'            => 'sometimes|nullable|string|max:100',
+            'correo_contacto' => 'sometimes|nullable|email|max:255',
             'foto_url'        => 'sometimes|nullable|string|max:500',
             'foto_file'       => 'sometimes|nullable|image|max:5120',
+            'enlaces_personalizados' => 'sometimes|array|max:8',
+            'enlaces_personalizados.*.titulo' => 'required_with:enlaces_personalizados|string|max:80',
+            'enlaces_personalizados.*.url' => 'required_with:enlaces_personalizados|url|max:500',
         ]);
 
         if ($request->hasFile('foto_file')) {
@@ -153,9 +162,28 @@ class PortafolioController extends Controller
             $data['foto_url'] = $resultado->getSecurePath();
         }
 
-        unset($data['foto_file']);
+        $enlaces = $data['enlaces_personalizados'] ?? null;
+        unset($data['foto_file'], $data['enlaces_personalizados']);
 
-        $perfil->update($data);
+        DB::transaction(function () use ($perfil, $data, $enlaces) {
+            $perfil->update($data);
+
+            if (is_array($enlaces)) {
+                PerfilEnlace::where('perfil_id', $perfil->id_perfil)->update(['eliminado' => true]);
+
+                foreach (array_values($enlaces) as $index => $enlace) {
+                    PerfilEnlace::create([
+                        'perfil_id' => $perfil->id_perfil,
+                        'titulo' => trim($enlace['titulo']),
+                        'url' => trim($enlace['url']),
+                        'orden' => $index,
+                        'eliminado' => false,
+                    ]);
+                }
+            }
+        });
+
+        $perfil->load('enlacesPersonalizados');
 
         return response()->json([
             'message' => 'Perfil actualizado correctamente',

@@ -21,10 +21,8 @@ export default function ExperienciaRowList({
   experiencias,
   onEdit,
   onRemove,
-  onAdd,
   activeAction,
 }: Props) {
-  const showAdd = activeAction === "registrar"; 
   const showEdit = activeAction === "editar"; 
   const showRemove = activeAction === "eliminar";
   

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PortafolioPublicacion;
+use App\Models\PortafolioVisualizacionEvento;
 use App\Models\Usuario;
 use App\Repositories\PortafolioPublicacionRepository;
 use Illuminate\Support\Str;
@@ -32,6 +33,7 @@ class PortafolioPublicacionService
                 'slug_publico'    => null,
                 'url_publica'     => null,
                 'api_url_publica' => null,
+                'visualizaciones' => 0,
                 'publicado_en'    => null,
                 'despublicado_en' => null,
             ];
@@ -123,9 +125,15 @@ class PortafolioPublicacionService
             'slug_publico'    => $slug,
             'url_publica'     => ($enlaceActivo && $slug) ? $this->construirUrlPublica($slug) : null,
             'api_url_publica' => $slug ? url('/api/public/portafolios/' . $slug) : null,
+            'visualizaciones' => $this->contarVisualizaciones($publicacion),
             'publicado_en'    => $publicacion->publicado_en,
             'despublicado_en' => $publicacion->despublicado_en,
         ];
+    }
+
+    private function contarVisualizaciones(PortafolioPublicacion $publicacion): int
+    {
+        return PortafolioVisualizacionEvento::where('publicacion_id', $publicacion->id_publicacion)->count();
     }
 
     private function construirUrlPublica(string $slug): string

@@ -6,7 +6,18 @@ export interface Perfil {
   celular: string;
   descripcion: string;
   foto_url: string | null;
+  ciudad?: string | null;
+  pais?: string | null;
   correo_contacto?: string | null;
+  enlaces_personalizados?: PerfilEnlace[];
+  enlacesPersonalizados?: PerfilEnlace[];
+}
+
+export interface PerfilEnlace {
+  id_perfil_enlace?: number;
+  titulo: string;
+  url: string;
+  orden?: number;
 }
 
 export interface HabilidadItem {
@@ -172,6 +183,7 @@ export interface EstadoPublicacionPortafolio {
   slug_publico: string | null;
   url_publica: string | null;
   api_url_publica?: string | null;
+  visualizaciones: number;
   publicado_en: string | null;
   despublicado_en: string | null;
 }
@@ -184,6 +196,7 @@ export interface PortafolioPublicoResumen {
   profesion: string | null;
   descripcion: string | null;
   foto_url: string | null;
+  perfil_privado: boolean;
   publicado_en: string | null;
 }
 

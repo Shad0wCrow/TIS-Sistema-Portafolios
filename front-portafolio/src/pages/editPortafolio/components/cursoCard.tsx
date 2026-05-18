@@ -24,8 +24,7 @@ function formatFechaInicio(fecha: string): string {
   return `${meses[parseInt(m) - 1]} ${y}`;
 }
 
-export default function CursoCard({ cursos, onAdd, onRemove, activeAction }: CursoCardProps) {
-  const showAdd    = activeAction === "registrar";
+export default function CursoCard({ cursos, onRemove, activeAction }: CursoCardProps) {
   const showRemove = activeAction === "eliminar";
 
   const isActionActive = showRemove;
