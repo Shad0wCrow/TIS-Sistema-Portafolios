@@ -17,7 +17,8 @@ class PortafolioRepository
 {
     public function perfil(int $usuarioId): ?Perfil
     {
-        return Perfil::where('usuario_id', $usuarioId)
+        return Perfil::with('enlacesPersonalizados')
+            ->where('usuario_id', $usuarioId)
             ->where('eliminado', false)
             ->first();
     }

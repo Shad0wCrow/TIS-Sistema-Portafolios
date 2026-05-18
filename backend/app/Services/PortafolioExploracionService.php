@@ -17,12 +17,12 @@ class PortafolioExploracionService
         $this->publicacionRepository = $publicacionRepository;
     }
 
-    public function listarPortafoliosAjenos(?int $usuarioId, ?int $limite = null): array
+    public function listarPortafoliosAjenos(?int $usuarioId, ?int $limite = null, ?string $busqueda = null): array
     {
         $limiteSeguro = $this->normalizarLimite($limite);
 
         return $this->publicacionRepository
-            ->listarPublicadosAjenos($usuarioId, $limiteSeguro)
+            ->listarPublicadosAjenos($usuarioId, $limiteSeguro, $this->normalizarBusqueda($busqueda))
             ->map(function ($publicacion) {
                 return $this->formatearTarjeta($publicacion);
             })
@@ -53,8 +53,16 @@ class PortafolioExploracionService
             'profesion' => $perfilPublico ? $publicacion->profesion : null,
             'descripcion' => $perfilPublico ? $publicacion->descripcion : null,
             'foto_url' => $perfilPublico ? $publicacion->foto_url : null,
+            'perfil_privado' => !$perfilPublico,
             'publicado_en' => $publicacion->publicado_en,
         ];
+    }
+
+    private function normalizarBusqueda(?string $busqueda): ?string
+    {
+        $criterio = trim((string) $busqueda);
+
+        return $criterio !== '' ? $criterio : null;
     }
 
     private function nombreVisible($publicacion): string

@@ -39,7 +39,7 @@ class PortafolioPublicacionRepository
         return PortafolioPublicacion::where('slug_publico', $slug)->exists();
     }
 
-    public function listarPublicadosAjenos(?int $usuarioId, int $limite)
+    public function listarPublicadosAjenos(?int $usuarioId, int $limite, ?string $busqueda = null)
     {
         $query = DB::table('portafolio_publicacion as publicacion')
             ->join('usuario', 'usuario.id_usuario', '=', 'publicacion.usuario_id')
@@ -53,6 +53,21 @@ class PortafolioPublicacionRepository
 
         if ($usuarioId) {
             $query->where('publicacion.usuario_id', '!=', $usuarioId);
+        }
+
+        $criterio = trim((string) $busqueda);
+
+        if ($criterio !== '') {
+            $like = '%' . mb_strtolower($criterio) . '%';
+
+            $query->where(function ($subquery) use ($like) {
+                $subquery
+                    ->whereRaw('LOWER(usuario.nombre_usuario) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(perfil.nombre_perfil) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(perfil.apellido_perfil) LIKE ?', [$like])
+                    ->orWhereRaw("LOWER(CONCAT(COALESCE(perfil.nombre_perfil, ''), ' ', COALESCE(perfil.apellido_perfil, ''))) LIKE ?", [$like])
+                    ->orWhereRaw('LOWER(perfil.profesion) LIKE ?', [$like]);
+            });
         }
 
         return $query

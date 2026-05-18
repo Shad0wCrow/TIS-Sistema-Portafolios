@@ -46,6 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
         });
         const data = await res.json();
         localStorage.setItem('hasProfile', data.has_profile ? 'true' : 'false');
+        if (data.has_profile) localStorage.setItem('hasPortafolio', 'true');
       } catch (error) {
         console.error('Error verificando perfil:', error);
       }

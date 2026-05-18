@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./editarperfil.module.css";
-import { getPortafolio, updatePerfil, getSugerenciasProfecion } from "../../services/portafolioservice";
+import { getPerfilMe, updatePerfil, getSugerenciasProfecion } from "../../services/portafolioservice";
 import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput";
 import Input from "../../components/ui/Input/input";
 import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import { IconPersona } from "../editPortafolio/components/icons";
+import AdvancedProfileSection, { type ProfileLinkForm } from "./components/AdvancedProfileSection";
 
 const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
 const SOLO_NUMEROS = /^\+?[0-9\s\-()]{7,20}$/;
 const CARACTERES_PELIGROSOS = /[<>"'`;{}()]/;
 const URL_VALIDA = /^(https?:\/\/.+\..+|data:image\/.+)/;
+const LINK_URL_VALIDA = /^https?:\/\/.+\..+/;
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface FormState {
     nombre_perfil: string;
@@ -18,6 +21,9 @@ interface FormState {
     profesion: string;
     celular: string;
     descripcion: string;
+    ciudad: string;
+    pais: string;
+    correo_contacto: string;
 }
 
 interface FormErrors {
@@ -26,10 +32,14 @@ interface FormErrors {
     profesion?: string;
     celular?: string;
     descripcion?: string;
+    ciudad?: string;
+    pais?: string;
+    correo_contacto?: string;
     foto?: string;
+    [key: string]: string | undefined;
 }
 
-function validar(form: FormState, fotoUrl: string): FormErrors {
+function validar(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): FormErrors {
     const errs: FormErrors = {};
 
     if (!form.nombre_perfil.trim()) errs.nombre_perfil = "El nombre es obligatorio.";
@@ -55,6 +65,27 @@ function validar(form: FormState, fotoUrl: string): FormErrors {
     if (limpiaFoto && !URL_VALIDA.test(limpiaFoto)) errs.foto = "La URL de foto debe comenzar con http:// o https://.";
     /*else if (limpiaFoto.length > 100000) errs.foto = "La URL de foto no puede superar 100000 caracteres.";
 */
+    if (form.ciudad.trim() && CARACTERES_PELIGROSOS.test(form.ciudad)) errs.ciudad = "Caracteres no permitidos.";
+    else if (form.ciudad.trim().length > 100) errs.ciudad = "Máximo 100 caracteres.";
+
+    if (form.pais.trim() && CARACTERES_PELIGROSOS.test(form.pais)) errs.pais = "Caracteres no permitidos.";
+    else if (form.pais.trim().length > 100) errs.pais = "Máximo 100 caracteres.";
+
+    if (form.correo_contacto.trim() && !EMAIL_VALIDO.test(form.correo_contacto.trim())) {
+        errs.correo_contacto = "Ingrese un correo válido.";
+    }
+
+    enlaces.forEach((enlace, index) => {
+        const titulo = enlace.titulo.trim();
+        const url = enlace.url.trim();
+
+        if (!titulo) errs[`enlaces.${index}.titulo`] = "El título es obligatorio.";
+        else if (CARACTERES_PELIGROSOS.test(titulo)) errs[`enlaces.${index}.titulo`] = "Caracteres no permitidos.";
+
+        if (!url) errs[`enlaces.${index}.url`] = "La URL es obligatoria.";
+        else if (!LINK_URL_VALIDA.test(url)) errs[`enlaces.${index}.url`] = "Debe comenzar con http:// o https://.";
+    });
+
     return errs;
 }
 
@@ -75,13 +106,18 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         profesion: "",
         celular: "",
         descripcion: "",
+        ciudad: "",
+        pais: "",
+        correo_contacto: "",
     });
 
     const [fotoUrl, setFotoUrl] = useState("");
+    const [enlaces, setEnlaces] = useState<ProfileLinkForm[]>([]);
     const [errors, setErrors] = useState<FormErrors>({});
     const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [activeProfileTab, setActiveProfileTab] = useState<"basic" | "advanced">("basic");
 
     const [modalOpen, setModalOpen] = useState(false);
     const [modalTab, setModalTab] = useState<"upload" | "url">("upload");
@@ -91,7 +127,7 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        getPortafolio()
+        getPerfilMe()
             .then((res) => {
                 const p = res.perfil;
                 if (p) {
@@ -101,8 +137,16 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                         profesion: p.profesion ?? "",
                         celular: p.celular ?? "",
                         descripcion: p.descripcion ?? "",
+                        ciudad: p.ciudad ?? "",
+                        pais: p.pais ?? "",
+                        correo_contacto: p.correo_contacto ?? "",
                     });
                     setFotoUrl(p.foto_url ?? "");
+                    const enlacesPerfil = p.enlaces_personalizados ?? p.enlacesPersonalizados ?? [];
+                    setEnlaces(enlacesPerfil.map((enlace: ProfileLinkForm) => ({
+                        titulo: enlace.titulo ?? "",
+                        url: enlace.url ?? "",
+                    })));
                 }
             })
             .catch(() => setErrorPage("No se pudo cargar el perfil."))
@@ -113,20 +157,49 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         return (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const updated = { ...form, [field]: e.target.value };
             setForm(updated);
-            if (touched[field]) setErrors(validar(updated, fotoUrl));
+            if (touched[field]) setErrors(validar(updated, fotoUrl, enlaces));
         };
     }
 
     function handleBlur(field: keyof FormState) {
         return () => {
             setTouched((prev) => ({ ...prev, [field]: true }));
-            setErrors(validar(form, fotoUrl));
+            setErrors(validar(form, fotoUrl, enlaces));
         };
+    }
+
+    function handleAdvancedFieldChange(field: "ciudad" | "pais" | "correo_contacto", value: string) {
+        const updated = { ...form, [field]: value };
+        setForm(updated);
+        setErrors(validar(updated, fotoUrl, enlaces));
+    }
+
+    function handleLinkChange(index: number, field: keyof ProfileLinkForm, value: string) {
+        const updated = enlaces.map((enlace, currentIndex) => (
+            currentIndex === index ? { ...enlace, [field]: value } : enlace
+        ));
+        setEnlaces(updated);
+        setErrors(validar(form, fotoUrl, updated));
+    }
+
+    function handleAddLink() {
+        if (enlaces.length >= 8) {
+            setErrors((prev) => ({ ...prev, enlaces: "Máximo 8 enlaces personalizados." }));
+            return;
+        }
+
+        setEnlaces((prev) => [...prev, { titulo: "", url: "" }]);
+    }
+
+    function handleRemoveLink(index: number) {
+        const updated = enlaces.filter((_, currentIndex) => currentIndex !== index);
+        setEnlaces(updated);
+        setErrors(validar(form, fotoUrl, updated));
     }
 
     function handleQuitarFoto() {
         setFotoUrl("");
-        setErrors(validar(form, ""));
+        setErrors(validar(form, "", enlaces));
     }
 
     function handleOpenModal() {
@@ -146,10 +219,10 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
     function handleModalConfirm() {
     if (modalTab === "url" && modalUrl.trim()) {
         setFotoUrl(modalUrl.trim());
-        setErrors(validar(form, modalUrl.trim()));
+        setErrors(validar(form, modalUrl.trim(), enlaces));
     } else if (modalTab === "upload" && modalPreview) {
         setFotoUrl(modalPreview);
-        setErrors(validar(form, modalPreview));
+        setErrors(validar(form, modalPreview, enlaces));
     }
     setModalOpen(false);
 }
@@ -191,7 +264,7 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         ) as Record<keyof FormState, boolean>;
         setTouched(allTouched);
 
-        const currentErrors = validar(form, fotoUrl);
+        const currentErrors = validar(form, fotoUrl, enlaces);
         setErrors(currentErrors);
 
         if (Object.keys(currentErrors).length > 0) return;
@@ -204,7 +277,16 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                 profesion: form.profesion.trim(),
                 celular: form.celular.trim(),
                 descripcion: form.descripcion.trim(),
+                ciudad: form.ciudad.trim() || null,
+                pais: form.pais.trim() || null,
+                correo_contacto: form.correo_contacto.trim() || null,
                 foto_url: fotoUrl.trim() || undefined,
+                enlaces_personalizados: enlaces
+                    .map((enlace) => ({
+                        titulo: enlace.titulo.trim(),
+                        url: enlace.url.trim(),
+                    }))
+                    .filter((enlace) => enlace.titulo || enlace.url),
             });
             setSuccessMsg("Perfil actualizado correctamente.");
             setTimeout(() => setSuccessMsg(null), 3000);
@@ -241,10 +323,29 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                                 </span>
                             )}
                         </div>
+
                     </div>
 
                     <div className={styles.content}>
+                        <div className={styles.profileTabs} aria-label="Secciones de perfil">
+                            <button
+                                type="button"
+                                className={`${styles.profileTab} ${activeProfileTab === "basic" ? styles.profileTabActive : ""}`}
+                                onClick={() => setActiveProfileTab("basic")}
+                            >
+                                Datos básicos
+                            </button>
+                            <button
+                                type="button"
+                                className={`${styles.profileTab} ${activeProfileTab === "advanced" ? styles.profileTabActive : ""}`}
+                                onClick={() => setActiveProfileTab("advanced")}
+                            >
+                                Perfil avanzado
+                            </button>
+                        </div>
 
+                        {activeProfileTab === "basic" && (
+                            <>
                         <div className={styles.section}>
                             <div className={styles.sectionHeader}>
                                 <span className={styles.sectionTitle}>Foto de perfil</span>
@@ -387,7 +488,7 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                                             onChange={(v) => {
                                                 const updated = { ...form, profesion: v };
                                                 setForm(updated);
-                                                if (touched.profesion) setErrors(validar(updated, fotoUrl));
+                                                if (touched.profesion) setErrors(validar(updated, fotoUrl, enlaces));
                                             }}
                                             onBlur={handleBlur("profesion")}
                                             placeholder="Ej: Ingeniero de Software"
@@ -433,6 +534,22 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                                 </div>
                             </div>
                         </div>
+                            </>
+                        )}
+
+                        {activeProfileTab === "advanced" && (
+                            <AdvancedProfileSection
+                                ciudad={form.ciudad}
+                                pais={form.pais}
+                                correoContacto={form.correo_contacto}
+                                enlaces={enlaces}
+                                errors={errors}
+                                onFieldChange={handleAdvancedFieldChange}
+                                onLinkChange={handleLinkChange}
+                                onAddLink={handleAddLink}
+                                onRemoveLink={handleRemoveLink}
+                            />
+                        )}
                     </div>
 
                     {/* ── Footer ── */}

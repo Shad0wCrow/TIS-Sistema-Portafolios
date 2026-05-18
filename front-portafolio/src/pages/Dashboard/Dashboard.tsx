@@ -8,6 +8,7 @@ import MyPublicationPanel from './components/MyPublicationPanel';
 import PublicPortfolioSection from './components/PublicPortfolioSection';
 import EditarPerfil from '../SoloPerfil/editarPerfil';
 import CreateAccount from '../createAccount/createAccount';
+import PageLoader from '../../components/ui/PageLoader/PageLoader';
 import "./Dashboard.css";
 
 const DASHBOARD_CACHE_KEY = 'dashboardPortafoliosCache';
@@ -51,7 +52,12 @@ const writeDashboardCache = (data: Omit<DashboardCache, 'cachedAt'>) => {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<'inicio' | 'perfil'>('inicio');
-  const [hasProfile, setHasProfile] = useState(localStorage.getItem('hasProfile') === 'true');
+  const [profileStatus, setProfileStatus] = useState<'checking' | 'exists' | 'missing'>(() => {
+    const stored = localStorage.getItem('hasProfile');
+    if (stored === 'true') return 'exists';
+    if (stored === 'false') return 'missing';
+    return 'checking';
+  });
   const cachedDashboard = readDashboardCache();
   const [publicacion, setPublicacion] = useState<EstadoPublicacionPortafolio | null>(cachedDashboard?.publicacion ?? null);
   const [portafolios, setPortafolios] = useState<PortafolioPublicoResumen[]>(cachedDashboard?.portafolios ?? []);
@@ -62,6 +68,12 @@ const Dashboard: React.FC = () => {
   const [savingSlug, setSavingSlug] = useState<string | null>(null);
 
   useEffect(() => {
+    if (cachedDashboard && Date.now() - cachedDashboard.cachedAt < 30_000) {
+      setLoadingPublicacion(false);
+      setLoadingPortafolios(false);
+      return;
+    }
+
     getDashboardPortafolios(12)
       .then((data) => {
         setPublicacion(data.publicacion);
@@ -84,6 +96,24 @@ const Dashboard: React.FC = () => {
         setLoadingPortafolios(false);
       });
   }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    if (!token || profileStatus !== 'checking') return;
+
+    fetch('http://localhost:8000/api/perfil/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const exists = Boolean(data.has_profile);
+        localStorage.setItem('hasProfile', exists ? 'true' : 'false');
+        if (exists) localStorage.setItem('hasPortafolio', 'true');
+        setProfileStatus(exists ? 'exists' : 'missing');
+      })
+      .catch(() => setProfileStatus('missing'));
+  }, [profileStatus]);
 
   const handleCopy = async () => {
     if (!publicacion?.url_publica) return;
@@ -119,7 +149,12 @@ const Dashboard: React.FC = () => {
     }
 
     if (id === 'perfil') {
-      setHasProfile(localStorage.getItem('hasProfile') === 'true');
+      const storedProfile = localStorage.getItem('hasProfile');
+      if (storedProfile === null) {
+        setProfileStatus('checking');
+      } else {
+        setProfileStatus(storedProfile === 'true' ? 'exists' : 'missing');
+      }
       setActiveView('perfil');
       return;
     }
@@ -131,7 +166,8 @@ const Dashboard: React.FC = () => {
 
   const handleProfileCreated = () => {
     localStorage.setItem('hasProfile', 'true');
-    setHasProfile(true);
+    localStorage.setItem('hasPortafolio', 'true');
+    setProfileStatus('exists');
     setActiveView('perfil');
   };
 
@@ -143,7 +179,9 @@ const Dashboard: React.FC = () => {
         <main className="dashboard-main">
           {activeView === 'perfil' ? (
             <section className="dashboard-profile-content">
-              {hasProfile ? (
+              {profileStatus === 'checking' ? (
+                <PageLoader message="Verificando perfil..." />
+              ) : profileStatus === 'exists' ? (
                 <EditarPerfil embedded onBack={() => setActiveView('inicio')} />
               ) : (
                 <CreateAccount embedded onSaved={handleProfileCreated} />
@@ -152,6 +190,13 @@ const Dashboard: React.FC = () => {
           ) : (
             <section className="dashboard-content">
               <div className="dashboard-feed">
+                <section className="dashboard-views-card" aria-label="Visualizaciones del portafolio">
+                  <span className="dashboard-views-label">Visualizaciones</span>
+                  <strong className="dashboard-views-value">
+                    {loadingPublicacion ? "..." : publicacion?.visualizaciones ?? 0}
+                  </strong>
+                </section>
+
                 <section className="dashboard-section">
                   <MyPublicationPanel
                     publicacion={publicacion}

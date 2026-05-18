@@ -31,6 +31,9 @@ class PerfilController extends Controller
             'descripcion'     => 'required|string|max:1000',
             'foto_url'        => 'nullable|string|max:500',
             'foto_file'       => 'nullable|image|max:5120',
+            'ciudad'          => 'nullable|string|max:100',
+            'pais'            => 'nullable|string|max:100',
+            'correo_contacto' => 'nullable|email|max:255',
         ]);
 
         $fotoUrl = $data['foto_url'] ?? null;
@@ -51,6 +54,9 @@ class PerfilController extends Controller
                 'celular'         => $data['celular'],
                 'descripcion'     => $data['descripcion'],
                 'foto_url'        => $fotoUrl,
+                'ciudad'          => $data['ciudad'] ?? null,
+                'pais'            => $data['pais'] ?? null,
+                'correo_contacto' => $data['correo_contacto'] ?? null,
                 'eliminado'       => false,
                 'visibilidad'     => 'privado',
             ]);
@@ -85,6 +91,9 @@ class PerfilController extends Controller
             'descripcion'     => 'sometimes|string|max:1000',
             'foto_url'        => 'nullable|string|max:500',
             'foto_file'       => 'nullable|image|max:5120',
+            'ciudad'          => 'sometimes|nullable|string|max:100',
+            'pais'            => 'sometimes|nullable|string|max:100',
+            'correo_contacto' => 'sometimes|nullable|email|max:255',
         ]);
 
         if ($request->hasFile('foto_file')) {
@@ -108,7 +117,7 @@ class PerfilController extends Controller
     {
         $user = $request->user();
 
-        $perfil = Perfil::where('usuario_id', $user->id_usuario)->first();
+        $perfil = Perfil::with('enlacesPersonalizados')->where('usuario_id', $user->id_usuario)->first();
 
         return response()->json([
             'has_profile' => $perfil ? true : false,

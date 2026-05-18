@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
 import type { PortafolioPublicoResumen } from "../../../types/portafolioTypes";
 import PageLoader from "../../../components/ui/PageLoader/PageLoader";
 import PublicPortfolioCard from "./PublicPortfolioCard";
+import PortfolioSearchBox from "./PortfolioSearchBox";
+import { usePortfolioSearch } from "../hooks/usePortfolioSearch";
 
 interface PublicPortfolioSectionProps {
   portafolios: PortafolioPublicoResumen[];
@@ -20,53 +21,49 @@ export default function PublicPortfolioSection({
   onOpen,
   onSave,
 }: PublicPortfolioSectionProps) {
-  const [search, setSearch] = useState("");
+  const {
+    query,
+    setQuery,
+    results,
+    loading: searchLoading,
+    error: searchError,
+    shouldSearch,
+    needsMoreCharacters,
+  } = usePortfolioSearch();
 
-  const portafoliosFiltrados = useMemo(() => {
-    const criterio = search.trim().toLowerCase();
-
-    if (!criterio) {
-      return portafolios;
-    }
-
-    return portafolios.filter((portafolio) => {
-      const texto = `${portafolio.nombre} ${portafolio.profesion ?? ""} ${portafolio.descripcion ?? ""}`.toLowerCase();
-      return texto.includes(criterio);
-    });
-  }, [portafolios, search]);
+  const visiblePortafolios = shouldSearch ? results : portafolios;
+  const visibleLoading = shouldSearch ? searchLoading : loading;
+  const visibleError = shouldSearch ? searchError : error;
+  const emptyMessage = shouldSearch
+    ? "No se encontraron resultados."
+    : "No hay portafolios disponibles para mostrar.";
 
   return (
-   
-   
-   <section className="dashboard-section">
+    <section className="dashboard-section">
       <div className="feed-header">
         <div>
           <span className="publication-kicker">Portafolios</span>
           <h1 className="feed-title">Portafolios de referencia</h1>
           <p className="feed-subtitle">Explora publicaciones de otros usuarios.</p>
         </div>
-        <label className="feed-search">
-          <span className="sr-only">Buscar portafolios</span>
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por nombre o profesion"
-          />
-        </label>
+        <PortfolioSearchBox value={query} onChange={setQuery} />
       </div>
 
-      {loading ? (
+      {needsMoreCharacters ? (
         <div className="feed-empty">
-          <PageLoader message="Cargando portafolios..." fullHeight={false} />
+          <h2 className="empty-state-text">Escribe al menos 2 caracteres para buscar.</h2>
         </div>
-      ) : error ? (
+      ) : visibleLoading ? (
         <div className="feed-empty">
-          <h2 className="empty-state-text">{error}</h2>
+          <PageLoader message={shouldSearch ? "Buscando portafolios..." : "Cargando portafolios..."} fullHeight={false} />
         </div>
-      ) : portafoliosFiltrados.length > 0 ? (
+      ) : visibleError ? (
+        <div className="feed-empty">
+          <h2 className="empty-state-text">{visibleError}</h2>
+        </div>
+      ) : visiblePortafolios.length > 0 ? (
         <div className="portfolio-grid">
-          {portafoliosFiltrados.map((portafolio) => (
+          {visiblePortafolios.map((portafolio) => (
             <PublicPortfolioCard
               key={portafolio.id_publicacion}
               portafolio={portafolio}
@@ -78,7 +75,7 @@ export default function PublicPortfolioSection({
         </div>
       ) : (
         <div className="feed-empty">
-          <h2 className="empty-state-text">No hay portafolios disponibles para mostrar.</h2>
+          <h2 className="empty-state-text">{emptyMessage}</h2>
         </div>
       )}
     </section>

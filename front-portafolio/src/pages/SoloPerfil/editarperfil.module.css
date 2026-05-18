@@ -140,6 +140,31 @@
   gap: 14px;
 }
 
+.profileTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profileTab {
+  min-height: 36px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  background: var(--bg3);
+  color: var(--text2);
+  padding: 0 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.profileTabActive {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
 .sectionHeader {
   display: flex;
   align-items: center;
@@ -470,6 +495,80 @@
   font-size: 11px;
   color: var(--red);
   font-weight: 500;
+}
+
+.linksHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.linksTitle {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.linksHint {
+  margin: 4px 0 0;
+  color: var(--text3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.addLinkBtn,
+.removeLinkBtn {
+  height: 36px;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.addLinkBtn {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  padding: 0 14px;
+}
+
+.removeLinkBtn {
+  align-self: end;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--red);
+  padding: 0 12px;
+}
+
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.linksEmpty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  color: var(--text3);
+  font-size: 12px;
+  background: var(--bg4);
+}
+
+.linkRow {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.7fr) minmax(220px, 1.3fr) auto;
+  gap: 12px;
+  align-items: start;
 }
 
 /* ── Footer ────────────────────────────────────────────────────────────────── */
@@ -898,6 +997,18 @@
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .linkRow {
+    grid-template-columns: 1fr;
+  }
+
+  .linksHeader {
+    flex-direction: column;
+  }
+
+  .removeLinkBtn {
+    align-self: flex-start;
   }
 
   .fieldFull {

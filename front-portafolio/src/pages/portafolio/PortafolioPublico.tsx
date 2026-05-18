@@ -6,6 +6,7 @@ import {
   getPortafolioPublico,
   guardarPortafolio,
   registrarContactoDirecto,
+  registrarVisualizacionPortafolio,
 } from "../../services/portafolioservice";
 import type {
   Certificacion,
@@ -90,7 +91,10 @@ export default function PortafolioPublico() {
     }
 
     getPortafolioPublico(slug)
-      .then(setData)
+      .then((portafolio) => {
+        setData(portafolio);
+        registrarVisualizacionPortafolio(slug).catch(() => undefined);
+      })
       .catch((err) => {
         const message = err?.response?.data?.message ?? "El portafolio no está disponible.";
         setError(message);
@@ -126,6 +130,8 @@ export default function PortafolioPublico() {
   }, [certificaciones]);
   const experiencias = (data?.experiencias ?? emptyData.experiencias) as Experiencia[];
   const contactoDirecto = data?.contacto_directo;
+  const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
+  const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
   const mostrarContactoDirecto = Boolean(contactoDirecto?.habilitado && contactoDirecto.correo && slug);
 
   const nombreCompleto = useMemo(() => {
@@ -213,6 +219,32 @@ export default function PortafolioPublico() {
                 <p className={styles.fieldLabel}>Teléfono</p>
                 <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
               </div>
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Ubicación</p>
+                <p className={styles.fieldValue}>{ubicacionPerfil || "Sin información"}</p>
+              </div>
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Correo</p>
+                <p className={styles.fieldValue}>{perfil?.correo_contacto ?? "Sin información"}</p>
+              </div>
+              {enlacesPerfil.length > 0 && (
+                <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                  <p className={styles.fieldLabel}>Enlaces personalizados</p>
+                  <div className={styles.profileLinks}>
+                    {enlacesPerfil.map((enlace, index) => (
+                      <a
+                        key={`${enlace.url}-${index}`}
+                        href={enlace.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.profileLink}
+                      >
+                        {enlace.titulo}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </SectionShell>
         );
