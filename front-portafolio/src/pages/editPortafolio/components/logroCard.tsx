@@ -26,6 +26,9 @@ export default function LogroCard({
   const showAdd = activeAction === "registrar"; 
   const showRemove = activeAction === "eliminar";
 
+  const isActionActive = showRemove;
+  const actionText = showRemove ? "SELECCIONA EL LOGRO A ELIMINAR" : "";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -36,11 +39,6 @@ export default function LogroCard({
           </span>
         </div>
 
-        {showAdd && (
-          <button className={styles.btnAdd} onClick={onAdd} type="button">
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {logros.length === 0 ? (
@@ -53,8 +51,15 @@ export default function LogroCard({
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {logros.map((logro) => (
-            <li key={logro.id_logro} className={styles.item}>
+            <li 
+              key={logro.id_logro} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showRemove) onRemove(logro.id_logro);
+              }}
+            >
               <div className={styles.itemIcon}>🏅</div>
 
               <div className={styles.itemInfo}>
@@ -93,17 +98,6 @@ export default function LogroCard({
                 >
                   {logro.visibilidad === "publico" ? "Público" : "Privado"}
                 </span>
-
-                {showRemove && (
-                  <button
-                    className={styles.btnRemove}
-                    onClick={() => onRemove(logro.id_logro)}
-                    title="Eliminar"
-                    type="button"
-                  >
-                    Eliminar
-                  </button>
-                )}
               </div>
             </li>
           ))}

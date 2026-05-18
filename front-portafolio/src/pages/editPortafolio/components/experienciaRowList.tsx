@@ -27,6 +27,9 @@ export default function ExperienciaRowList({
   const showAdd = activeAction === "registrar"; 
   const showEdit = activeAction === "editar"; 
   const showRemove = activeAction === "eliminar";
+  
+  const isActionActive = showEdit || showRemove;
+  const actionText = showEdit ? "SELECCIONA LA EXPERIENCIA A EDITAR" : showRemove ? "SELECCIONA LA EXPERIENCIA A ELIMINAR" : "";
 
   return (
     <div className={styles.container}>
@@ -38,8 +41,16 @@ export default function ExperienciaRowList({
       )}
 
       <div className={styles.list}>
+        {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
         {experiencias.map((exp) => (
-          <div key={exp.id_experiencia} className={styles.card}>
+          <div 
+            key={exp.id_experiencia} 
+            className={`${styles.card} ${isActionActive ? styles.itemClickable : ""}`}
+            onClick={() => {
+              if (showEdit) onEdit(exp);
+              if (showRemove) onRemove(exp.id_experiencia);
+            }}
+          >
             <div className={styles.cardTimeline}>
               <span className={styles.timelineDot} />
               <span className={styles.timelineLine} />
@@ -85,45 +96,10 @@ export default function ExperienciaRowList({
               {exp.descripcion && <p className={styles.descripcion}>{exp.descripcion}</p>}
             </div>
 
-            <div className={styles.cardActions}>
-              {showEdit && (
-                <button
-                  type="button"
-                  className={styles.actionBtn}
-                  onClick={() => onEdit(exp)}
-                  title="Editar"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                  </svg>
-                </button>
-              )}
-
-              {showRemove && (
-                <button
-                  type="button"
-                  className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                  onClick={() => onRemove(exp.id_experiencia)}
-                  title="Eliminar"
-                >
-                  Eliminar
-                </button>
-              )}
-            </div>
           </div>
         ))}
       </div>
 
-      {showAdd && (
-        <button className={styles.addBtn} onClick={onAdd} type="button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Agregar experiencia
-        </button>
-      )}
     </div>
   );
 }

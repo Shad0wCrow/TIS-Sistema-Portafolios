@@ -51,7 +51,10 @@ export default function ProjectRowList({
 }: ProjectRowListProps) {
   const showAdd = activeAction === "registrar";
   const showEdit = activeAction === "editar";
-  const showRemove = activeAction === "eliminar"; 
+  const showRemove = activeAction === "eliminar";
+  
+  const isActionActive = showEdit || showRemove;
+  const actionText = showEdit ? "SELECCIONA EL PROYECTO A EDITAR" : showRemove ? "SELECCIONA EL PROYECTO A ELIMINAR" : ""; 
 
   return (
     <div className={styles.card}>
@@ -63,11 +66,6 @@ export default function ProjectRowList({
           </span>
         </div>
 
-        {showAdd && (
-          <button type="button" className={styles.btnAdd} onClick={onAdd}>
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {proyectos.length === 0 ? (
@@ -80,8 +78,16 @@ export default function ProjectRowList({
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {proyectos.map((p) => (
-            <li key={p.id_proyecto} className={styles.item}>
+            <li 
+              key={p.id_proyecto} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showEdit) onEdit(p);
+                if (showRemove) onRemove(p.id_proyecto);
+              }}
+            >
               <div className={styles.itemIcon}>
                 <ProjectIcon />
               </div>
@@ -136,30 +142,6 @@ export default function ProjectRowList({
                   </div>
                 )}
               </div>
-
-                <div className={styles.itemActions}>
-                  {showEdit && (
-                    <button
-                      type="button"
-                      className={styles.btnEdit}
-                      onClick={() => onEdit(p)}
-                      title="Editar"
-                    >
-                      Editar
-                    </button>
-                  )}
-
-                  {showRemove && (
-                    <button
-                      type="button"
-                      className={styles.btnRemove}
-                      onClick={() => onRemove(p.id_proyecto)}
-                      title="Eliminar"
-                    >
-                      Eliminar
-                    </button>
-                  )}
-                </div>
             </li>
           ))}
         </ul>
