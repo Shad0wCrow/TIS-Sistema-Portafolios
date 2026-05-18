@@ -37,6 +37,46 @@ import {
 } from "./components/portafolioUtils";
 import type { SectionId } from "./components/portafolioUtils";
 
+// ── Colores de acento disponibles ────────────────────────────────────────────
+const COLOR_STORAGE_KEY = "portafolio_accent_color";
+
+const PRESET_COLORS = [
+  { id: "indigo",   label: "Índigo",     value: "#4f46e5" },
+  { id: "sky",      label: "Cielo",      value: "#0ea5e9" },
+  { id: "emerald",  label: "Esmeralda",  value: "#10b981" },
+  { id: "rose",     label: "Rosa",       value: "#f43f5e" },
+  { id: "amber",    label: "Ámbar",      value: "#f59e0b" },
+  { id: "violet",   label: "Violeta",    value: "#8b5cf6" },
+  { id: "slate",    label: "Pizarra",    value: "#475569" },
+  { id: "teal",     label: "Verde azul", value: "#14b8a6" },
+] as const;
+
+function loadAccentColor(): string {
+  try {
+    return localStorage.getItem(COLOR_STORAGE_KEY) ?? PRESET_COLORS[0].value;
+  } catch {
+    return PRESET_COLORS[0].value;
+  }
+}
+
+function saveAccentColor(color: string): void {
+  try {
+    localStorage.setItem(COLOR_STORAGE_KEY, color);
+  } catch { /* noop */ }
+}
+
+function applyAccentColor(color: string): void {
+  document.documentElement.style.setProperty("--color-accent", color);
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  document.documentElement.style.setProperty(
+    "--color-accent-soft",
+    `rgba(${r},${g},${b},0.12)`
+  );
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 export default function Portafolio() {
   const navigate = useNavigate();
 
@@ -53,94 +93,113 @@ export default function Portafolio() {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  // ── Color de acento ─────────────────────────────────────────────────────────
+  const [accentColor, setAccentColor] = useState<string>(loadAccentColor);
+  const [showColorModal, setShowColorModal] = useState(false);
+  const [draftColor, setDraftColor] = useState<string>(loadAccentColor);
+
+  // Aplica el color guardado al montar el componente
+  useEffect(() => {
+    applyAccentColor(accentColor);
+  }, [accentColor]);
+
+  const openColorModal = () => {
+    setDraftColor(accentColor);
+    setShowColorModal(true);
+  };
+
+  const saveColor = () => {
+    saveAccentColor(draftColor);
+    setAccentColor(draftColor);
+    applyAccentColor(draftColor);
+    setShowColorModal(false);
+  };
+  // ────────────────────────────────────────────────────────────────────────────
+
   // ── PDF export ──────────────────────────────────────────────────────────────
   const [exporting, setExporting] = useState(false);
 
   const handleExportPdf = async () => {
-  setExporting(true);
-  try {
-    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-      import("html2canvas"),
-      import("jspdf"),
-    ]);
+    setExporting(true);
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
 
-    const element = document.querySelector<HTMLElement>("#portafolio-content");
-    if (!element) throw new Error("Elemento no encontrado");
+      const element = document.querySelector<HTMLElement>("#portafolio-content");
+      if (!element) throw new Error("Elemento no encontrado");
 
-    // Ocultar secciones sin contenido usando su id en el DOM
-    const sectionsToHide: HTMLElement[] = [];
-    (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
-      if (!sectionHasContent[id]) {
-        // Busca tanto el elemento con ese id como cualquier ancestro section/article/div con ese id
-        const el = document.getElementById(id);
-        if (el) {
-          el.style.visibility = "hidden";
-          el.style.height = "0";
-          el.style.overflow = "hidden";
-          el.style.padding = "0";
-          el.style.margin = "0";
-          sectionsToHide.push(el);
+      const sectionsToHide: HTMLElement[] = [];
+      (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
+        if (!sectionHasContent[id]) {
+          const el = document.getElementById(id);
+          if (el) {
+            el.style.visibility = "hidden";
+            el.style.height = "0";
+            el.style.overflow = "hidden";
+            el.style.padding = "0";
+            el.style.margin = "0";
+            sectionsToHide.push(el);
+          }
         }
-      }
-    });
+      });
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff",
-      ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
-    });
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
+      });
 
-    // Restaurar todo
-    sectionsToHide.forEach((el) => {
-      el.style.visibility = "";
-      el.style.height = "";
-      el.style.overflow = "";
-      el.style.padding = "";
-      el.style.margin = "";
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.92);
-    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position -= pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    const filename = `portafolio-${nombreCompleto.replace(/\s+/g, "-").toLowerCase()}.pdf`;
-    pdf.save(filename);
-  } catch (err) {
-    console.error("Error al exportar PDF:", err);
-    // Asegurarse de restaurar si hay error
-    (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) {
+      sectionsToHide.forEach((el) => {
         el.style.visibility = "";
         el.style.height = "";
         el.style.overflow = "";
         el.style.padding = "";
         el.style.margin = "";
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
-    });
-    alert("No se pudo generar el PDF. Intenta nuevamente.");
-  } finally {
-    setExporting(false);
-  }
-};
+
+      const filename = `portafolio-${nombreCompleto.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+      pdf.save(filename);
+    } catch (err) {
+      console.error("Error al exportar PDF:", err);
+      (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.visibility = "";
+          el.style.height = "";
+          el.style.overflow = "";
+          el.style.padding = "";
+          el.style.margin = "";
+        }
+      });
+      alert("No se pudo generar el PDF. Intenta nuevamente.");
+    } finally {
+      setExporting(false);
+    }
+  };
   // ────────────────────────────────────────────────────────────────────────────
 
   const openOrderModal = () => {
@@ -544,6 +603,23 @@ export default function Portafolio() {
             <IconSort />
             Ordenar secciones
           </button>
+
+          {/* ── Botón Color ── */}
+          <button type="button" className={styles.secondaryButton} onClick={openColorModal}>
+            <span
+              style={{
+                display: "inline-block",
+                width: 13,
+                height: 13,
+                borderRadius: "50%",
+                background: accentColor,
+                border: "2px solid currentColor",
+                flexShrink: 0,
+              }}
+            />
+            Color
+          </button>
+
           <button
             type="button"
             className={styles.secondaryButton}
@@ -551,7 +627,6 @@ export default function Portafolio() {
           >
             Configurar visibilidad
           </button>
-          {/* ── Botón Exportar PDF ── */}
           <button
             type="button"
             className={styles.secondaryButton}
@@ -596,6 +671,7 @@ export default function Portafolio() {
         </section>
       </main>
 
+      {/* ── Modal: Ordenar secciones ── */}
       {showOrderModal && (
         <div className={styles.modalOverlay} onClick={() => setShowOrderModal(false)}>
           <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
@@ -640,6 +716,165 @@ export default function Portafolio() {
               </button>
               <button type="button" className={styles.primaryButton} onClick={saveOrder}>
                 Guardar orden
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Color del portafolio ── */}
+      {showColorModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowColorModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Color del portafolio</h2>
+            <p className={styles.modalSub}>
+              Elige el color de acento que verán quienes visiten tu portafolio.
+            </p>
+
+            {/* Vista previa del color seleccionado */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                padding: "0.75rem 1rem",
+                borderRadius: "0.5rem",
+                background: `rgba(${parseInt(draftColor.slice(1, 3), 16)},${parseInt(draftColor.slice(3, 5), 16)},${parseInt(draftColor.slice(5, 7), 16)},0.10)`,
+                border: `1.5px solid ${draftColor}`,
+                marginBottom: "1.25rem",
+                transition: "all 0.2s",
+              }}
+            >
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: draftColor,
+                  display: "block",
+                  flexShrink: 0,
+                  boxShadow: `0 0 0 4px ${draftColor}33`,
+                }}
+              />
+              <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>
+                Color seleccionado:&nbsp;
+                <code style={{ fontFamily: "monospace", letterSpacing: "0.03em" }}>{draftColor}</code>
+              </span>
+            </div>
+
+            {/* Paleta de colores predefinidos */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "0.65rem",
+                marginBottom: "1.25rem",
+              }}
+            >
+              {PRESET_COLORS.map((preset) => {
+                const isSelected = draftColor === preset.value;
+                const r = parseInt(preset.value.slice(1, 3), 16);
+                const g = parseInt(preset.value.slice(3, 5), 16);
+                const b = parseInt(preset.value.slice(5, 7), 16);
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    title={preset.label}
+                    onClick={() => setDraftColor(preset.value)}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                      padding: "0.65rem 0.4rem",
+                      borderRadius: "0.5rem",
+                      border: isSelected
+                        ? `2px solid ${preset.value}`
+                        : "2px solid transparent",
+                      background: isSelected
+                        ? `rgba(${r},${g},${b},0.10)`
+                        : "var(--color-surface-alt, #f8fafc)",
+                      cursor: "pointer",
+                      transition: "border 0.15s, background 0.15s, transform 0.1s",
+                      transform: isSelected ? "scale(1.04)" : "scale(1)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: "50%",
+                        background: preset.value,
+                        display: "block",
+                        boxShadow: isSelected
+                          ? `0 0 0 3px ${preset.value}55`
+                          : "0 1px 3px rgba(0,0,0,0.15)",
+                        transition: "box-shadow 0.15s",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "0.68rem",
+                        color: "var(--color-text-muted, #64748b)",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {preset.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Color personalizado */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                padding: "0.65rem 0.75rem",
+                borderRadius: "0.5rem",
+                background: "var(--color-surface-alt, #f8fafc)",
+                border: "1.5px solid var(--color-border, #e2e8f0)",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <span style={{ fontSize: "0.82rem", color: "var(--color-text-muted, #64748b)", flexShrink: 0 }}>
+                Personalizado:
+              </span>
+              <input
+                type="color"
+                value={draftColor}
+                onChange={(e) => setDraftColor(e.target.value)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "0.375rem",
+                  border: "1.5px solid var(--color-border, #e2e8f0)",
+                  cursor: "pointer",
+                  padding: 2,
+                  background: "none",
+                }}
+              />
+              <code
+                style={{
+                  fontSize: "0.78rem",
+                  color: "var(--color-text-muted, #64748b)",
+                  fontFamily: "monospace",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {draftColor}
+              </code>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.secondaryButton} onClick={() => setShowColorModal(false)}>
+                Cancelar
+              </button>
+              <button type="button" className={styles.primaryButton} onClick={saveColor}>
+                Aplicar color
               </button>
             </div>
           </div>
