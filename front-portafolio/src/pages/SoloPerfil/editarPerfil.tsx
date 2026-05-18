@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo, useRef, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./editarperfil.module.css";
 import { getPerfilMe, updatePerfil, getSugerenciasProfecion } from "../../services/portafolioservice";
 import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput";
 import Input from "../../components/ui/Input/input";
 import PageLoader from "../../components/ui/PageLoader/PageLoader";
+import ConfirmModal from "../../components/ui/ConfirmModal/ConfirmModal";
 import { IconPersona } from "../editPortafolio/components/icons";
 import AdvancedProfileSection, { type ProfileLinkForm } from "./components/AdvancedProfileSection";
 
@@ -37,6 +38,51 @@ interface FormErrors {
     correo_contacto?: string;
     foto?: string;
     [key: string]: string | undefined;
+}
+
+interface ProfileSnapshot {
+    form: FormState;
+    fotoUrl: string;
+    enlaces: ProfileLinkForm[];
+}
+
+type ConfirmAction = "save" | "discard" | null;
+
+const EMPTY_FORM: FormState = {
+    nombre_perfil: "",
+    apellido_perfil: "",
+    profesion: "",
+    celular: "",
+    descripcion: "",
+    ciudad: "",
+    pais: "",
+    correo_contacto: "",
+};
+
+function normalizeLinks(enlaces: ProfileLinkForm[]): ProfileLinkForm[] {
+    return enlaces
+        .map((enlace) => ({
+            titulo: enlace.titulo.trim(),
+            url: enlace.url.trim(),
+        }))
+        .filter((enlace) => enlace.titulo || enlace.url);
+}
+
+function normalizeSnapshot(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): ProfileSnapshot {
+    return {
+        form: {
+            nombre_perfil: form.nombre_perfil.trim(),
+            apellido_perfil: form.apellido_perfil.trim(),
+            profesion: form.profesion.trim(),
+            celular: form.celular.trim(),
+            descripcion: form.descripcion.trim(),
+            ciudad: form.ciudad.trim(),
+            pais: form.pais.trim(),
+            correo_contacto: form.correo_contacto.trim(),
+        },
+        fotoUrl: fotoUrl.trim(),
+        enlaces: normalizeLinks(enlaces),
+    };
 }
 
 function validar(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): FormErrors {
@@ -79,6 +125,8 @@ function validar(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): 
         const titulo = enlace.titulo.trim();
         const url = enlace.url.trim();
 
+        if (!titulo && !url) return;
+
         if (!titulo) errs[`enlaces.${index}.titulo`] = "El título es obligatorio.";
         else if (CARACTERES_PELIGROSOS.test(titulo)) errs[`enlaces.${index}.titulo`] = "Caracteres no permitidos.";
 
@@ -100,24 +148,17 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
     const [loadingPage, setLoadingPage] = useState(true);
     const [errorPage, setErrorPage] = useState("");
 
-    const [form, setForm] = useState<FormState>({
-        nombre_perfil: "",
-        apellido_perfil: "",
-        profesion: "",
-        celular: "",
-        descripcion: "",
-        ciudad: "",
-        pais: "",
-        correo_contacto: "",
-    });
+    const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
     const [fotoUrl, setFotoUrl] = useState("");
     const [enlaces, setEnlaces] = useState<ProfileLinkForm[]>([]);
+    const [originalProfile, setOriginalProfile] = useState<ProfileSnapshot | null>(null);
     const [errors, setErrors] = useState<FormErrors>({});
     const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [activeProfileTab, setActiveProfileTab] = useState<"basic" | "advanced">("basic");
+    const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
     const [modalOpen, setModalOpen] = useState(false);
     const [modalTab, setModalTab] = useState<"upload" | "url">("upload");
@@ -131,7 +172,7 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
             .then((res) => {
                 const p = res.perfil;
                 if (p) {
-                    setForm({
+                    const loadedForm = {
                         nombre_perfil: p.nombre_perfil ?? "",
                         apellido_perfil: p.apellido_perfil ?? "",
                         profesion: p.profesion ?? "",
@@ -140,18 +181,33 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                         ciudad: p.ciudad ?? "",
                         pais: p.pais ?? "",
                         correo_contacto: p.correo_contacto ?? "",
-                    });
-                    setFotoUrl(p.foto_url ?? "");
+                    };
+                    const loadedFoto = p.foto_url ?? "";
                     const enlacesPerfil = p.enlaces_personalizados ?? p.enlacesPersonalizados ?? [];
-                    setEnlaces(enlacesPerfil.map((enlace: ProfileLinkForm) => ({
+                    const loadedLinks = enlacesPerfil.map((enlace: ProfileLinkForm) => ({
                         titulo: enlace.titulo ?? "",
                         url: enlace.url ?? "",
-                    })));
+                    }));
+
+                    setForm(loadedForm);
+                    setFotoUrl(loadedFoto);
+                    setEnlaces(loadedLinks);
+                    setOriginalProfile(normalizeSnapshot(loadedForm, loadedFoto, loadedLinks));
                 }
             })
             .catch(() => setErrorPage("No se pudo cargar el perfil."))
             .finally(() => setLoadingPage(false));
     }, []);
+
+    const currentSnapshot = useMemo(
+        () => normalizeSnapshot(form, fotoUrl, enlaces),
+        [form, fotoUrl, enlaces]
+    );
+
+    const hasUnsavedChanges = useMemo(() => {
+        if (!originalProfile) return false;
+        return JSON.stringify(currentSnapshot) !== JSON.stringify(originalProfile);
+    }, [currentSnapshot, originalProfile]);
 
     function handleChange(field: keyof FormState) {
         return (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -256,7 +312,7 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         }
     }
 
-    async function handleGuardar() {
+    function handleGuardar() {
         if (saving) return;
 
         const allTouched = Object.fromEntries(
@@ -269,6 +325,19 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
 
         if (Object.keys(currentErrors).length > 0) return;
 
+        if (!hasUnsavedChanges) {
+            setSuccessMsg("No hay cambios para guardar.");
+            setTimeout(() => setSuccessMsg(null), 2500);
+            return;
+        }
+
+        setConfirmAction("save");
+    }
+
+    async function confirmGuardar() {
+        if (saving) return;
+
+        const cleanLinks = normalizeLinks(enlaces);
         setSaving(true);
         try {
             await updatePerfil({
@@ -281,13 +350,16 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                 pais: form.pais.trim() || null,
                 correo_contacto: form.correo_contacto.trim() || null,
                 foto_url: fotoUrl.trim() || undefined,
-                enlaces_personalizados: enlaces
-                    .map((enlace) => ({
-                        titulo: enlace.titulo.trim(),
-                        url: enlace.url.trim(),
-                    }))
-                    .filter((enlace) => enlace.titulo || enlace.url),
+                enlaces_personalizados: cleanLinks,
             });
+            const savedSnapshot = normalizeSnapshot(form, fotoUrl, cleanLinks);
+            setForm(savedSnapshot.form);
+            setFotoUrl(savedSnapshot.fotoUrl);
+            setEnlaces(savedSnapshot.enlaces);
+            setOriginalProfile(savedSnapshot);
+            setTouched({});
+            setErrors({});
+            setConfirmAction(null);
             setSuccessMsg("Perfil actualizado correctamente.");
             setTimeout(() => setSuccessMsg(null), 3000);
         } catch {
@@ -295,6 +367,30 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         } finally {
             setSaving(false);
         }
+    }
+
+    function restoreOriginalProfile() {
+        if (!originalProfile) return;
+
+        setForm(originalProfile.form);
+        setFotoUrl(originalProfile.fotoUrl);
+        setEnlaces(originalProfile.enlaces);
+        setErrors({});
+        setTouched({});
+        setConfirmAction(null);
+        setSuccessMsg("Cambios descartados.");
+        setTimeout(() => setSuccessMsg(null), 2500);
+    }
+
+    function handleCancelar() {
+        if (saving) return;
+
+        if (hasUnsavedChanges) {
+            setConfirmAction("discard");
+            return;
+        }
+
+        embedded ? onBack?.() : navigate("/dashboard");
     }
 
     if (loadingPage)
@@ -555,12 +651,14 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                     {/* ── Footer ── */}
                     <div className={styles.footer}>
                         <span className={styles.footerHint}>
-                            Los cambios se guardan al presionar el botón
+                            {hasUnsavedChanges
+                                ? "Tienes cambios sin guardar"
+                                : "Los cambios se guardan al presionar el botón"}
                         </span>
                         <div className={styles.footerActions}>
                             <button
                                 className={styles.cancelBtn}
-                                onClick={() => embedded ? onBack?.() : navigate("/dashboard")}
+                                onClick={handleCancelar}
                                 disabled={saving}
                             >
                                 Cancelar
@@ -583,6 +681,28 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                     </div>
                 </div>
             </div>
+
+            <ConfirmModal
+                open={confirmAction === "save"}
+                title="Guardar cambios"
+                message="Se actualizará tu perfil avanzado y la información quedará visible en tu portafolio público según tu configuración."
+                confirmLabel="Guardar"
+                cancelLabel="Revisar"
+                loading={saving}
+                onConfirm={confirmGuardar}
+                onCancel={() => setConfirmAction(null)}
+            />
+
+            <ConfirmModal
+                open={confirmAction === "discard"}
+                title="Descartar cambios"
+                message="Se perderán los cambios hechos en pantalla y se restaurarán los datos guardados en la base de datos."
+                confirmLabel="Descartar"
+                cancelLabel="Seguir editando"
+                variant="danger"
+                onConfirm={restoreOriginalProfile}
+                onCancel={() => setConfirmAction(null)}
+            />
 
             {/* ── Modal foto ── */}
             {modalOpen && (

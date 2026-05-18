@@ -88,6 +88,7 @@ export const updatePerfil = async (data: {
     if (data.pais !== undefined) formData.append("pais", data.pais ?? "");
     if (data.correo_contacto !== undefined) formData.append("correo_contacto", data.correo_contacto ?? "");
     if (data.enlaces_personalizados !== undefined) {
+      formData.append("enlaces_personalizados_json", JSON.stringify(data.enlaces_personalizados));
       data.enlaces_personalizados.forEach((enlace, index) => {
         formData.append(`enlaces_personalizados[${index}][titulo]`, enlace.titulo);
         formData.append(`enlaces_personalizados[${index}][url]`, enlace.url);

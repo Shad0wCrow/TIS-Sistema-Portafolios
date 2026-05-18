@@ -138,12 +138,20 @@ class PortafolioController extends Controller
             ->where('eliminado', false)
             ->firstOrFail();
 
+        if ($request->filled('enlaces_personalizados_json')) {
+            $decodedLinks = json_decode($request->input('enlaces_personalizados_json'), true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedLinks)) {
+                $request->merge(['enlaces_personalizados' => $decodedLinks]);
+            }
+        }
+
         $data = $request->validate([
             'nombre_perfil'   => 'sometimes|string|max:255',
             'apellido_perfil' => 'sometimes|string|max:255',
             'profesion'       => 'sometimes|string|max:150',
             'celular'         => 'sometimes|string|max:20',
-            'descripcion'     => 'sometimes|string|max:200',
+            'descripcion'     => 'sometimes|string|max:300',
             'ciudad'          => 'sometimes|nullable|string|max:100',
             'pais'            => 'sometimes|nullable|string|max:100',
             'correo_contacto' => 'sometimes|nullable|email|max:255',
