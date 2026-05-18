@@ -40,7 +40,7 @@ interface SidebarEdicionProps {
   certificacionesCount: number;
   experienciaCount: number;
   onSectionChange: (section: ActiveSection) => void;
-  onActionChange: (action: SectionAction) => void;
+  onActionChange: (action: SectionAction, targetSection?: ActiveSection) => void;
   onBack: () => void;
 }
 
@@ -120,14 +120,12 @@ export default function SidebarEdicion({
       setOpenDropdown(null);
       return;
     }
-      onSectionChange(key);
-      onActionChange("mostrar");
     setOpenDropdown((prev) => (prev === key ? null : key));
   };
 
   const handleActionClick = (section: ActiveSection, action: SectionAction) => {
     onSectionChange(section);
-    onActionChange(action);
+    onActionChange(action, section);
     setOpenDropdown(null);
   };
 

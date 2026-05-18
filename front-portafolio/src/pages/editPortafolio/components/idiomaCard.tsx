@@ -14,6 +14,9 @@ export default function IdiomaCard({ idiomas, onAdd, onRemove, activeAction }: I
   const showAdd = activeAction === "registrar";
   const showRemove = activeAction === "eliminar";
 
+  const isActionActive = showRemove;
+  const actionText = showRemove ? "SELECCIONA EL IDIOMA A ELIMINAR" : "";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -24,11 +27,6 @@ export default function IdiomaCard({ idiomas, onAdd, onRemove, activeAction }: I
           </span>
         </div>
 
-        {showAdd && (
-          <button className={styles.btnAdd} onClick={onAdd} type="button">
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {idiomas.length === 0 ? (
@@ -41,26 +39,21 @@ export default function IdiomaCard({ idiomas, onAdd, onRemove, activeAction }: I
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {idiomas.map((idioma) => (
-            <li key={idioma.id_usuario_idioma} className={styles.item}>
+            <li
+              key={idioma.id_usuario_idioma}
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showRemove && onRemove) onRemove(idioma.id_usuario_idioma);
+              }}
+            >
               <div className={styles.itemIcon}>🌐</div>
 
               <div className={styles.itemInfo}>
                 <span className={styles.itemTitle}>{idioma.nombre}</span>
                 {idioma.nivel && <span className={styles.itemSub}>{idioma.nivel}</span>}
               </div>
-
-              {showRemove && onRemove && (
-                <button
-                  type="button"
-                  className={styles.btnRemove}
-                  onClick={() => onRemove(idioma.id_usuario_idioma)}
-                  title="Eliminar idioma"
-                  aria-label={`Eliminar ${idioma.nombre}`}
-                >
-                  Eliminar
-                </button>
-              )}
             </li>
           ))}
         </ul>
