@@ -20,11 +20,9 @@ function formatFecha(fecha: string | null): string {
 
 export default function EducacionCard({
   educaciones,
-  onAdd,
   onRemove,
   activeAction,
 }: EducacionCardProps) {
-  const showAdd    = activeAction === "registrar";
   const showRemove = activeAction === "eliminar";
 
   const isActionActive = showRemove;

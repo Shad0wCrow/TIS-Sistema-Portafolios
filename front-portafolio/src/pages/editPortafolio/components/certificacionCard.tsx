@@ -20,11 +20,9 @@ function formatFecha(fecha: string | null): string {
 
 export default function CertificacionCard({
   certificaciones,
-  onAdd,
   onRemove,
   activeAction,
 }: CertificacionCardProps) {
-  const showAdd = activeAction === "registrar";
   const showRemove = activeAction === "eliminar";
 
   const isActionActive = showRemove;
@@ -56,7 +54,7 @@ export default function CertificacionCard({
             <li 
               key={cert.id_certificacion} 
               className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
-              onClick={(e) => {
+              onClick={() => {
                 if (showRemove) onRemove(cert.id_certificacion);
               }}
             >

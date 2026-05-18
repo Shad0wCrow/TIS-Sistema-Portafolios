@@ -46,10 +46,8 @@ export default function ProjectRowList({
   proyectos,
   onEdit,
   onRemove,
-  onAdd,
   activeAction,
 }: ProjectRowListProps) {
-  const showAdd = activeAction === "registrar";
   const showEdit = activeAction === "editar";
   const showRemove = activeAction === "eliminar";
   

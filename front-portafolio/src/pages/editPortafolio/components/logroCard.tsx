@@ -19,11 +19,9 @@ function formatFecha(fecha: string | null): string {
 
 export default function LogroCard({
   logros,
-  onAdd,
   onRemove,
   activeAction,
 }: LogroCardProps) {
-  const showAdd = activeAction === "registrar"; 
   const showRemove = activeAction === "eliminar";
 
   const isActionActive = showRemove;

@@ -10,8 +10,7 @@ interface IdiomaCardProps {
   activeAction?: SectionAction;
 }
 
-export default function IdiomaCard({ idiomas, onAdd, onRemove, activeAction }: IdiomaCardProps) {
-  const showAdd = activeAction === "registrar";
+export default function IdiomaCard({ idiomas, onRemove, activeAction }: IdiomaCardProps) {
   const showRemove = activeAction === "eliminar";
 
   const isActionActive = showRemove;
