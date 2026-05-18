@@ -27,10 +27,12 @@ class PortafolioPublicacionService
 
         if (!$publicacion) {
             return [
-                'publicado' => false,
-                'slug_publico' => null,
-                'url_publica' => null,
-                'publicado_en' => null,
+                'publicado'       => false,
+                'enlace_activo'   => false,
+                'slug_publico'    => null,
+                'url_publica'     => null,
+                'api_url_publica' => null,
+                'publicado_en'    => null,
                 'despublicado_en' => null,
             ];
         }
@@ -62,7 +64,37 @@ class PortafolioPublicacionService
             return $this->obtenerEstado($usuario);
         }
 
-        return $this->formatearEstado($this->publicacionRepository->despublicar($publicacion));
+        return $this->formatearEstado(
+            $this->publicacionRepository->despublicar($publicacion)
+        );
+    }
+
+    public function generarEnlace(Usuario $usuario): array
+    {
+        $publicacionActual = $this->publicacionRepository->buscarPorUsuario($usuario->id_usuario);
+
+        if ($publicacionActual && $publicacionActual->slug_publico) {
+            $slug = $publicacionActual->slug_publico;
+        } else {
+            $slug = $this->generarSlug($usuario);
+        }
+
+        $publicacion = $this->publicacionRepository->activarEnlace($usuario->id_usuario, $slug);
+
+        return $this->formatearEstado($publicacion);
+    }
+
+    public function revocarEnlace(Usuario $usuario): array
+    {
+        $publicacion = $this->publicacionRepository->buscarPorUsuario($usuario->id_usuario);
+
+        if (!$publicacion) {
+            return $this->obtenerEstado($usuario);
+        }
+
+        return $this->formatearEstado(
+            $this->publicacionRepository->desactivarEnlace($publicacion)
+        );
     }
 
     private function generarSlug(Usuario $usuario): string
@@ -82,12 +114,16 @@ class PortafolioPublicacionService
 
     private function formatearEstado(PortafolioPublicacion $publicacion): array
     {
+        $slug = $publicacion->slug_publico;
+        $enlaceActivo = (bool) $publicacion->enlace_activo;
+
         return [
-            'publicado' => (bool) $publicacion->publicado,
-            'slug_publico' => $publicacion->slug_publico,
-            'url_publica' => $this->construirUrlPublica($publicacion->slug_publico),
-            'api_url_publica' => url('/api/public/portafolios/' . $publicacion->slug_publico),
-            'publicado_en' => $publicacion->publicado_en,
+            'publicado'       => (bool) $publicacion->publicado,
+            'enlace_activo'   => $enlaceActivo,
+            'slug_publico'    => $slug,
+            'url_publica'     => ($enlaceActivo && $slug) ? $this->construirUrlPublica($slug) : null,
+            'api_url_publica' => $slug ? url('/api/public/portafolios/' . $slug) : null,
+            'publicado_en'    => $publicacion->publicado_en,
             'despublicado_en' => $publicacion->despublicado_en,
         ];
     }

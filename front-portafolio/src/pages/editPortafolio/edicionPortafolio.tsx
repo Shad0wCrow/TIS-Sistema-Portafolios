@@ -287,7 +287,7 @@ export default function EdicionPortafolio() {
             <button
               type="button"
               className={styles.publishButton}
-              onClick={() => navigate("/portafolio/visibilidad")}
+              onClick={() => navigate("/portafolio/publicar")}
             >
               Publicar
             </button>

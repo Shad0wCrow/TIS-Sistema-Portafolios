@@ -120,4 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/perfil/sugerencias-profesion', [PerfilController::class, 'sugerenciasProfecion']);
 
+    //Para crear enlaces públicos de portafolio
+    Route::post('/portafolio/enlace/generar',  [PortafolioPublicacionController::class, 'generarEnlace']);
+    Route::post('/portafolio/enlace/revocar',  [PortafolioPublicacionController::class, 'revocarEnlace']);
     });
