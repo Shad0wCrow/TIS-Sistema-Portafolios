@@ -27,6 +27,9 @@ export default function EducacionCard({
   const showAdd    = activeAction === "registrar";
   const showRemove = activeAction === "eliminar";
 
+  const isActionActive = showRemove;
+  const actionText = showRemove ? "SELECCIONA LA FORMACIÓN ACADÉMICA A ELIMINAR" : "";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -37,11 +40,6 @@ export default function EducacionCard({
           </span>
         </div>
 
-        {showAdd && (
-          <button className={styles.btnAdd} onClick={onAdd} type="button">
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {educaciones.length === 0 ? (
@@ -54,8 +52,15 @@ export default function EducacionCard({
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {educaciones.map((edu) => (
-            <li key={edu.id_educacion} className={styles.item}>
+            <li 
+              key={edu.id_educacion} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showRemove) onRemove(edu.id_educacion);
+              }}
+            >
               <div className={styles.itemIcon}>🎓</div>
 
               <div className={styles.itemInfo}>
@@ -88,17 +93,6 @@ export default function EducacionCard({
                 >
                   {edu.visibilidad === "publico" ? "Público" : "Privado"}
                 </span>
-
-                {showRemove && (
-                  <button
-                    className={styles.btnRemove}
-                    onClick={() => onRemove(edu.id_educacion)}
-                    title="Eliminar"
-                    type="button"
-                  >
-                    Eliminar
-                  </button>
-                )}
               </div>
             </li>
           ))}

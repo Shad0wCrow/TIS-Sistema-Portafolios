@@ -28,6 +28,9 @@ export default function CursoCard({ cursos, onAdd, onRemove, activeAction }: Cur
   const showAdd    = activeAction === "registrar";
   const showRemove = activeAction === "eliminar";
 
+  const isActionActive = showRemove;
+  const actionText = showRemove ? "SELECCIONA EL CURSO A ELIMINAR" : "";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -38,11 +41,6 @@ export default function CursoCard({ cursos, onAdd, onRemove, activeAction }: Cur
           </span>
         </div>
 
-        {showAdd && (
-          <button className={styles.btnAdd} onClick={onAdd} type="button">
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {cursos.length === 0 ? (
@@ -55,10 +53,17 @@ export default function CursoCard({ cursos, onAdd, onRemove, activeAction }: Cur
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {cursos.map((curso) => {
             const esActual = curso.fecha_fin === null;
             return (
-              <li key={curso.id_educacion} className={styles.item}>
+              <li 
+                key={curso.id_educacion} 
+                className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+                onClick={() => {
+                  if (showRemove) onRemove(curso.id_educacion);
+                }}
+              >
                 <div className={styles.itemIcon}>📚</div>
 
                 <div className={styles.itemInfo}>
@@ -89,17 +94,6 @@ export default function CursoCard({ cursos, onAdd, onRemove, activeAction }: Cur
                   >
                     {curso.visibilidad === "publico" ? "Público" : "Privado"}
                   </span>
-
-                  {showRemove && (
-                    <button
-                      className={styles.btnRemove}
-                      onClick={() => onRemove(curso.id_educacion)}
-                      title="Eliminar"
-                      type="button"
-                    >
-                      Eliminar
-                    </button>
-                  )}
                 </div>
               </li>
             );

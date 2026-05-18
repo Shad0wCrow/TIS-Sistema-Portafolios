@@ -24,8 +24,11 @@ export default function CertificacionCard({
   onRemove,
   activeAction,
 }: CertificacionCardProps) {
-  const showAdd = activeAction ===  "mostrar" && "registrar" ;
+  const showAdd = activeAction === "registrar";
   const showRemove = activeAction === "eliminar";
+
+  const isActionActive = showRemove;
+  const actionText = showRemove ? "SELECCIONA LA CERTIFICACIÓN A ELIMINAR" : "";
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   return (
@@ -38,11 +41,6 @@ export default function CertificacionCard({
           </span>
         </div>
 
-        {showAdd && (
-          <button className={styles.btnAdd} onClick={onAdd} type="button">
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {certificaciones.length === 0 ? (
@@ -53,14 +51,24 @@ export default function CertificacionCard({
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {certificaciones.map((cert) => (
-            <li key={cert.id_certificacion} className={styles.item}>
+            <li 
+              key={cert.id_certificacion} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={(e) => {
+                if (showRemove) onRemove(cert.id_certificacion);
+              }}
+            >
               {cert.imagen_url ? (
                 <img
                   src={cert.imagen_url}
                   alt={cert.nombre}
                   className={styles.itemImage}
-                  onClick={() => setPreviewImage(cert.imagen_url || null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewImage(cert.imagen_url || null);
+                  }}
                   style={{ cursor: "zoom-in" }}
                   title="Clic para ver la imagen en grande"
                 />
@@ -116,17 +124,6 @@ export default function CertificacionCard({
                 >
                   {cert.visibilidad === "publico" ? "Público" : "Privado"}
                 </span>
-
-                {showRemove && (
-                  <button
-                    className={styles.btnRemove}
-                    onClick={() => onRemove(cert.id_certificacion)}
-                    title="Eliminar"
-                    type="button"
-                  >
-                    Eliminar
-                  </button>
-                )}
               </div>
             </li>
           ))}

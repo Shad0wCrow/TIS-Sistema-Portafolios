@@ -219,10 +219,10 @@ export default function EdicionPortafolio() {
     }
   };
 
-  const handleActionChange = (action: SectionAction) => {
+  const handleActionChange = (action: SectionAction, targetSection?: ActiveSection) => {
     setActiveAction(action);
     if (action === "registrar") {
-      openRegistrarModal(activeSection);
+      openRegistrarModal(targetSection || activeSection);
     }
   };
 
