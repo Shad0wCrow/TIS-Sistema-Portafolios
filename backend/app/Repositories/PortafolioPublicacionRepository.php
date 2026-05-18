@@ -12,6 +12,10 @@ class PortafolioPublicacionRepository
         return PortafolioPublicacion::where('usuario_id', $usuarioId)->first();
     }
 
+    /**
+     * Busca por slug solo si está publicado en plataforma.
+     * Usado por el listado público de la plataforma.
+     */
     public function buscarPublicadoPorSlug(string $slug): ?PortafolioPublicacion
     {
         return PortafolioPublicacion::where('slug_publico', $slug)
@@ -19,9 +23,15 @@ class PortafolioPublicacionRepository
             ->first();
     }
 
-    public function buscarPorSlug(string $slug): ?PortafolioPublicacion
+    /**
+     * Busca por slug si el enlace externo está activo.
+     * Usado por la vista pública de enlace compartido.
+     */
+    public function buscarPorSlugConEnlaceActivo(string $slug): ?PortafolioPublicacion
     {
-        return PortafolioPublicacion::where('slug_publico', $slug)->first();
+        return PortafolioPublicacion::where('slug_publico', $slug)
+            ->where('enlace_activo', true)
+            ->first();
     }
 
     public function existeSlug(string $slug): bool
@@ -64,14 +74,17 @@ class PortafolioPublicacionRepository
             ]);
     }
 
+    /**
+     * Publica el portafolio en plataforma. Recibe el slug generado por el Service.
+     */
     public function guardarPublicacion(int $usuarioId, string $slug): PortafolioPublicacion
     {
         return PortafolioPublicacion::updateOrCreate(
             ['usuario_id' => $usuarioId],
             [
-                'slug_publico' => $slug,
-                'publicado' => true,
-                'publicado_en' => now(),
+                'slug_publico'    => $slug,
+                'publicado'       => true,
+                'publicado_en'    => now(),
                 'despublicado_en' => null,
             ]
         );
@@ -80,9 +93,33 @@ class PortafolioPublicacionRepository
     public function despublicar(PortafolioPublicacion $publicacion): PortafolioPublicacion
     {
         $publicacion->update([
-            'publicado' => false,
+            'publicado'       => false,
             'despublicado_en' => now(),
         ]);
+
+        return $publicacion;
+    }
+
+    /**
+     * Activa el enlace externo. Crea el registro si no existe (sin publicar en plataforma).
+     */
+    public function activarEnlace(int $usuarioId, string $slug): PortafolioPublicacion
+    {
+        return PortafolioPublicacion::updateOrCreate(
+            ['usuario_id' => $usuarioId],
+            [
+                'slug_publico'  => $slug,
+                'enlace_activo' => true,
+            ]
+        );
+    }
+
+    /**
+     * Desactiva el enlace externo sin afectar la publicación en plataforma.
+     */
+    public function desactivarEnlace(PortafolioPublicacion $publicacion): PortafolioPublicacion
+    {
+        $publicacion->update(['enlace_activo' => false]);
 
         return $publicacion;
     }

@@ -35,18 +35,13 @@
   overflow: hidden;
 }
 
+.embedded {
+  height: 100%;
+}
+
 
 .sidebar {
-  width: 230px;
-  min-width: 230px;
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--sidebar-border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  overflow-y: auto;
-  position: relative;
+  display: none;
 }
 
 .sidebarTop {
@@ -314,14 +309,7 @@
 }
 
 .topbar {
-  height: 52px;
-  background: var(--bg3);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  flex-shrink: 0;
+  display: none;
 }
 
 .topbarLeft {

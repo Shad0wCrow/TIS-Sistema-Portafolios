@@ -1,5 +1,4 @@
 import styles from "./projectRow.module.css";
-import { IconPencil } from "./icons";
 import type { Proyecto } from "../../../types/portafolioTypes";
 
 type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";

@@ -30,6 +30,8 @@ class PortafolioPublicoService
             $data['perfil'] = $this->portafolioRepository->perfil($usuarioId);
         }
 
+        $data['contacto_directo'] = $this->contactoDirecto($usuarioId, $configuracion);
+
         if ($this->seccionPublica($configuracion, 'seccion_habilidades')) {
             $habilidades = $this->portafolioRepository->habilidadesPublicas($usuarioId);
             $data['habilidades_tecnicas'] = $habilidades
@@ -139,5 +141,22 @@ class PortafolioPublicoService
     private function seccionPublica(ConfiguracionPrivacidad $configuracion, string $seccion): bool
     {
         return ($configuracion->{$seccion} ?? ConfiguracionPrivacidad::PRIVADO) === ConfiguracionPrivacidad::PUBLICO;
+    }
+
+    private function contactoDirecto(int $usuarioId, ConfiguracionPrivacidad $configuracion): array
+    {
+        if (!$this->seccionPublica($configuracion, 'seccion_perfil') || !$configuracion->mostrar_correo) {
+            return [
+                'habilitado' => false,
+                'correo' => null,
+            ];
+        }
+
+        $correo = $this->portafolioRepository->correoContacto($usuarioId);
+
+        return [
+            'habilitado' => $correo !== null,
+            'correo' => $correo,
+        ];
     }
 }

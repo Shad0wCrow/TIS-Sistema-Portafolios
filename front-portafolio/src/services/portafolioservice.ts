@@ -29,7 +29,9 @@ const normalizePublicationState = (
   publicacion: EstadoPublicacionPortafolio
 ): EstadoPublicacionPortafolio => ({
   ...publicacion,
-  url_publica: buildPublicPortfolioUrl(publicacion.slug_publico) ?? publicacion.url_publica,
+  url_publica: publicacion.enlace_activo
+    ? buildPublicPortfolioUrl(publicacion.slug_publico) ?? publicacion.url_publica
+    : null,
 });
 
 const normalizePublicPortfolioSummary = <T extends PortafolioPublicoResumen>(portafolio: T): T => ({
@@ -522,14 +524,35 @@ export const despublicarPortafolio = async (): Promise<EstadoPublicacionPortafol
   return normalizePublicationState(res.data.publicacion);
 };
 
+export const generarEnlacePublico = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.post(`${API}/portafolio/enlace/generar`, {}, {
+    headers: authHeaders(),
+  });
+  return normalizePublicationState(res.data.publicacion);
+};
+
+export const revocarEnlacePublico = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.post(`${API}/portafolio/enlace/revocar`, {}, {
+    headers: authHeaders(),
+  });
+  return normalizePublicationState(res.data.publicacion);
+};
+
 export const getPortafolioPublico = async (slug: string): Promise<PortafolioData> => {
   const res = await axios.get(`${API}/public/portafolios/${slug}`);
   const portafolio = res.data.portafolio ?? {};
-  type PublicRecord = Record<string, any>;
+  type PublicRecord = Record<string, unknown> & {
+    entidad_emisora?: { nombre?: string | null } | null;
+    entidadEmisora?: { nombre?: string | null } | null;
+    nombre_entidad?: string | null;
+    entidad_nombre?: string | null;
+    imagen_url?: string | null;
+  };
 
   return {
     ...portafolio,
     perfil: portafolio.perfil ?? null,
+    contacto_directo: portafolio.contacto_directo ?? { habilitado: false, correo: null },
     habilidades_tecnicas: portafolio.habilidades_tecnicas ?? [],
     habilidades_blandas: portafolio.habilidades_blandas ?? [],
     proyectos: portafolio.proyectos ?? [],
@@ -548,4 +571,9 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
       entidad_nombre: logro.entidad_nombre ?? logro.entidad_emisora?.nombre ?? logro.entidadEmisora?.nombre ?? null,
     })),
   };
+};
+
+export const registrarContactoDirecto = async (slug: string): Promise<{ mailto: string }> => {
+  const res = await axios.post(`${API}/public/portafolios/${slug}/contacto`);
+  return res.data;
 };

@@ -46,6 +46,7 @@ const NIVEL_IDIOMA: Record<string, string> = {
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
 const DEFAULTS_SECCIONES: ConfiguracionSecciones = {
+  mostrar_correo: false,
   seccion_perfil: "publico",
   seccion_habilidades: "publico",
   seccion_proyectos: "publico",
