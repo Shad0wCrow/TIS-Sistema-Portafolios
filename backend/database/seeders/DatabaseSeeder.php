@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
             CurriculumSeeder::class,
             HabilidadesSeeder::class,
             ProyectosSeeder::class,
+            PortafolioPublicacionSeeder::class,
+            DemoPortfoliosSeeder::class,
         ]);
     }
 }
