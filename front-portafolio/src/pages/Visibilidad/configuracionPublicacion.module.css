@@ -69,15 +69,6 @@
 .btnSecondary { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
 .btnSecondary:hover:not(:disabled) { background: var(--bg); }
 .btnSecondary:disabled { opacity: .6; cursor: not-allowed; }
-.btnDanger {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 500; border-radius: 8px;
-  padding: 7px 16px; cursor: pointer;
-  transition: background .15s, opacity .15s; border: 1px solid #f2c6c0;
-  background: #fff; color: var(--red);
-}
-.btnDanger:hover:not(:disabled) { background: var(--red-lt); }
-.btnDanger:disabled { opacity: .55; cursor: not-allowed; }
 
 /* ── Main / Card ─────────────────────────────────────────────────── */
 .main {
@@ -87,53 +78,6 @@
 .card {
   background: var(--bg3); border: 1px solid var(--border);
   border-radius: 14px; width: 100%; max-width: 640px; overflow: hidden;
-}
-.publishPanel {
-  padding: 24px 28px;
-  border-bottom: 1px solid var(--border);
-  background: #fbfdfc;
-}
-.publishHeader { display: flex; align-items: flex-start; gap: 14px; }
-.publishIcon {
-  width: 42px; height: 42px; border-radius: 8px;
-  background: var(--accent-lt); color: var(--accent);
-  display: inline-flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.publishIcon svg { width: 21px; height: 21px; }
-.publishCopy { min-width: 0; flex: 1; }
-.cardEyebrow {
-  margin: 0 0 4px; font-size: 11px; font-weight: 700;
-  color: var(--accent); text-transform: uppercase; letter-spacing: .06em;
-}
-.statusPill {
-  display: inline-flex; align-items: center; min-height: 26px;
-  border-radius: 4px; padding: 4px 9px; font-size: 11px;
-  font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
-  white-space: nowrap;
-}
-.statusPublished { background: var(--accent-lt); color: var(--accent); }
-.statusDraft { background: #f0f0f0; color: var(--text3); }
-.urlBox {
-  margin-top: 16px; display: flex; align-items: center; gap: 8px;
-  border: 1px solid var(--border); background: #fff; border-radius: 8px;
-  padding: 8px 10px;
-}
-.urlText {
-  min-width: 0; flex: 1; font-size: 13px; color: var(--text2);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.iconActionBtn {
-  width: 32px; height: 32px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--bg3);
-  color: var(--accent); display: inline-flex; align-items: center;
-  justify-content: center; cursor: pointer; flex-shrink: 0;
-}
-.iconActionBtn svg { width: 16px; height: 16px; }
-.iconActionBtn:hover { background: var(--accent-lt); border-color: var(--accent-md); }
-.publishActions {
-  display: flex; align-items: center; flex-wrap: wrap;
-  gap: 8px; margin-top: 16px;
 }
 .cardHeader {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -218,19 +162,6 @@
 .cardFooter { padding: 16px 28px; background: var(--bg); border-top: 1px solid var(--border); }
 .footerNote { font-size: 12px; color: var(--text3); margin: 0; line-height: 1.6; }
 
-/* ── Estado de carga ─────────────────────────────────────────────── */
-.stateScreen {
-  min-height: 100vh; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 12px; color: var(--text2); font-size: 14px;
-}
-.loadingDot {
-  width: 24px; height: 24px; border-radius: 50%;
-  border: 3px solid var(--accent-md); border-top-color: var(--accent);
-  animation: spin .8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
 @media (max-width: 720px) {
   .topbar {
     height: auto;
@@ -238,19 +169,11 @@
     flex-direction: column;
     padding: 14px 16px;
   }
-  .topbarActions,
-  .publishActions {
+  .topbarActions {
     width: 100%;
   }
-  .topbarActions button,
-  .publishActions button {
+  .topbarActions button {
     flex: 1 1 150px;
-  }
-  .publishHeader {
-    flex-wrap: wrap;
-  }
-  .statusPill {
-    margin-left: 56px;
   }
   .main {
     padding: 20px 12px;
@@ -260,212 +183,5 @@
   }
   .counter {
     align-items: flex-start;
-  }
-}
-
-/* ── Toast de confirmación al copiar (CA-2) ──────────────────────── */
-.copiedToast {
-  margin: 8px 0 0;
-  padding: 8px 14px;
-  background: var(--accent-lt);
-  color: var(--accent);
-  border: 1px solid var(--accent-md);
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  animation: toastSlideIn 0.3s ease-out;
-}
-
-@keyframes toastSlideIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Panel de compartir en redes sociales (CA-6) ─────────────────── */
-.sharePanel {
-  margin-top: 20px;
-  padding: 20px;
-  background: #f8faf9;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-.sharePanelHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.sharePanelHeader > svg {
-  width: 22px;
-  height: 22px;
-  color: var(--accent);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.sharePanelTitle {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.sharePanelSub {
-  margin: 3px 0 0;
-  font-size: 12px;
-  color: var(--text2);
-  line-height: 1.4;
-}
-
-.shareButtons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.shareBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 16px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: transform 0.15s, box-shadow 0.15s, background 0.15s, opacity 0.15s;
-}
-
-.shareBtn svg {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-}
-
-.shareBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.shareBtn:active {
-  transform: translateY(0);
-}
-
-/* CA-7: Accesibilidad - focus visible para navegación con Tab */
-.shareBtn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(26, 102, 68, 0.15);
-}
-
-.iconActionBtn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(26, 102, 68, 0.15);
-}
-
-/* Brand colors for each social network */
-.shareBtnLinkedIn {
-  background: #0A66C2;
-  color: #ffffff;
-}
-.shareBtnLinkedIn:hover {
-  background: #004182;
-  color: #ffffff;
-}
-
-.shareBtnWhatsApp {
-  background: #25D366;
-  color: #ffffff;
-}
-.shareBtnWhatsApp:hover {
-  background: #1da851;
-  color: #ffffff;
-}
-
-.shareBtnTwitter {
-  background: #0f1419;
-  color: #ffffff;
-}
-.shareBtnTwitter:hover {
-  background: #272c30;
-  color: #ffffff;
-}
-
-.shareBtnTelegram {
-  background: #0088cc;
-  color: #ffffff;
-}
-.shareBtnTelegram:hover {
-  background: #006da3;
-  color: #ffffff;
-}
-
-.shareBtnEmail {
-  background: var(--bg3);
-  color: var(--text);
-  border-color: var(--border);
-}
-.shareBtnEmail:hover {
-  background: var(--bg);
-  color: var(--text);
-}
-
-/* ── Aviso de portafolio no publicado (CA-5) ──────────────────────── */
-.unpublishedNotice {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-top: 18px;
-  padding: 18px;
-  background: #fff7e6;
-  border: 1px solid #fde8b3;
-  border-radius: 10px;
-}
-
-.unpublishedIcon {
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
-  background: #fdecc8;
-  color: #a16207;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.unpublishedIcon svg {
-  width: 18px;
-  height: 18px;
-}
-
-.unpublishedTitle {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #92400e;
-}
-
-.unpublishedText {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: #a16207;
-  line-height: 1.5;
-}
-
-/* ── Responsive para el panel de compartir ────────────────────────── */
-@media (max-width: 720px) {
-  .shareButtons {
-    flex-direction: column;
-  }
-  .shareBtn {
-    justify-content: center;
   }
 }

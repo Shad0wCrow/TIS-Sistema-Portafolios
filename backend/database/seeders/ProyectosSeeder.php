@@ -43,7 +43,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => 'https://api.anatorres.dev/docs',
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(8), 'actualizado_en' => now()->subDays(1),
+                
             ],
             // Ana (1) – Proyecto 2
             [
@@ -56,7 +56,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => 'https://educonnect-demo.vercel.app',
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(18), 'actualizado_en' => now()->subMonths(6),
+                
             ],
             // Carlos (2) – Proyecto 3
             [
@@ -69,7 +69,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => null,
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(12), 'actualizado_en' => now()->subMonths(2),
+                
             ],
             // Carlos (2) – Proyecto 4
             [
@@ -82,7 +82,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => null,
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(5), 'actualizado_en' => now()->subDays(3),
+                
             ],
             // Lucía (3) – Proyecto 5
             [
@@ -95,7 +95,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => 'https://finance-ui.vercel.app',
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(14), 'actualizado_en' => now()->subMonths(4),
+                
             ],
             // Lucía (3) – Proyecto 6
             [
@@ -108,7 +108,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => 'https://shopvue-preview.netlify.app',
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(4), 'actualizado_en' => now()->subDays(2),
+                
             ],
             // Diego (4) – Proyecto 7
             [
@@ -121,7 +121,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => 'https://sales-forecaster.streamlit.app',
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(11), 'actualizado_en' => now()->subMonths(3),
+                
             ],
             // Diego (4) – Proyecto 8
             [
@@ -134,7 +134,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => null,
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(9), 'actualizado_en' => now()->subMonths(4),
+                
             ],
             // Sofía (5) – Proyecto 9
             [
@@ -147,7 +147,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => 'https://play.google.com/store/apps/details?id=co.healthtrack',
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(10), 'actualizado_en' => now()->subMonths(2),
+                
             ],
             // Sofía (5) – Proyecto 10
             [
@@ -160,7 +160,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => null,
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(5), 'actualizado_en' => now()->subDays(4),
+                
             ],
             // Mateo (6) – Proyecto 11
             [
@@ -173,7 +173,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => null,
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(6), 'actualizado_en' => now()->subDays(2),
+                
             ],
             // Mateo (6) – Proyecto 12
             [
@@ -186,7 +186,7 @@ class ProyectosSeeder extends Seeder
                 'demo_url'        => null,
                 'imagen_principal_url' => null,
                 'visibilidad' => 'publico', 'eliminado' => false,
-                'creado_en' => now()->subMonths(16), 'actualizado_en' => now()->subMonths(7),
+                
             ],
         ]);
 
@@ -209,7 +209,6 @@ class ProyectosSeeder extends Seeder
                 'proyecto_id' => $pid,
                 'rol_proyecto' => 'propietario',
                 'es_propietario' => true,
-                'fecha_union' => now(),
             ];
         }
 
@@ -224,140 +223,14 @@ class ProyectosSeeder extends Seeder
         ];
 
         foreach ($colaboradores as $c) {
-            $c['fecha_union'] = now();
+           
             $rows[] = $c;
         }
 
         DB::table('proyecto_usuario')->insert($rows);
 
-        // ─── proyecto_tecnologia ──────────────────────────────────────
-        DB::table('proyecto_tecnologia')->insert([
-            // Proyecto 1 – PortafolioAPI
-            ['proyecto_id' => 1, 'tecnologia_id' => 1],  // PHP
-            ['proyecto_id' => 1, 'tecnologia_id' => 8],  // Laravel
-            ['proyecto_id' => 1, 'tecnologia_id' => 15], // PostgreSQL
-            ['proyecto_id' => 1, 'tecnologia_id' => 19], // Docker
-            ['proyecto_id' => 1, 'tecnologia_id' => 25], // Git
-            // Proyecto 2 – EduConnect
-            ['proyecto_id' => 2, 'tecnologia_id' => 1],  // PHP
-            ['proyecto_id' => 2, 'tecnologia_id' => 8],  // Laravel
-            ['proyecto_id' => 2, 'tecnologia_id' => 9],  // React
-            ['proyecto_id' => 2, 'tecnologia_id' => 23], // Tailwind
-            ['proyecto_id' => 2, 'tecnologia_id' => 16], // MySQL
-            // Proyecto 3 – MicroCommerce
-            ['proyecto_id' => 3, 'tecnologia_id' => 2],  // JS
-            ['proyecto_id' => 3, 'tecnologia_id' => 13], // Node.js
-            ['proyecto_id' => 3, 'tecnologia_id' => 14], // Express.js
-            ['proyecto_id' => 3, 'tecnologia_id' => 17], // MongoDB
-            ['proyecto_id' => 3, 'tecnologia_id' => 19], // Docker
-            ['proyecto_id' => 3, 'tecnologia_id' => 18], // Redis
-            // Proyecto 4 – pg-migrate-cli
-            ['proyecto_id' => 4, 'tecnologia_id' => 2],  // JS
-            ['proyecto_id' => 4, 'tecnologia_id' => 13], // Node.js
-            ['proyecto_id' => 4, 'tecnologia_id' => 15], // PostgreSQL
-            // Proyecto 5 – FinanceUI
-            ['proyecto_id' => 5, 'tecnologia_id' => 10], // Vue.js
-            ['proyecto_id' => 5, 'tecnologia_id' => 3],  // TypeScript
-            ['proyecto_id' => 5, 'tecnologia_id' => 23], // Tailwind
-            ['proyecto_id' => 5, 'tecnologia_id' => 26], // Figma
-            // Proyecto 6 – ShopVue
-            ['proyecto_id' => 6, 'tecnologia_id' => 10], // Vue.js
-            ['proyecto_id' => 6, 'tecnologia_id' => 3],  // TypeScript
-            ['proyecto_id' => 6, 'tecnologia_id' => 23], // Tailwind
-            ['proyecto_id' => 6, 'tecnologia_id' => 22], // Firebase
-            // Proyecto 7 – SalesForecaster
-            ['proyecto_id' => 7, 'tecnologia_id' => 4],  // Python
-            ['proyecto_id' => 7, 'tecnologia_id' => 21], // AWS
-            ['proyecto_id' => 7, 'tecnologia_id' => 15], // PostgreSQL
-            // Proyecto 8 – DataViz Dashboard
-            ['proyecto_id' => 8, 'tecnologia_id' => 4],  // Python
-            ['proyecto_id' => 8, 'tecnologia_id' => 15], // PostgreSQL
-            ['proyecto_id' => 8, 'tecnologia_id' => 2],  // JS
-            // Proyecto 9 – HealthTrack
-            ['proyecto_id' => 9, 'tecnologia_id' => 22], // Firebase
-            ['proyecto_id' => 9, 'tecnologia_id' => 2],  // JS
-            // Proyecto 10 – EventoApp
-            ['proyecto_id' => 10, 'tecnologia_id' => 2], // JS
-            ['proyecto_id' => 10, 'tecnologia_id' => 3], // TypeScript
-            ['proyecto_id' => 10, 'tecnologia_id' => 22],// Firebase
-            // Proyecto 11 – K8s-AutoScaler
-            ['proyecto_id' => 11, 'tecnologia_id' => 19],// Docker
-            ['proyecto_id' => 11, 'tecnologia_id' => 20],// Kubernetes
-            ['proyecto_id' => 11, 'tecnologia_id' => 21],// AWS
-            // Proyecto 12 – TerraformBolivia
-            ['proyecto_id' => 12, 'tecnologia_id' => 21],// AWS
-            ['proyecto_id' => 12, 'tecnologia_id' => 19],// Docker
-            ['proyecto_id' => 12, 'tecnologia_id' => 20],// Kubernetes
-        ]);
+        
 
-        // ─── proyecto_habilidad ───────────────────────────────────────
-        DB::table('proyecto_habilidad')->insert([
-            ['proyecto_id' => 1, 'habilidad_id' => 1],  // PHP
-            ['proyecto_id' => 1, 'habilidad_id' => 2],  // Laravel
-            ['proyecto_id' => 1, 'habilidad_id' => 15], // REST APIs
-            ['proyecto_id' => 2, 'habilidad_id' => 1],  // PHP
-            ['proyecto_id' => 2, 'habilidad_id' => 5],  // React
-            ['proyecto_id' => 2, 'habilidad_id' => 15], // REST APIs
-            ['proyecto_id' => 3, 'habilidad_id' => 7],  // Node.js
-            ['proyecto_id' => 3, 'habilidad_id' => 15], // REST APIs
-            ['proyecto_id' => 4, 'habilidad_id' => 7],  // Node.js
-            ['proyecto_id' => 5, 'habilidad_id' => 6],  // Vue.js
-            ['proyecto_id' => 5, 'habilidad_id' => 19], // UI/UX
-            ['proyecto_id' => 5, 'habilidad_id' => 20], // Figma
-            ['proyecto_id' => 6, 'habilidad_id' => 6],  // Vue.js
-            ['proyecto_id' => 6, 'habilidad_id' => 19], // UI/UX
-            ['proyecto_id' => 7, 'habilidad_id' => 8],  // Python
-            ['proyecto_id' => 8, 'habilidad_id' => 8],  // Python
-            ['proyecto_id' => 8, 'habilidad_id' => 10], // PostgreSQL
-            ['proyecto_id' => 9, 'habilidad_id' => 3],  // JavaScript
-            ['proyecto_id' => 10,'habilidad_id' => 3],  // JavaScript
-            ['proyecto_id' => 11,'habilidad_id' => 13], // Docker
-            ['proyecto_id' => 11,'habilidad_id' => 17], // AWS
-            ['proyecto_id' => 12,'habilidad_id' => 17], // AWS
-            ['proyecto_id' => 12,'habilidad_id' => 13], // Docker
-        ]);
-
-        // ─── proyecto_tag ─────────────────────────────────────────────
-        DB::table('proyecto_tag')->insert([
-            ['proyecto_id' => 1, 'tag_id' => 3],  // backend
-            ['proyecto_id' => 1, 'tag_id' => 5],  // api
-            ['proyecto_id' => 1, 'tag_id' => 13], // saas
-            ['proyecto_id' => 2, 'tag_id' => 1],  // fullstack
-            ['proyecto_id' => 2, 'tag_id' => 14], // crud
-            ['proyecto_id' => 2, 'tag_id' => 15], // real-time
-            ['proyecto_id' => 3, 'tag_id' => 3],  // backend
-            ['proyecto_id' => 3, 'tag_id' => 5],  // api
-            ['proyecto_id' => 3, 'tag_id' => 7],  // e-commerce
-            ['proyecto_id' => 4, 'tag_id' => 6],  // open-source
-            ['proyecto_id' => 4, 'tag_id' => 3],  // backend
-            ['proyecto_id' => 5, 'tag_id' => 2],  // frontend
-            ['proyecto_id' => 5, 'tag_id' => 20], // accesibilidad
-            ['proyecto_id' => 5, 'tag_id' => 11], // responsive
-            ['proyecto_id' => 6, 'tag_id' => 2],  // frontend
-            ['proyecto_id' => 6, 'tag_id' => 7],  // e-commerce
-            ['proyecto_id' => 6, 'tag_id' => 12], // pwa
-            ['proyecto_id' => 7, 'tag_id' => 9],  // machine-learning
-            ['proyecto_id' => 7, 'tag_id' => 8],  // dashboard
-            ['proyecto_id' => 8, 'tag_id' => 8],  // dashboard
-            ['proyecto_id' => 8, 'tag_id' => 14], // crud
-            ['proyecto_id' => 9, 'tag_id' => 4],  // mobile
-            ['proyecto_id' => 9, 'tag_id' => 15], // real-time
-            ['proyecto_id' => 10,'tag_id' => 4],  // mobile
-            ['proyecto_id' => 10,'tag_id' => 14], // crud
-            ['proyecto_id' => 11,'tag_id' => 10], // devops
-            ['proyecto_id' => 11,'tag_id' => 6],  // open-source
-            ['proyecto_id' => 12,'tag_id' => 10], // devops
-            ['proyecto_id' => 12,'tag_id' => 6],  // open-source
-        ]);
-
-        // ─── Evidencias ───────────────────────────────────────────────
-        DB::table('evidencia')->insert([
-            ['proyecto_id' => 1, 'titulo' => 'Diagrama de arquitectura', 'descripcion' => 'Diagrama C4 del sistema de la API',          'tipo_archivo' => 'imagen', 'url_archivo' => 'https://cdn.anatorres.dev/portafolio-api/arch.png',    'fecha_subida' => now()->subMonths(3), 'eliminado' => false],
-            ['proyecto_id' => 2, 'titulo' => 'Video demo EduConnect',   'descripcion' => 'Recorrido de 3 minutos por las funciones',    'tipo_archivo' => 'video',  'url_archivo' => 'https://youtu.be/demo-educonnect',                     'fecha_subida' => now()->subMonths(6), 'eliminado' => false],
-            ['proyecto_id' => 3, 'titulo' => 'Diagrama de servicios',   'descripcion' => 'Mapa de microservicios y sus comunicaciones', 'tipo_archivo' => 'imagen', 'url_archivo' => 'https://cdn.carlos.dev/micro-commerce/services.png',   'fecha_subida' => now()->subMonths(4), 'eliminado' => false],
-            ['proyecto_id' => 5, 'titulo' => 'Storybook FinanceUI',     'descripcion' => 'Catálogo interactivo de componentes',         'tipo_archivo' => 'enlace', 'url_archivo' => 'https://finance-ui-storybook.vercel.app',               'fecha_subida' => now()->subMonths(2), 'eliminado' => false],
-            ['proyecto_id' => 7, 'titulo' => 'Informe de resultados',   'descripcion' => 'PDF con métricas de precisión del modelo',    'tipo_archivo' => 'pdf',    'url_archivo' => 'https://cdn.diego.dev/sales-forecaster/report.pdf',    'fecha_subida' => now()->subMonths(5), 'eliminado' => false],
-            ['proyecto_id' => 9, 'titulo' => 'Capturas de pantalla',    'descripcion' => 'Screenshots de las pantallas principales',    'tipo_archivo' => 'imagen', 'url_archivo' => 'https://cdn.sofia.dev/healthtrack/screenshots.zip',    'fecha_subida' => now()->subMonths(2), 'eliminado' => false],
-        ]);
+      
     }
 }

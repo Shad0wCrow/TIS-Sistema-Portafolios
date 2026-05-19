@@ -23,8 +23,8 @@ function Login() {
       const data = await loginUser({ correo, contrasenia });
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.removeItem("hasPortafolio"); 
-      localStorage.removeItem("hasProfile");
+      localStorage.setItem("hasProfile", data.has_profile ? "true" : "false");
+      localStorage.setItem("hasPortafolio", data.has_portafolio ? "true" : "false");
       sessionStorage.removeItem(DASHBOARD_CACHE_KEY);
       if (data.dashboard) {
         sessionStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify({
@@ -34,7 +34,7 @@ function Login() {
         }));
       }
       
-      navigate("/dashboard");
+      navigate(data.user?.rol === "admin" ? "/admin" : "/dashboard");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Error al iniciar sesión");
     } finally {

@@ -5,6 +5,8 @@ import {
   getEstadoGuardado,
   getPortafolioPublico,
   guardarPortafolio,
+  registrarContactoDirecto,
+  registrarVisualizacionPortafolio,
 } from "../../services/portafolioservice";
 import type {
   Certificacion,
@@ -56,6 +58,20 @@ const emptyData: Required<Pick<
   experiencias: [],
 };
 
+const getRequestMessage = (err: unknown, fallback: string): string => {
+  if (
+    err &&
+    typeof err === "object" &&
+    "response" in err
+  ) {
+    const response = (err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }).response;
+    const firstError = response?.data?.errors ? Object.values(response.data.errors)[0]?.[0] : "";
+    return firstError || response?.data?.message || fallback;
+  }
+
+  return fallback;
+};
+
 export default function PortafolioPublico() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
@@ -65,6 +81,7 @@ export default function PortafolioPublico() {
   const [guardado, setGuardado] = useState(false);
   const [savingGuardado, setSavingGuardado] = useState(false);
   const [guardadoMessage, setGuardadoMessage] = useState("");
+  const [contactLoading, setContactLoading] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -74,7 +91,10 @@ export default function PortafolioPublico() {
     }
 
     getPortafolioPublico(slug)
-      .then(setData)
+      .then((portafolio) => {
+        setData(portafolio);
+        registrarVisualizacionPortafolio(slug).catch(() => undefined);
+      })
       .catch((err) => {
         const message = err?.response?.data?.message ?? "El portafolio no está disponible.";
         setError(message);
@@ -109,6 +129,10 @@ export default function PortafolioPublico() {
     }));
   }, [certificaciones]);
   const experiencias = (data?.experiencias ?? emptyData.experiencias) as Experiencia[];
+  const contactoDirecto = data?.contacto_directo;
+  const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
+  const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
+  const mostrarContactoDirecto = Boolean(contactoDirecto?.habilitado && contactoDirecto.correo && slug);
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Portafolio profesional";
@@ -150,13 +174,26 @@ export default function PortafolioPublico() {
         setGuardado(true);
         setGuardadoMessage("Portafolio guardado correctamente.");
       }
-    } catch (err: any) {
-      const message = err?.response?.data?.errors?.portafolio?.[0]
-        ?? err?.response?.data?.message
-        ?? "No se pudo actualizar guardados.";
-      setGuardadoMessage(message);
+    } catch (err) {
+      setGuardadoMessage(getRequestMessage(err, "No se pudo actualizar guardados."));
     } finally {
       setSavingGuardado(false);
+    }
+  };
+
+  const handleContactoDirecto = async () => {
+    if (!slug || !contactoDirecto?.correo || contactLoading) return;
+
+    const fallbackMailto = `mailto:${contactoDirecto.correo}`;
+
+    try {
+      setContactLoading(true);
+      const response = await registrarContactoDirecto(slug);
+      window.location.href = response.mailto || fallbackMailto;
+    } catch {
+      window.location.href = fallbackMailto;
+    } finally {
+      setContactLoading(false);
     }
   };
 
@@ -182,6 +219,32 @@ export default function PortafolioPublico() {
                 <p className={styles.fieldLabel}>Teléfono</p>
                 <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
               </div>
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Ubicación</p>
+                <p className={styles.fieldValue}>{ubicacionPerfil || "Sin información"}</p>
+              </div>
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Correo</p>
+                <p className={styles.fieldValue}>{perfil?.correo_contacto ?? "Sin información"}</p>
+              </div>
+              {enlacesPerfil.length > 0 && (
+                <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                  <p className={styles.fieldLabel}>Enlaces personalizados</p>
+                  <div className={styles.profileLinks}>
+                    {enlacesPerfil.map((enlace, index) => (
+                      <a
+                        key={`${enlace.url}-${index}`}
+                        href={enlace.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.profileLink}
+                      >
+                        {enlace.titulo}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </SectionShell>
         );
@@ -390,6 +453,16 @@ export default function PortafolioPublico() {
               <h2 className={styles.profileName}>{nombreCompleto}</h2>
               {perfil?.profesion && <p className={styles.profileRole}>{perfil.profesion}</p>}
               {perfil?.descripcion && <p className={styles.profileDescription}>{perfil.descripcion}</p>}
+              {mostrarContactoDirecto && (
+                <button
+                  type="button"
+                  className={styles.contactButton}
+                  onClick={handleContactoDirecto}
+                  disabled={contactLoading}
+                >
+                  {contactLoading ? "Abriendo..." : "Contacto directo"}
+                </button>
+              )}
             </div>
           </div>
 

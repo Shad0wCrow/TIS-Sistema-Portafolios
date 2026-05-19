@@ -1,5 +1,6 @@
 import styles from "./cursoCard.module.css";
 import type { Curso } from "../../../types/portafolioTypes";
+import { ROL_CURSO_LABELS } from "../../../types/portafolioTypes";
 
 type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
 
@@ -23,14 +24,11 @@ function formatFechaInicio(fecha: string): string {
   return `${meses[parseInt(m) - 1]} ${y}`;
 }
 
-export default function CursoCard({
-  cursos,
-  onAdd,
-  onRemove,
-  activeAction,
-}: CursoCardProps) {
-  const showAdd = activeAction === "registrar";
+export default function CursoCard({ cursos, onRemove, activeAction }: CursoCardProps) {
   const showRemove = activeAction === "eliminar";
+
+  const isActionActive = showRemove;
+  const actionText = showRemove ? "SELECCIONA EL CURSO A ELIMINAR" : "";
 
   return (
     <div className={styles.card}>
@@ -42,11 +40,6 @@ export default function CursoCard({
           </span>
         </div>
 
-        {showAdd && (
-          <button className={styles.btnAdd} onClick={onAdd} type="button">
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {cursos.length === 0 ? (
@@ -59,14 +52,29 @@ export default function CursoCard({
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {cursos.map((curso) => {
             const esActual = curso.fecha_fin === null;
             return (
-              <li key={curso.id_educacion} className={styles.item}>
+              <li 
+                key={curso.id_educacion} 
+                className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+                onClick={() => {
+                  if (showRemove) onRemove(curso.id_educacion);
+                }}
+              >
                 <div className={styles.itemIcon}>📚</div>
 
                 <div className={styles.itemInfo}>
                   <span className={styles.itemTitle}>{curso.titulo}</span>
+
+                  {/* HU-14: badge con el rol en el curso */}
+                  {curso.rol_curso && curso.rol_curso !== "no_aplica" && (
+                    <span className={styles.itemRol}>
+                      {ROL_CURSO_LABELS[curso.rol_curso]}
+                    </span>
+                  )}
+
                   <span className={styles.itemSub}>{curso.institucion}</span>
                   <span className={styles.itemDates}>
                     {formatFechaInicio(curso.fecha_inicio)} — {formatFecha(curso.fecha_fin, esActual)}
@@ -85,17 +93,6 @@ export default function CursoCard({
                   >
                     {curso.visibilidad === "publico" ? "Público" : "Privado"}
                   </span>
-
-                  {showRemove && (
-                    <button
-                      className={styles.btnRemove}
-                      onClick={() => onRemove(curso.id_educacion)}
-                      title="Eliminar"
-                      type="button"
-                    >
-                      Eliminar
-                    </button>
-                  )}
                 </div>
               </li>
             );

@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\PortafolioPublicoController;
 use App\Http\Controllers\Api\PortafoliosPublicosController;
 use App\Http\Controllers\Api\PortafolioGuardadoController;
 use App\Http\Controllers\Api\DashboardPortafolioController;
+use App\Http\Controllers\Api\AdminController;
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
@@ -27,6 +28,8 @@ Route::get('/health', function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/public/portafolios/{slug}', [PortafolioPublicoController::class, 'show']);
+Route::post('/public/portafolios/{slug}/contacto', [PortafolioPublicoController::class, 'registrarContacto']);
+Route::post('/public/portafolios/{slug}/visualizacion', [PortafolioPublicoController::class, 'registrarVisualizacion']);
 
 // Rutas protegidas 
 Route::middleware('auth:sanctum')->group(function () {
@@ -119,4 +122,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/perfil/sugerencias-profesion', [PerfilController::class, 'sugerenciasProfecion']);
 
+    //Para crear enlaces públicos de portafolio
+    Route::post('/portafolio/enlace/generar',  [PortafolioPublicacionController::class, 'generarEnlace']);
+    Route::post('/portafolio/enlace/revocar',  [PortafolioPublicacionController::class, 'revocarEnlace']);
+
+    Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/usuarios', [AdminController::class, 'usuarios']);
+        Route::patch('/usuarios/{id}/estado', [AdminController::class, 'actualizarEstadoUsuario']);
+        Route::get('/reportes/resumen', [AdminController::class, 'reporteResumen']);
+    });
     });

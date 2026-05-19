@@ -9,6 +9,7 @@ use App\Models\Logro;
 use App\Models\Perfil;
 use App\Models\Proyecto;
 use App\Models\ProyectoUsuario;
+use App\Models\Usuario;
 use App\Models\UsuarioHabilidad;
 use App\Models\UsuarioIdioma;
 
@@ -16,9 +17,28 @@ class PortafolioRepository
 {
     public function perfil(int $usuarioId): ?Perfil
     {
-        return Perfil::where('usuario_id', $usuarioId)
+        return Perfil::with('enlacesPersonalizados')
+            ->where('usuario_id', $usuarioId)
             ->where('eliminado', false)
             ->first();
+    }
+
+    public function correoContacto(int $usuarioId): ?string
+    {
+        $perfil = $this->perfil($usuarioId);
+        $correoPerfil = trim((string) ($perfil->correo_contacto ?? ''));
+
+        if ($correoPerfil !== '') {
+            return $correoPerfil;
+        }
+
+        $correoUsuario = Usuario::where('id_usuario', $usuarioId)
+            ->where('eliminado', false)
+            ->value('correo');
+
+        $correoUsuario = trim((string) $correoUsuario);
+
+        return $correoUsuario !== '' ? $correoUsuario : null;
     }
 
     public function habilidadesPublicas(int $usuarioId)

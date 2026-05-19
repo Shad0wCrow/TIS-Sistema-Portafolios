@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Perfil;
+use App\Models\PortafolioPublicacion;
 use App\Models\Usuario;
 use App\Services\PortafolioExploracionService;
 use App\Services\PortafolioPublicacionService;
@@ -72,6 +74,8 @@ class AuthController extends Controller
             'message' => 'Login correcto',
             'token' => $token,
             'user' => $usuario,
+            'has_profile' => $this->usuarioTienePerfil($usuario),
+            'has_portafolio' => $this->usuarioTienePortafolio($usuario),
             'dashboard' => $this->dashboardInicial($usuario),
         ]);
     }
@@ -105,5 +109,18 @@ class AuthController extends Controller
 
             return null;
         }
+    }
+
+    private function usuarioTienePerfil(Usuario $usuario): bool
+    {
+        return Perfil::where('usuario_id', $usuario->id_usuario)
+            ->where('eliminado', false)
+            ->exists();
+    }
+
+    private function usuarioTienePortafolio(Usuario $usuario): bool
+    {
+        return $this->usuarioTienePerfil($usuario)
+            || PortafolioPublicacion::where('usuario_id', $usuario->id_usuario)->exists();
     }
 }

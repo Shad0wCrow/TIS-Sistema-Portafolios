@@ -1,5 +1,6 @@
 import styles from "./educacionCard.module.css";
 import type { Educacion } from "../../../types/portafolioTypes";
+import { GRADO_LABELS } from "../../../types/portafolioTypes";
 
 type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
 
@@ -19,12 +20,13 @@ function formatFecha(fecha: string | null): string {
 
 export default function EducacionCard({
   educaciones,
-  onAdd,
   onRemove,
   activeAction,
 }: EducacionCardProps) {
-  const showAdd = activeAction === "registrar" ;
   const showRemove = activeAction === "eliminar";
+
+  const isActionActive = showRemove;
+  const actionText = showRemove ? "SELECCIONA LA FORMACIÓN ACADÉMICA A ELIMINAR" : "";
 
   return (
     <div className={styles.card}>
@@ -36,11 +38,6 @@ export default function EducacionCard({
           </span>
         </div>
 
-        {showAdd && (
-          <button className={styles.btnAdd} onClick={onAdd} type="button">
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {educaciones.length === 0 ? (
@@ -53,12 +50,27 @@ export default function EducacionCard({
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {educaciones.map((edu) => (
-            <li key={edu.id_educacion} className={styles.item}>
+            <li 
+              key={edu.id_educacion} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showRemove) onRemove(edu.id_educacion);
+              }}
+            >
               <div className={styles.itemIcon}>🎓</div>
 
               <div className={styles.itemInfo}>
                 <span className={styles.itemTitle}>{edu.titulo}</span>
+
+                {/* HU-8: badge con el grado de formación */}
+                {edu.grado && (
+                  <span className={styles.itemGrado}>
+                    {GRADO_LABELS[edu.grado]}
+                  </span>
+                )}
+
                 <span className={styles.itemSub}>{edu.institucion}</span>
                 {edu.area_estudio && (
                   <span className={styles.itemArea}>{edu.area_estudio}</span>
@@ -79,17 +91,6 @@ export default function EducacionCard({
                 >
                   {edu.visibilidad === "publico" ? "Público" : "Privado"}
                 </span>
-
-                {showRemove && (
-                  <button
-                    className={styles.btnRemove}
-                    onClick={() => onRemove(edu.id_educacion)}
-                    title="Eliminar"
-                    type="button"
-                  >
-                    Eliminar
-                  </button>
-                )}
               </div>
             </li>
           ))}

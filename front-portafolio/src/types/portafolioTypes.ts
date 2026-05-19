@@ -6,6 +6,18 @@ export interface Perfil {
   celular: string;
   descripcion: string;
   foto_url: string | null;
+  ciudad?: string | null;
+  pais?: string | null;
+  correo_contacto?: string | null;
+  enlaces_personalizados?: PerfilEnlace[];
+  enlacesPersonalizados?: PerfilEnlace[];
+}
+
+export interface PerfilEnlace {
+  id_perfil_enlace?: number;
+  titulo: string;
+  url: string;
+  orden?: number;
 }
 
 export interface HabilidadItem {
@@ -38,6 +50,7 @@ export interface Curso {
   institucion: string;
   titulo: string;
   area_estudio: "curso";
+  rol_curso: RolCurso | null;
   fecha_inicio: string;
   fecha_fin: string | null;
   descripcion: string | null;
@@ -55,16 +68,60 @@ export interface Logro {
   visibilidad: "publico" | "privado";
 }
 
+
+export type GradoEducacion =
+  | "titulo_bachiller"
+  | "tecnico_medio"
+  | "titulo_superior"
+  | "licenciado"
+  | "especialidad"
+  | "maestria"
+  | "doctorado"
+  | "post_doctorado"
+  | "otro";
+
+
+export const GRADO_LABELS: Record<GradoEducacion, string> = {
+  titulo_bachiller: "Título de Bachiller",
+  tecnico_medio:    "Técnico Medio",
+  titulo_superior:  "Título Superior",
+  licenciado:       "Licenciado/a",
+  especialidad:     "Especialidad",
+  maestria:         "Maestría",
+  doctorado:        "Doctorado",
+  post_doctorado:   "Post Doctorado",
+  otro:            "Otro",
+};
+
+
+
 export interface Educacion {
   id_educacion: number;
   institucion: string;
   titulo: string;
   area_estudio: string | null;
+  grado: GradoEducacion | null;   // HU-8: null en registros históricos sin grado asignado
   fecha_inicio: string;
   fecha_fin: string | null;
   descripcion: string | null;
   visibilidad: "publico" | "privado";
 }
+
+export type RolCurso =
+  | "estudiante"
+  | "auxiliar"
+  | "docente"
+  | "profesor"
+  | "no_aplica";
+
+export const ROL_CURSO_LABELS: Record<RolCurso, string> = {
+  estudiante: "Estudiante",
+  auxiliar:   "Auxiliar",
+  docente:    "Docente",
+  profesor:   "Profesor",
+  no_aplica:  "No aplica",
+};
+
 
 export interface Idioma {
   id_usuario_idioma: number;
@@ -102,6 +159,7 @@ export interface Experiencia {
 
 export interface PortafolioData {
   perfil: Perfil | null;
+  contacto_directo?: ContactoDirecto;
   habilidades_tecnicas: HabilidadItem[];
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
@@ -114,11 +172,18 @@ export interface PortafolioData {
   configuracion?: ConfiguracionSecciones;
 }
 
+export interface ContactoDirecto {
+  habilitado: boolean;
+  correo: string | null;
+}
+
 export interface EstadoPublicacionPortafolio {
   publicado: boolean;
+  enlace_activo: boolean;
   slug_publico: string | null;
   url_publica: string | null;
   api_url_publica?: string | null;
+  visualizaciones: number;
   publicado_en: string | null;
   despublicado_en: string | null;
 }
@@ -131,6 +196,7 @@ export interface PortafolioPublicoResumen {
   profesion: string | null;
   descripcion: string | null;
   foto_url: string | null;
+  perfil_privado: boolean;
   publicado_en: string | null;
 }
 
@@ -145,8 +211,9 @@ export interface EstadoGuardadoPortafolio {
 }
 
 export type EstadoVisibilidad = 'publico' | 'privado';
- 
+
 export interface ConfiguracionSecciones {
+  mostrar_correo:          boolean;
   seccion_perfil:          EstadoVisibilidad;
   seccion_habilidades:     EstadoVisibilidad;
   seccion_proyectos:       EstadoVisibilidad;
@@ -157,8 +224,9 @@ export interface ConfiguracionSecciones {
   seccion_logros:          EstadoVisibilidad;
   seccion_idiomas:         EstadoVisibilidad;
 }
- 
+
 export const SECCION_LABELS: Record<keyof ConfiguracionSecciones, string> = {
+  mostrar_correo:          'Contacto directo',
   seccion_perfil:          'Perfil profesional',
   seccion_habilidades:     'Habilidades',
   seccion_proyectos:       'Proyectos',

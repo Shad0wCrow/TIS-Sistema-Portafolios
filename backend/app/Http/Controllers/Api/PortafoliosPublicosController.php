@@ -20,13 +20,15 @@ class PortafoliosPublicosController extends Controller
     {
         $data = $request->validate([
             'limite' => 'sometimes|integer|min:1|max:30',
+            'q' => 'sometimes|nullable|string|min:2|max:80',
         ]);
 
         try {
             return response()->json([
                 'portafolios' => $this->exploracionService->listarPortafoliosAjenos(
                     $request->user()->id_usuario,
-                    $data['limite'] ?? null
+                    $data['limite'] ?? null,
+                    $data['q'] ?? null
                 ),
             ]);
         } catch (\Throwable $exception) {

@@ -38,7 +38,6 @@ const NIVEL_LABEL: Record<string, string> = {
 export default function SkillCard({
   tipo,
   lista,
-  onAdd,
   onRemove,
   onEdit,
   activeAction,
@@ -50,9 +49,11 @@ export default function SkillCard({
       ? "Agrega lenguajes, frameworks y herramientas que dominas."
       : "Agrega habilidades interpersonales y de trabajo en equipo.";
 
-  const showAdd = activeAction === "registrar";
   const showEdit = activeAction === "editar";
   const showRemove = activeAction === "eliminar";
+
+  const isActionActive = showEdit || showRemove;
+  const actionText = showEdit ? "SELECCIONA LA HABILIDAD A EDITAR" : showRemove ? "SELECCIONA LA HABILIDAD A ELIMINAR" : "";
 
   return (
     <div className={styles.card}>
@@ -64,11 +65,6 @@ export default function SkillCard({
           </span>
         </div>
 
-        {showAdd && (
-          <button className={styles.btnAdd} onClick={onAdd} type="button">
-            <span>+</span> Agregar
-          </button>
-        )}
       </div>
 
       {lista.length === 0 ? (
@@ -81,8 +77,16 @@ export default function SkillCard({
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {lista.map((h) => (
-            <li key={h.id_usuario_habilidad} className={styles.item}>
+            <li 
+              key={h.id_usuario_habilidad} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showEdit) onEdit(h);
+                if (showRemove) onRemove(h.id_usuario_habilidad);
+              }}
+            >
               <div className={styles.itemIconWrap}>
                 {tipo === "tecnica" ? <IconTecnica /> : <IconBlanda />}
               </div>
@@ -105,28 +109,6 @@ export default function SkillCard({
                   >
                     {NIVEL_LABEL[h.nivel] ?? h.nivel}
                   </span>
-                )}
-
-                {showEdit && (
-                  <button
-                    className={styles.btnEdit}
-                    onClick={() => onEdit(h)}
-                    title="Editar nivel"
-                    type="button"
-                  >
-                    Editar
-                  </button>
-                )}
-
-                {showRemove && (
-                  <button
-                    className={styles.btnRemove}
-                    onClick={() => onRemove(h.id_usuario_habilidad)}
-                    title="Eliminar"
-                    type="button"
-                  >
-                    Eliminar
-                  </button>
                 )}
               </div>
             </li>

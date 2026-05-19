@@ -88,7 +88,12 @@ async function fetchProfesiones(q: string): Promise<string[]> {
     )
 }
 
-export default function CreateAccount() {
+interface CreateAccountProps {
+    embedded?: boolean
+    onSaved?: () => void
+}
+
+export default function CreateAccount({ embedded = false, onSaved }: CreateAccountProps) {
     const navigate = useNavigate()
 
     const [values, setValues] = useState<FormValues>({
@@ -176,7 +181,7 @@ export default function CreateAccount() {
     }
 
     return (
-        <main className={styles.page}>
+        <main className={`${styles.page} ${embedded ? styles.embedded : ""}`}>
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarTop}>
                     <div className={styles.brand}>
@@ -436,7 +441,7 @@ export default function CreateAccount() {
                 <div className={styles.greenAccent} />
 
                 <div className={styles.actions}>
-                    <span className={styles.actionsHint}>Puedes omitir este paso y crear tu perfil después</span>
+                    <span className={styles.actionsHint}>Completa tu perfil para mostrarlo en tu portafolio.</span>
                     <div className={styles.actionsRight}>
                         <Button text="Omitir" className={styles.cancel} onClick={handleCancelar} />
                         <Button
@@ -454,7 +459,8 @@ export default function CreateAccount() {
                 open={showSuccess}
                 onClose={() => {
                     setShowSuccess(false)
-                    navigate("/dashboard")
+                    onSaved?.()
+                    if (!embedded) navigate("/dashboard")
                 }}
             />
         </main>

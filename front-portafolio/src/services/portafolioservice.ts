@@ -4,9 +4,11 @@ import type {
   ConfiguracionSecciones,
   EstadoPublicacionPortafolio,
   EstadoGuardadoPortafolio,
+  GradoEducacion,
   PortafolioData,
   PortafolioGuardadoResumen,
   PortafolioPublicoResumen,
+  RolCurso,
 } from '../types/portafolioTypes';
 
 const API = "http://localhost:8000/api";
@@ -27,16 +29,36 @@ const normalizePublicationState = (
   publicacion: EstadoPublicacionPortafolio
 ): EstadoPublicacionPortafolio => ({
   ...publicacion,
-  url_publica: buildPublicPortfolioUrl(publicacion.slug_publico) ?? publicacion.url_publica,
+  visualizaciones: Number(publicacion.visualizaciones ?? 0),
+  url_publica: publicacion.enlace_activo
+    ? buildPublicPortfolioUrl(publicacion.slug_publico) ?? publicacion.url_publica
+    : null,
 });
 
 const normalizePublicPortfolioSummary = <T extends PortafolioPublicoResumen>(portafolio: T): T => ({
   ...portafolio,
+  perfil_privado: Boolean(portafolio.perfil_privado),
   url_publica: buildPublicPortfolioUrl(portafolio.slug_publico) ?? portafolio.url_publica,
 });
 
+const getVisitSession = (): string => {
+  const key = "portfolio_visit_session";
+  const current = localStorage.getItem(key);
+
+  if (current) return current;
+
+  const next = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+  localStorage.setItem(key, next);
+  return next;
+};
+
 export const getPortafolio = async () => {
   const res = await axios.get(`${API}/portafolio`, { headers: authHeaders() });
+  return res.data;
+};
+
+export const getPerfilMe = async () => {
+  const res = await axios.get(`${API}/perfil/me`, { headers: authHeaders() });
   return res.data;
 };
 
@@ -47,6 +69,10 @@ export const updatePerfil = async (data: {
   celular?: string;
   descripcion?: string;
   foto_url?: string;
+  ciudad?: string | null;
+  pais?: string | null;
+  correo_contacto?: string | null;
+  enlaces_personalizados?: { titulo: string; url: string }[];
 }) => {
   const isDataUrl = data.foto_url?.startsWith("data:image/");
 
@@ -58,6 +84,16 @@ export const updatePerfil = async (data: {
     if (data.profesion !== undefined) formData.append("profesion", data.profesion);
     if (data.celular !== undefined) formData.append("celular", data.celular);
     if (data.descripcion !== undefined) formData.append("descripcion", data.descripcion);
+    if (data.ciudad !== undefined) formData.append("ciudad", data.ciudad ?? "");
+    if (data.pais !== undefined) formData.append("pais", data.pais ?? "");
+    if (data.correo_contacto !== undefined) formData.append("correo_contacto", data.correo_contacto ?? "");
+    if (data.enlaces_personalizados !== undefined) {
+      formData.append("enlaces_personalizados_json", JSON.stringify(data.enlaces_personalizados));
+      data.enlaces_personalizados.forEach((enlace, index) => {
+        formData.append(`enlaces_personalizados[${index}][titulo]`, enlace.titulo);
+        formData.append(`enlaces_personalizados[${index}][url]`, enlace.url);
+      });
+    }
 
     const blob = dataUrlToBlob(data.foto_url!);
     const ext = blob.type.split("/")[1] ?? "jpg";
@@ -153,6 +189,7 @@ export const removeProyecto = async (id: number) => {
 export const addCurso = async (data: {
   nombre_curso: string;
   institucion: string;
+  rol_curso?: RolCurso;
   fecha_inicio: string;
   fecha_fin?: string;
   es_actual?: boolean;
@@ -181,7 +218,7 @@ export const getSugerenciasCurso = async (q: string): Promise<string[]> => {
   return res.data.sugerencias ?? [];
 };
 
-// ── Educación ─────────────────────────────────────────────────────────────────
+// ── Educación (Grado de Formación) ────────────────────────────────────────────
 export const getEducaciones = async () => {
   const res = await axios.get(`${API}/educacion`, {
     headers: authHeaders(),
@@ -200,16 +237,38 @@ export const getSugerenciasInstitucion = async (
   return res.data.sugerencias ?? [];
 };
 
+// HU-8: el campo "grado" ahora es obligatorio para educación formal.
 export const addEducacion = async (data: {
   institucion: string;
   titulo: string;
   area_estudio?: string;
+  grado: GradoEducacion;           // obligatorio
   fecha_inicio: string;
   fecha_fin?: string;
   descripcion?: string;
   visibilidad?: "publico" | "privado";
 }) => {
   const res = await axios.post(`${API}/educacion`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+// HU-8: update también requiere grado.
+export const updateEducacion = async (
+  id: number,
+  data: {
+    institucion?: string;
+    titulo?: string;
+    area_estudio?: string;
+    grado?: GradoEducacion;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    descripcion?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await axios.put(`${API}/educacion/${id}`, data, {
     headers: authHeaders(),
   });
   return res.data;
@@ -414,7 +473,7 @@ export const getVisibilidadSecciones = async (): Promise<ConfiguracionSecciones>
   });
   return res.data.configuracion;
 };
- 
+
 /** Guarda la configuración de secciones visibles del portafolio. */
 export const updateVisibilidadSecciones = async (
   data: ConfiguracionSecciones
@@ -432,10 +491,13 @@ export const getEstadoPublicacion = async (): Promise<EstadoPublicacionPortafoli
   return normalizePublicationState(res.data.publicacion);
 };
 
-export const getPortafoliosPublicos = async (limite = 12): Promise<PortafolioPublicoResumen[]> => {
+export const getPortafoliosPublicos = async (
+  limite = 12,
+  busqueda?: string
+): Promise<PortafolioPublicoResumen[]> => {
   const res = await axios.get(`${API}/portafolios/publicos`, {
     headers: authHeaders(),
-    params: { limite },
+    params: { limite, q: busqueda || undefined },
   });
   return (res.data.portafolios ?? []).map(normalizePublicPortfolioSummary);
 };
@@ -497,14 +559,35 @@ export const despublicarPortafolio = async (): Promise<EstadoPublicacionPortafol
   return normalizePublicationState(res.data.publicacion);
 };
 
+export const generarEnlacePublico = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.post(`${API}/portafolio/enlace/generar`, {}, {
+    headers: authHeaders(),
+  });
+  return normalizePublicationState(res.data.publicacion);
+};
+
+export const revocarEnlacePublico = async (): Promise<EstadoPublicacionPortafolio> => {
+  const res = await axios.post(`${API}/portafolio/enlace/revocar`, {}, {
+    headers: authHeaders(),
+  });
+  return normalizePublicationState(res.data.publicacion);
+};
+
 export const getPortafolioPublico = async (slug: string): Promise<PortafolioData> => {
   const res = await axios.get(`${API}/public/portafolios/${slug}`);
   const portafolio = res.data.portafolio ?? {};
-  type PublicRecord = Record<string, any>;
+  type PublicRecord = Record<string, unknown> & {
+    entidad_emisora?: { nombre?: string | null } | null;
+    entidadEmisora?: { nombre?: string | null } | null;
+    nombre_entidad?: string | null;
+    entidad_nombre?: string | null;
+    imagen_url?: string | null;
+  };
 
   return {
     ...portafolio,
     perfil: portafolio.perfil ?? null,
+    contacto_directo: portafolio.contacto_directo ?? { habilitado: false, correo: null },
     habilidades_tecnicas: portafolio.habilidades_tecnicas ?? [],
     habilidades_blandas: portafolio.habilidades_blandas ?? [],
     proyectos: portafolio.proyectos ?? [],
@@ -523,4 +606,22 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
       entidad_nombre: logro.entidad_nombre ?? logro.entidad_emisora?.nombre ?? logro.entidadEmisora?.nombre ?? null,
     })),
   };
+};
+
+export const registrarContactoDirecto = async (slug: string): Promise<{ mailto: string }> => {
+  const res = await axios.post(`${API}/public/portafolios/${slug}/contacto`);
+  return res.data;
+};
+
+export const registrarVisualizacionPortafolio = async (slug: string): Promise<void> => {
+  const token = localStorage.getItem("token");
+  const headers: Record<string, string> = {
+    "X-Visit-Session": getVisitSession(),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  await axios.post(`${API}/public/portafolios/${slug}/visualizacion`, {}, { headers });
 };

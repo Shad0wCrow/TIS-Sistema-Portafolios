@@ -18,9 +18,19 @@ class Perfil extends Model
         'celular',
         'descripcion',
         'foto_url',
+        'ciudad',
+        'pais',
         'correo_contacto',
         'linkedin_url',
         'visibilidad',
         'eliminado',
     ];
+
+    public function enlacesPersonalizados()
+    {
+        return $this->hasMany(PerfilEnlace::class, 'perfil_id', 'id_perfil')
+            ->where('eliminado', false)
+            ->orderBy('orden')
+            ->orderBy('id_perfil_enlace');
+    }
 }

@@ -11,10 +11,15 @@ import Portafolio from "./pages/portafolio/Portafolio";
 import PortafolioPublico from "./pages/portafolio/PortafolioPublico";
 import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
 import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicacion";
+import PublicarPortafolio from "./pages/Publicar/PublicarPortafolio";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+
 import CvGenerator from './pages/editPortafolio/CvGenerator';
 
 import CreateAccountRoute from "./components/CreateAccountRoute";
 import PortafolioRoute from "./components/PortafolioRoute";
+import ProfileRoute from "./components/ProfileRoute";
+import AdminRoute from "./components/AdminRoute";
 
 
 
@@ -38,11 +43,20 @@ function App() {
       <Route path="/guardados" element={<Guardados />} />
 
       <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        }
+      />
+
+      <Route
         path="/perfil/editar"
         element={
-          <PortafolioRoute>
+          <ProfileRoute>
             <EditarPerfil />
-          </PortafolioRoute>
+          </ProfileRoute>
         }
       />
 
@@ -60,6 +74,15 @@ function App() {
         element={
           <PortafolioRoute>
             <ConfiguracionPublicacion />
+          </PortafolioRoute>
+        }
+      />
+
+      <Route
+        path="/portafolio/publicar"
+        element={
+          <PortafolioRoute>
+            <PublicarPortafolio />
           </PortafolioRoute>
         }
       />
