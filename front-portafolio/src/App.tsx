@@ -11,7 +11,7 @@ import Portafolio from "./pages/portafolio/Portafolio";
 import PortafolioPublico from "./pages/portafolio/PortafolioPublico";
 import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
 import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicacion";
-
+import CvGenerator from './pages/editPortafolio/CvGenerator';
 
 import CreateAccountRoute from "./components/CreateAccountRoute";
 import PortafolioRoute from "./components/PortafolioRoute";
@@ -74,6 +74,7 @@ function App() {
           </PortafolioRoute>
         }
       />
+      <Route path="/generar-cv" element={<CvGenerator />} />
     </Routes>
   );
 }
