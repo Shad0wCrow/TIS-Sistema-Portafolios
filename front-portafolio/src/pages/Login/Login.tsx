@@ -34,7 +34,7 @@ function Login() {
         }));
       }
       
-      navigate("/dashboard");
+      navigate(data.user?.rol === "admin" ? "/admin" : "/dashboard");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Error al iniciar sesión");
     } finally {

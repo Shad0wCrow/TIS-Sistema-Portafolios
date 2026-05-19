@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\PortafolioPublicoController;
 use App\Http\Controllers\Api\PortafoliosPublicosController;
 use App\Http\Controllers\Api\PortafolioGuardadoController;
 use App\Http\Controllers\Api\DashboardPortafolioController;
+use App\Http\Controllers\Api\AdminController;
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
@@ -124,4 +125,10 @@ Route::middleware('auth:sanctum')->group(function () {
     //Para crear enlaces públicos de portafolio
     Route::post('/portafolio/enlace/generar',  [PortafolioPublicacionController::class, 'generarEnlace']);
     Route::post('/portafolio/enlace/revocar',  [PortafolioPublicacionController::class, 'revocarEnlace']);
+
+    Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/usuarios', [AdminController::class, 'usuarios']);
+        Route::patch('/usuarios/{id}/estado', [AdminController::class, 'actualizarEstadoUsuario']);
+        Route::get('/reportes/resumen', [AdminController::class, 'reporteResumen']);
+    });
     });
