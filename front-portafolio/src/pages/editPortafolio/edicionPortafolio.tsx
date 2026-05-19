@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./edicionPortafolio.module.css";
 import skillStyles from "./components/skillCard.module.css";
+import PageLoader from "../../components/ui/PageLoader/PageLoader";
+import CvGenerator from './CvGenerator';
+
 import {
   getPortafolio,
   getCatalogoHabilidades,
@@ -277,6 +280,13 @@ export default function EdicionPortafolio() {
             </span>
           </div>
           <div className={styles.topbarRight}>
+            <button
+              type="button"
+              className={styles.previewButton}
+              onClick={() => navigate("/generar-cv")}
+            >
+              Generar CV
+            </button>
             <button
               type="button"
               className={styles.previewButton}

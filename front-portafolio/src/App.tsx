@@ -14,6 +14,7 @@ import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicaci
 import PublicarPortafolio from "./pages/Publicar/PublicarPortafolio";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 
+import CvGenerator from './pages/editPortafolio/CvGenerator';
 
 import CreateAccountRoute from "./components/CreateAccountRoute";
 import PortafolioRoute from "./components/PortafolioRoute";
@@ -96,6 +97,7 @@ function App() {
           </PortafolioRoute>
         }
       />
+      <Route path="/generar-cv" element={<CvGenerator />} />
     </Routes>
   );
 }
