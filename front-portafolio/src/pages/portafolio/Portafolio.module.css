@@ -5,12 +5,12 @@
 /* ── Variable de acento (valor por defecto, se sobreescribe desde JS) ── */
 :root {
   --color-accent: #1a6644;
-  --color-accent-soft: rgba(26, 102, 68, 0.22);
-  --color-accent-dark: color-mix(in srgb, var(--color-accent) 80%, black);
-  --color-accent-bg: color-mix(in srgb, var(--color-accent) 18%, white);
-  --color-accent-bg2: color-mix(in srgb, var(--color-accent) 12%, white);
-  --color-accent-border: color-mix(in srgb, var(--color-accent) 22%, transparent);
-  --color-accent-ring: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  --color-accent-soft: rgba(26, 102, 68, 0.12);
+  --color-accent-dark: #14523a;
+  --color-accent-bg: rgba(26, 102, 68, 0.18);
+  --color-accent-bg2: rgba(26, 102, 68, 0.12);
+  --color-accent-border: rgba(26, 102, 68, 0.22);
+  --color-accent-ring: rgba(26, 102, 68, 0.28);
 }
 
 .page {
@@ -109,7 +109,7 @@
 }
 
 .savePortfolioBtnActive {
-  border-color: color-mix(in srgb, var(--color-accent) 40%, white);
+  border-color: var(--color-accent-border);
   background: var(--color-accent-bg);
   color: var(--color-accent);
 }
@@ -176,7 +176,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, var(--color-accent-bg) 0%, color-mix(in srgb, var(--color-accent) 14%, white) 100%);
+  background: linear-gradient(180deg, var(--color-accent-bg) 0%, var(--color-accent-bg2) 100%);
   color: var(--color-accent);
   border: 1px solid var(--color-accent-border);
 }
@@ -408,7 +408,7 @@
     linear-gradient(
       135deg,
       var(--color-accent-bg) 0%,
-      color-mix(in srgb, var(--color-accent) 10%, white) 100%
+      var(--color-accent-bg2) 100%
     );
 
   border-bottom: 1px solid var(--color-accent-border);
@@ -523,8 +523,8 @@
 }
 
 .profileLink:hover {
-  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--color-accent) 14%, white);
+  border-color: rgba(26, 102, 68, 0.45);
+background: var(--color-accent-bg);
 }
 
 .splitGrid {
@@ -707,7 +707,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, var(--color-accent-bg) 0%, color-mix(in srgb, var(--color-accent) 14%, white) 100%);
+  background: linear-gradient(180deg, var(--color-accent-bg) 0%, var(--color-accent-bg2) 100%);
   color: var(--color-accent);
 }
 

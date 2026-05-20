@@ -5,6 +5,7 @@ import {
   getExperiencias,
   getPortafolio,
   getVisibilidadSecciones,
+  guardarColorAcento,
 } from "../../services/portafolioservice";
 import type {
   Certificacion,
@@ -28,6 +29,7 @@ import {
   DEFAULTS_SECCIONES,
   DEFAULT_SECTION_ORDER,
   SECTION_LABELS,
+  applyAccentColor,
   isSectionPublic,
   loadSectionOrder,
   saveSectionOrder,
@@ -65,16 +67,6 @@ function saveAccentColor(color: string): void {
   } catch { /* noop */ }
 }
 
-function applyAccentColor(color: string): void {
-  document.documentElement.style.setProperty("--color-accent", color);
-  const r = parseInt(color.slice(1, 3), 16);
-  const g = parseInt(color.slice(3, 5), 16);
-  const b = parseInt(color.slice(5, 7), 16);
-  document.documentElement.style.setProperty(
-    "--color-accent-soft",
-    `rgba(${r},${g},${b},0.12)`
-  );
-}
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function Portafolio() {
@@ -113,6 +105,7 @@ export default function Portafolio() {
     setAccentColor(draftColor);
     applyAccentColor(draftColor);
     setShowColorModal(false);
+    guardarColorAcento(draftColor).catch(() => undefined);
   };
   // ────────────────────────────────────────────────────────────────────────────
 
@@ -145,13 +138,29 @@ export default function Portafolio() {
         }
       });
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
-      });
+const canvas = await html2canvas(element, {
+  scale: 2,
+  useCORS: true,
+  logging: false,
+  backgroundColor: "#ffffff",
+  ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
+  onclone: (clonedDoc) => {
+    const root = clonedDoc.documentElement;
+    const style = clonedDoc.createElement("style");
+    style.textContent = `
+      :root {
+        --color-accent: ${accentColor};
+        --color-accent-soft: rgba(26, 102, 68, 0.12);
+        --color-accent-dark: #14523a;
+        --color-accent-bg: rgba(26, 102, 68, 0.18);
+        --color-accent-bg2: rgba(26, 102, 68, 0.12);
+        --color-accent-border: rgba(26, 102, 68, 0.22);
+        --color-accent-ring: rgba(26, 102, 68, 0.28);
+      }
+    `;
+    root.appendChild(style);
+  },
+});
 
       sectionsToHide.forEach((el) => {
         el.style.visibility = "";

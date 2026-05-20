@@ -17,6 +17,7 @@ class PortafolioPublicacion extends Model
         'slug_publico',
         'publicado',
         'enlace_activo',
+        'color_acento',
         'publicado_en',
         'despublicado_en',
     ];

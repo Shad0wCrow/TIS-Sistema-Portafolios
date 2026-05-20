@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   eliminarPortafolioGuardado,
@@ -60,6 +60,29 @@ const emptyData: Required<Pick<
   certificaciones: [],
   experiencias: [],
 };
+
+const DEFAULT_ACCENT_COLOR = "#1a6644";
+
+function hexToRgba(hexColor: string, alpha: number): string {
+  const hex = hexColor.trim();
+  const normalized = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : DEFAULT_ACCENT_COLOR;
+  const r = parseInt(normalized.slice(1, 3), 16);
+  const g = parseInt(normalized.slice(3, 5), 16);
+  const b = parseInt(normalized.slice(5, 7), 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function buildAccentStyle(color?: string | null): CSSProperties {
+  const accent = color && /^#[0-9a-fA-F]{6}$/.test(color.trim())
+    ? color.trim()
+    : DEFAULT_ACCENT_COLOR;
+
+  return {
+    ["--color-accent" as any]: accent,
+    ["--color-accent-soft" as any]: hexToRgba(accent, 0.22),
+  };
+}
 
 const getRequestMessage = (err: unknown, fallback: string): string => {
   if (
@@ -161,6 +184,8 @@ export default function PortafolioPublico() {
     if (!perfil) return "Portafolio profesional";
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Portafolio profesional";
   }, [perfil]);
+
+  const accentStyle = useMemo(() => buildAccentStyle(data?.color_acento), [data?.color_acento]);
 
   const sectionHasContent: Record<SectionId, boolean> = {
     perfil: Boolean(perfil),
@@ -457,7 +482,7 @@ export default function PortafolioPublico() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} style={accentStyle}>
       <header className={styles.topBar}>
         <div className={styles.brandBlock}>
           <span className={styles.brandKicker}>Devfolio</span>

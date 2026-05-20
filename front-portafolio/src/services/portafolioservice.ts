@@ -679,3 +679,7 @@ export const registrarVisualizacionPortafolio = async (slug: string): Promise<vo
 
   await axios.post(`${API}/public/portafolios/${slug}/visualizacion`, {}, { headers });
 };
+
+export const guardarColorAcento = async (colorAcento: string | null): Promise<void> => {
+  await axios.patch(`${API}/portafolio/color`, { color_acento: colorAcento }, { headers: authHeaders() });
+};
