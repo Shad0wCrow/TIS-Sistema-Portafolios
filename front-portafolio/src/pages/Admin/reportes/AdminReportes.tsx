@@ -265,6 +265,8 @@ export default function AdminReportes() {
 
         <nav className="admin-nav" aria-label="Navegación administrativa">
           <Link to="/admin" className="admin-nav-link">Dashboard</Link>
+          <Link to="/admin/estadisticas-usuarios" className="admin-nav-link">Estadísticas Usuarios</Link>
+          <Link to="/admin/estadisticas-portafolios" className="admin-nav-link">Estadísticas Portafolios</Link>
           <span className="admin-nav-link admin-nav-link--active">
             Reportes y usuarios
             {pendientesCount !== undefined && pendientesCount > 0 && (

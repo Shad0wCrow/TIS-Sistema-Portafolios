@@ -135,6 +135,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/usuarios/{id}/estado', [AdminController::class, 'actualizarEstadoUsuario']);
         Route::get('/reportes/resumen', [AdminController::class, 'reporteResumen']);
 
+        // HU-40: Estadísticas e indicadores
+        Route::get('/estadisticas/usuarios', [AdminController::class, 'estadisticasUsuarios']);
+        Route::get('/estadisticas/portafolios', [AdminController::class, 'estadisticasPortafolios']);
+
         // HU-61: Gestión de reportes de portafolios
         Route::get('/reportes/portafolios', [ReportePortafolioController::class, 'index']);
         Route::patch('/reportes/portafolios/{id}/resolver', [ReportePortafolioController::class, 'resolver']);

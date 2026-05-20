@@ -17,6 +17,8 @@ import PublicarPortafolio from "./pages/Publicar/PublicarPortafolio";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 // Admin — Reportes: gestión de reportes (HU-61) + habilitar/inhabilitar (HU-45, HU-46)
 import AdminReportes from "./pages/Admin/reportes/AdminReportes";
+import EstadisticasUsuarios from "./pages/Admin/reportes/EstadisticasUsuarios";
+import EstadisticasPortafolios from "./pages/Admin/reportes/EstadisticasPortafolios";
 
 import CvGenerator from "./pages/editPortafolio/CvGenerator";
 
@@ -52,6 +54,26 @@ function App() {
         element={
           <AdminRoute>
             <AdminDashboard />
+          </AdminRoute>
+        }
+      />
+
+      {/* /admin/estadisticas-usuarios → estadísticas de registros (HU-40) */}
+      <Route
+        path="/admin/estadisticas-usuarios"
+        element={
+          <AdminRoute>
+            <EstadisticasUsuarios />
+          </AdminRoute>
+        }
+      />
+
+      {/* /admin/estadisticas-portafolios → estadísticas de portafolios (HU-40) */}
+      <Route
+        path="/admin/estadisticas-portafolios"
+        element={
+          <AdminRoute>
+            <EstadisticasPortafolios />
           </AdminRoute>
         }
       />

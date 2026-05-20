@@ -3,7 +3,7 @@
  * Ruta: /admin
  * Solo muestra estadísticas de usuarios (HU-45, HU-46 → gestionadas en AdminReportes).
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AdminStatsCards from "./components/AdminStatsCards";
 import AdminReportsPanel from "./components/AdminReportsPanel";
@@ -60,6 +60,12 @@ export default function AdminDashboard() {
           <span className="admin-nav-link admin-nav-link--active">
             Dashboard
           </span>
+          <Link to="/admin/estadisticas-usuarios" className="admin-nav-link">
+            Estadísticas Usuarios
+          </Link>
+          <Link to="/admin/estadisticas-portafolios" className="admin-nav-link">
+            Estadísticas Portafolios
+          </Link>
           <Link to="/admin/reportes" className="admin-nav-link">
             Reportes y usuarios
           </Link>
@@ -121,6 +127,48 @@ export default function AdminDashboard() {
           ) : (
             <AdminReportsPanel report={summary} />
           )}
+        </section>
+
+        {/* Acceso rápido a Estadísticas y Reportes Detallados */}
+        <section className="admin-section">
+          <div className="admin-section-header">
+            <div>
+              <h2>Estadísticas Detalladas</h2>
+              <p>Métricas avanzadas sobre la adopción de usuarios y el volumen de portafolios.</p>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", marginTop: "12px" }}>
+            <article className="admin-report-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div>
+                <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--admin-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                  Crecimiento de Usuarios
+                </h2>
+                <p className="admin-empty-text" style={{ fontSize: "13px", marginBottom: "16px" }}>
+                  Visualiza el ritmo temporal de creación de cuentas de usuarios en el sistema agrupado de forma interactiva.
+                </p>
+              </div>
+              <Link to="/admin/estadisticas-usuarios" className="admin-current-user" style={{ textDecoration: "none", display: "inline-flex", justifyContent: "center", width: "fit-content" }}>
+                Ver Gráficos de Usuarios →
+              </Link>
+            </article>
+
+            <article className="admin-report-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div>
+                <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--admin-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+                  Volumen de Portafolios
+                </h2>
+                <p className="admin-empty-text" style={{ fontSize: "13px", marginBottom: "16px" }}>
+                  Analiza el volumen de portafolios publicados y su distribución categorizada por áreas profesionales.
+                </p>
+              </div>
+              <Link to="/admin/estadisticas-portafolios" className="admin-current-user" style={{ textDecoration: "none", display: "inline-flex", justifyContent: "center", width: "fit-content" }}>
+                Ver Gráficos de Portafolios →
+              </Link>
+            </article>
+          </div>
         </section>
 
         {/* Acceso rápido a gestión */}
