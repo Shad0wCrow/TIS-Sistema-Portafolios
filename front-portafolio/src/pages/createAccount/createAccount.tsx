@@ -155,9 +155,10 @@ async function fetchProfesiones(q: string): Promise<string[]> {
 interface CreateAccountProps {
     embedded?: boolean
     onSaved?: () => void
+    onCancel?: () => void
 }
 
-export default function CreateAccount({ embedded = false, onSaved }: CreateAccountProps) {
+export default function CreateAccount({ embedded = false, onSaved, onCancel }: CreateAccountProps) {
     const navigate = useNavigate()
 
     const [values, setValues] = useState<FormValues>({
@@ -178,6 +179,7 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
     const [fotoUrl, setFotoUrl] = useState("")
     const [fotoError, setFotoError] = useState<string | undefined>(undefined)
     const [showSuccess, setShowSuccess] = useState(false)
+    const [submitError, setSubmitError] = useState<string | null>(null)
 
     function handleChange(field: keyof FormValues) {
         return (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -230,11 +232,16 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
     }
 
     const handleCancelar = () => {
-        navigate("/dashboard")
+        if (embedded && onCancel) {
+            onCancel()
+        } else {
+            navigate("/dashboard")
+        }
     }
 
     async function handleGuardar() {
         if (saving) return
+        setSubmitError(null)
 
         const allTouched = Object.fromEntries(
             (Object.keys(values) as (keyof FormValues)[]).map((k) => [k, true])
@@ -273,8 +280,10 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
 
                 localStorage.setItem("hasProfile", "true")
                 setShowSuccess(true)
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error al guardar perfil:", error)
+                const msg = error.response?.data?.message || error.response?.data?.error || "Error al guardar el perfil. Por favor, intenta de nuevo."
+                setSubmitError(msg)
             } finally {
                 setSaving(false)
             }
@@ -372,6 +381,21 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
                             Advertencia: Los campos Nombre, Apellido, Profesión y País son definitivos y no se podrán cambiar después de guardar el registro.
                         </p>
                     </div>
+
+                    {submitError && (
+                        <div style={{
+                            padding: "12px 20px",
+                            background: "#fde8e8",
+                            border: "1px solid #f8b4b4",
+                            borderRadius: "10px",
+                            marginBottom: "10px",
+                            color: "#c81e1e",
+                            fontSize: "13px",
+                            fontWeight: "600"
+                        }}>
+                            {submitError}
+                        </div>
+                    )}
 
                     <div className={styles.section}>
                         <div className={styles.sectionTag}>
