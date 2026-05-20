@@ -13,7 +13,7 @@ const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
 const SOLO_NUMEROS = /^\+?[0-9\s\-()]{7,20}$/;
 const CARACTERES_PELIGROSOS = /[<>"'`;{}()]/;
 const URL_VALIDA = /^(https?:\/\/.+\..+|data:image\/.+)/;
-const LINK_URL_VALIDA = /^https?:\/\/.+\..+/;
+const LINK_URL_VALIDA = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
 const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface FormState {
@@ -117,8 +117,12 @@ function validar(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): 
     if (form.pais.trim() && CARACTERES_PELIGROSOS.test(form.pais)) errs.pais = "Caracteres no permitidos.";
     else if (form.pais.trim().length > 100) errs.pais = "Máximo 100 caracteres.";
 
-    if (form.correo_contacto.trim() && !EMAIL_VALIDO.test(form.correo_contacto.trim())) {
-        errs.correo_contacto = "Ingrese un correo válido.";
+    if (form.correo_contacto.trim()) {
+        if (!EMAIL_VALIDO.test(form.correo_contacto.trim())) {
+            errs.correo_contacto = "Ingrese un correo válido.";
+        } else if (!form.correo_contacto.trim().toLowerCase().endsWith("@gmail.com")) {
+            errs.correo_contacto = "El correo de contacto debe ser una dirección de @gmail.com.";
+        }
     }
 
     enlaces.forEach((enlace, index) => {
@@ -131,7 +135,7 @@ function validar(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): 
         else if (CARACTERES_PELIGROSOS.test(titulo)) errs[`enlaces.${index}.titulo`] = "Caracteres no permitidos.";
 
         if (!url) errs[`enlaces.${index}.url`] = "La URL es obligatoria.";
-        else if (!LINK_URL_VALIDA.test(url)) errs[`enlaces.${index}.url`] = "Debe comenzar con http:// o https://.";
+        else if (!LINK_URL_VALIDA.test(url)) errs[`enlaces.${index}.url`] = "Debe ser una URL válida (ej: https://...).";
     });
 
     return errs;
@@ -323,7 +327,10 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         const currentErrors = validar(form, fotoUrl, enlaces);
         setErrors(currentErrors);
 
-        if (Object.keys(currentErrors).length > 0) return;
+        if (Object.keys(currentErrors).length > 0) {
+            setConfirmAction(null);
+            return;
+        }
 
         if (!hasUnsavedChanges) {
             setSuccessMsg("No hay cambios para guardar.");
@@ -651,9 +658,11 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                     {/* ── Footer ── */}
                     <div className={styles.footer}>
                         <span className={styles.footerHint}>
-                            {hasUnsavedChanges
-                                ? "Tienes cambios sin guardar"
-                                : "Los cambios se guardan al presionar el botón"}
+                            {Object.keys(errors).length > 0 
+                                ? <span style={{ color: "var(--red, #e53e3e)", fontWeight: 500 }}>Hay errores de validación. Revisa los campos.</span>
+                                : hasUnsavedChanges
+                                    ? "Tienes cambios sin guardar"
+                                    : "Los cambios se guardan al presionar el botón"}
                         </span>
                         <div className={styles.footerActions}>
                             <button
