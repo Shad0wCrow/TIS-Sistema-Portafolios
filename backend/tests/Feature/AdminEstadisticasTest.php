@@ -147,4 +147,30 @@ class AdminEstadisticasTest extends TestCase
         $this->assertEquals(1, $response->json('total_historico_activo'));
         $this->assertEquals(1, $response->json('periodo_creados'));
     }
+
+    public function test_estadisticas_con_rango_y_fecha_especifica()
+    {
+        $admin = $this->crearAdmin();
+        Sanctum::actingAs($admin);
+
+        // Test day picker
+        $responseHoy = $this->getJson('/api/admin/estadisticas/usuarios?rango=hoy&fecha=2026-05-19');
+        $responseHoy->assertOk();
+        $this->assertCount(24, $responseHoy->json('crecimiento'));
+
+        // Test week picker
+        $responseSemana = $this->getJson('/api/admin/estadisticas/usuarios?rango=semana&fecha=2026-W21');
+        $responseSemana->assertOk();
+        $this->assertCount(7, $responseSemana->json('crecimiento'));
+
+        // Test month picker
+        $responseMes = $this->getJson('/api/admin/estadisticas/usuarios?rango=mes&fecha=2026-05');
+        $responseMes->assertOk();
+        $this->assertCount(31, $responseMes->json('crecimiento')); // May has 31 days
+
+        // Test year picker
+        $responseAnio = $this->getJson('/api/admin/estadisticas/usuarios?rango=anio&fecha=2025');
+        $responseAnio->assertOk();
+        $this->assertCount(12, $responseAnio->json('crecimiento'));
+    }
 }

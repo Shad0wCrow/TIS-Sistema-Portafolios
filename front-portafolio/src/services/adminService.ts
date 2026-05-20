@@ -283,21 +283,22 @@ export interface PortfolioStatsResponse {
   profesiones_disponibles: string[];
 }
 
-export const getAdminUserStats = async (rango: string): Promise<UserStatsResponse> => {
+export const getAdminUserStats = async (rango: string, fecha?: string): Promise<UserStatsResponse> => {
   const res = await axios.get(`${API}/admin/estadisticas/usuarios`, {
     headers: authHeaders(),
-    params: { rango },
+    params: { rango, fecha },
   });
   return res.data;
 };
 
 export const getAdminPortfolioStats = async (
   rango: string,
-  profesion?: string
+  profesion?: string,
+  fecha?: string
 ): Promise<PortfolioStatsResponse> => {
   const res = await axios.get(`${API}/admin/estadisticas/portafolios`, {
     headers: authHeaders(),
-    params: { rango, profesion: profesion || undefined },
+    params: { rango, profesion: profesion || undefined, fecha },
   });
   return res.data;
 };

@@ -4,10 +4,33 @@ import { getAdminPortfolioStats, type PortfolioStatsResponse } from "../../../se
 import "../AdminDashboard.css";
 import "./Estadisticas.css";
 
+const getTodayString = () => new Date().toISOString().split("T")[0];
+
+const getThisWeekString = () => {
+  const d = new Date();
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const year = d.getUTCFullYear();
+  const startOfYear = new Date(Date.UTC(year, 0, 1));
+  const week = Math.ceil((((d.getTime() - startOfYear.getTime()) / 86400000) + 1) / 7);
+  return `${year}-W${String(week).padStart(2, '0')}`;
+};
+
+const getThisMonthString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+const getThisYearString = () => {
+  return String(new Date().getFullYear());
+};
+
 export default function EstadisticasPortafolios() {
   const navigate = useNavigate();
   const [rango, setRango] = useState<string>("mes");
-  const [profesion, setProfesion] = useState<string>("");
+  const [fecha, setFecha] = useState<string>(getThisMonthString());
   const [stats, setStats] = useState<PortfolioStatsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,20 +44,18 @@ export default function EstadisticasPortafolios() {
     index: number;
   } | null>(null);
 
-  const [hoveredSliceIdx, setHoveredSliceIdx] = useState<number | null>(null);
-
   const loadStats = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAdminPortfolioStats(rango, profesion);
+      const data = await getAdminPortfolioStats(rango, undefined, fecha);
       setStats(data);
     } catch {
       setError("No se pudieron cargar las estadísticas de portafolios.");
     } finally {
       setLoading(false);
     }
-  }, [rango, profesion]);
+  }, [rango, fecha]);
 
   useEffect(() => {
     loadStats();
@@ -47,20 +68,6 @@ export default function EstadisticasPortafolios() {
     sessionStorage.removeItem("dashboardPortafoliosCache");
     navigate("/login");
   }
-
-  // Color palette for the Donut chart slices (Admin green theme variations)
-  const sliceColors = [
-    "#166644", // --admin-accent
-    "#1e8a5a", // --admin-accent-mid
-    "#31a372",
-    "#4db889",
-    "#70cc9f",
-    "#98e0b7",
-    "#c0f0d2",
-    "#8a6010", // warning-gold
-    "#9b3520", // danger-red
-    "#527063", // --admin-text-muted
-  ];
 
   // 1. Growth Bar Chart Logic
   const barSvgWidth = 600;
@@ -86,18 +93,6 @@ export default function EstadisticasPortafolios() {
       ((barSvgWidth - 2 * barPaddingX) / growthPoints.length) * 0.65
     )
   );
-
-  // 2. Donut Chart Logic
-  const distData = stats?.distribucion_profesiones || [];
-  const totalPortafoliosPeriodo = distData.reduce((sum, item) => sum + item.total, 0);
-  const isDistEmpty = totalPortafoliosPeriodo === 0;
-
-  // Donut geometry parameters
-  const donutR = 70;
-  const donutCenter = 120;
-  const circumference = 2 * Math.PI * donutR; // 439.82
-
-  let accumulatedPercent = 0;
 
   return (
     <div className="admin-page admin-portfolios-page">
@@ -134,42 +129,77 @@ export default function EstadisticasPortafolios() {
           <div className="stats-title-block">
             <h1>Volumen de Portafolios</h1>
             <p>
-              Estadísticas sobre los portafolios publicados y su distribución por áreas
-              profesionales.
+              Estadísticas sobre los portafolios publicados y su crecimiento a lo largo del tiempo.
             </p>
           </div>
 
           <div className="stats-controls">
-            <div className="admin-filter-field" style={{ minWidth: 160 }}>
-              <span className="admin-stat-label">Profesión:</span>
-              <select
-                value={profesion}
-                onChange={(e) => setProfesion(e.target.value)}
-                className="stats-select"
-                style={{ width: "100%" }}
-              >
-                <option value="">Todas las áreas</option>
-                {stats?.profesiones_disponibles.map((p, idx) => (
-                  <option key={idx} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="admin-filter-field" style={{ minWidth: 280, display: "flex", gap: "8px" }}>
+              <div style={{ flex: 1 }}>
+                <span className="admin-stat-label">Periodo:</span>
+                <select
+                  value={rango}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setRango(val);
+                    if (val === "hoy") setFecha(getTodayString());
+                    else if (val === "semana") setFecha(getThisWeekString());
+                    else if (val === "mes") setFecha(getThisMonthString());
+                    else if (val === "anio") setFecha(getThisYearString());
+                  }}
+                  className="stats-select"
+                  style={{ width: "100%" }}
+                >
+                  <option value="hoy">Por Día</option>
+                  <option value="semana">Por Semana</option>
+                  <option value="mes">Por Mes</option>
+                  <option value="anio">Por Año</option>
+                </select>
+              </div>
 
-            <div className="admin-filter-field" style={{ minWidth: 140 }}>
-              <span className="admin-stat-label">Periodo:</span>
-              <select
-                value={rango}
-                onChange={(e) => setRango(e.target.value)}
-                className="stats-select"
-                style={{ width: "100%" }}
-              >
-                <option value="hoy">Hoy</option>
-                <option value="semana">Esta Semana</option>
-                <option value="mes">Este Mes</option>
-                <option value="anio">Este Año</option>
-              </select>
+              <div style={{ flex: 1 }}>
+                <span className="admin-stat-label">Fecha:</span>
+                {rango === "hoy" && (
+                  <input
+                    type="date"
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                    className="stats-select"
+                    style={{ width: "100%" }}
+                  />
+                )}
+                {rango === "semana" && (
+                  <input
+                    type="week"
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                    className="stats-select"
+                    style={{ width: "100%" }}
+                  />
+                )}
+                {rango === "mes" && (
+                  <input
+                    type="month"
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                    className="stats-select"
+                    style={{ width: "100%" }}
+                  />
+                )}
+                {rango === "anio" && (
+                  <select
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                    className="stats-select"
+                    style={{ width: "100%" }}
+                  >
+                    {Array.from({ length: new Date().getFullYear() - 2023 }).map((_, i) => {
+                      const y = String(2024 + i);
+                      return <option key={y} value={y}>{y}</option>;
+                    }).reverse()}
+                  </select>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -185,7 +215,7 @@ export default function EstadisticasPortafolios() {
           <div className="indicator-card">
             <div className="indicator-info">
               <span className="indicator-title">
-                {profesion ? `Activos (${profesion})` : "Total histórico de activos"}
+                Total histórico de activos
               </span>
               <span className="indicator-value">
                 {loading ? "..." : stats?.total_historico_activo.toLocaleString()}
@@ -238,7 +268,7 @@ export default function EstadisticasPortafolios() {
         </div>
 
         {/* ── Charts Grid ── */}
-        <div className="stats-grid">
+        <div className="stats-grid stats-grid--full">
           {/* Chart 1: Volume Growth */}
           <div className="chart-card">
             <div className="chart-card-header">
@@ -362,147 +392,6 @@ export default function EstadisticasPortafolios() {
                     <span className="chart-tooltip-label">{hoveredBar.label}</span>
                     <span className="chart-tooltip-value">{hoveredBar.valor} portafolios</span>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Chart 2: Profession Distribution Donut */}
-          <div className="chart-card">
-            <div className="chart-card-header">
-              <h3>Distribución por Profesión</h3>
-              <p>Top 10 áreas profesionales de portafolios creados en el periodo.</p>
-            </div>
-
-            {loading ? (
-              <div className="admin-table-state">Cargando distribución…</div>
-            ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1.1fr 0.9fr",
-                  gap: "10px",
-                  alignItems: "center",
-                  flexGrow: 1,
-                }}
-              >
-                {isDistEmpty ? (
-                  <div
-                    style={{ gridColumn: "1 / -1", height: "100%" }}
-                    className="chart-svg-wrapper"
-                  >
-                    <div className="chart-empty-overlay">
-                      <div className="chart-empty-message">
-                        <h4>Sin datos</h4>
-                        <p>No hay datos de distribución profesional para el lapso elegido.</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* SVG Donut Chart */}
-                    <div className="chart-svg-wrapper" style={{ minHeight: 200 }}>
-                      <svg viewBox="0 0 240 240" className="chart-svg">
-                        <circle
-                          cx={donutCenter}
-                          cy={donutCenter}
-                          r={donutR}
-                          fill="transparent"
-                          stroke="var(--admin-surface-muted)"
-                          strokeWidth="22"
-                        />
-
-                        {distData.map((item, idx) => {
-                          const percent = item.total / totalPortafoliosPeriodo;
-                          const dashLength = percent * circumference;
-                          const strokeOffset = -accumulatedPercent * circumference;
-
-                          // Accumulate percentage for the next slice
-                          accumulatedPercent += percent;
-
-                          const color = sliceColors[idx % sliceColors.length];
-                          const isHovered = hoveredSliceIdx === idx;
-
-                          return (
-                            <circle
-                              key={idx}
-                              cx={donutCenter}
-                              cy={donutCenter}
-                              r={donutR}
-                              fill="transparent"
-                              stroke={color}
-                              strokeWidth={isHovered ? "28" : "22"}
-                              strokeDasharray={`${dashLength} ${circumference}`}
-                              strokeDashoffset={strokeOffset}
-                              transform="rotate(-90 120 120)"
-                              className="chart-donut-slice"
-                              onMouseEnter={() => setHoveredSliceIdx(idx)}
-                              onMouseLeave={() => setHoveredSliceIdx(null)}
-                            />
-                          );
-                        })}
-
-                        {/* Centered Total Indicator */}
-                        <text
-                          x={donutCenter}
-                          y={donutCenter - 4}
-                          textAnchor="middle"
-                          fontFamily="var(--admin-font)"
-                          fontWeight="700"
-                          fontSize="22"
-                          fill="var(--admin-text)"
-                        >
-                          {totalPortafoliosPeriodo}
-                        </text>
-                        <text
-                          x={donutCenter}
-                          y={donutCenter + 14}
-                          textAnchor="middle"
-                          fontFamily="var(--admin-font-mono)"
-                          fontWeight="700"
-                          fontSize="9"
-                          letterSpacing="0.05em"
-                          fill="var(--admin-text-faint)"
-                        >
-                          PORTAFOLIOS
-                        </text>
-                      </svg>
-                    </div>
-
-                    {/* Donut Legend */}
-                    <div className="chart-legend">
-                      {distData.map((item, idx) => {
-                        const color = sliceColors[idx % sliceColors.length];
-                        const isHovered = hoveredSliceIdx === idx;
-                        const percent = ((item.total / totalPortafoliosPeriodo) * 100).toFixed(
-                          1
-                        );
-
-                        return (
-                          <div
-                            key={idx}
-                            className="chart-legend-item"
-                            style={{
-                              background: isHovered ? "var(--admin-surface-hover)" : undefined,
-                            }}
-                            onMouseEnter={() => setHoveredSliceIdx(idx)}
-                            onMouseLeave={() => setHoveredSliceIdx(null)}
-                          >
-                            <span
-                              className="chart-legend-color"
-                              style={{ backgroundColor: color }}
-                            />
-                            <span className="chart-legend-text" title={item.profesion}>
-                              {item.profesion}
-                            </span>
-                            <span className="chart-legend-value">
-                              {item.total} ({percent}%)
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
                 )}
               </div>
             )}

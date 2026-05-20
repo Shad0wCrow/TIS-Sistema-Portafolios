@@ -250,8 +250,9 @@ class AdminController extends Controller
     /**
      * Helper to compute date range boundaries, label sets, and PostgreSQL date extraction groupings.
      * Centralized to allow future scalability to other types of stats reports (e.g., visualizaciones, contactos).
+     * Accepts a target date parameter ($fecha) to load specific days, weeks, months, or years dynamically.
      */
-    protected function obtenerRangoFechasYAgrupacion(string $rango): array
+    protected function obtenerRangoFechasYAgrupacion(string $rango, ?string $fecha = null): array
     {
         $now = \Illuminate\Support\Carbon::now();
         $labels = [];
@@ -262,8 +263,16 @@ class AdminController extends Controller
 
         switch ($rango) {
             case 'hoy':
-                $inicio = $now->copy()->startOfDay();
-                $fin = $now->copy()->endOfDay();
+                $target = $now;
+                if ($fecha) {
+                    try {
+                        $target = \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $fecha);
+                    } catch (\Exception $e) {
+                        // ignore and use current date
+                    }
+                }
+                $inicio = $target->copy()->startOfDay();
+                $fin = $target->copy()->endOfDay();
                 $sqlGroup = "EXTRACT(HOUR FROM creado_en)";
                 for ($i = 0; $i < 24; $i++) {
                     $labels[] = sprintf("%02d:00", $i);
@@ -274,8 +283,14 @@ class AdminController extends Controller
                 break;
 
             case 'semana':
-                $inicio = $now->copy()->startOfWeek(); // Monday
-                $fin = $now->copy()->endOfWeek(); // Sunday
+                $target = $now;
+                if ($fecha && preg_match('/^(\d{4})-W(\d{1,2})$/', $fecha, $matches)) {
+                    $year = (int)$matches[1];
+                    $week = (int)$matches[2];
+                    $target = \Illuminate\Support\Carbon::now()->setISODate($year, $week);
+                }
+                $inicio = $target->copy()->startOfWeek(); // Monday
+                $fin = $target->copy()->endOfWeek(); // Sunday
                 $sqlGroup = "EXTRACT(ISODOW FROM creado_en)";
                 $labels = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
                 $formateadorClave = function ($rowKey) use ($labels) {
@@ -285,8 +300,13 @@ class AdminController extends Controller
                 break;
 
             case 'anio':
-                $inicio = $now->copy()->startOfYear();
-                $fin = $now->copy()->endOfYear();
+                $target = $now;
+                if ($fecha && preg_match('/^\d{4}$/', $fecha)) {
+                    $year = (int)$fecha;
+                    $target = \Illuminate\Support\Carbon::createFromDate($year, 1, 1);
+                }
+                $inicio = $target->copy()->startOfYear();
+                $fin = $target->copy()->endOfYear();
                 $sqlGroup = "EXTRACT(MONTH FROM creado_en)";
                 $labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
                 $formateadorClave = function ($rowKey) use ($labels) {
@@ -297,10 +317,16 @@ class AdminController extends Controller
 
             case 'mes':
             default:
-                $inicio = $now->copy()->startOfMonth();
-                $fin = $now->copy()->endOfMonth();
+                $target = $now;
+                if ($fecha && preg_match('/^(\d{4})-(\d{2})$/', $fecha, $matches)) {
+                    $year = (int)$matches[1];
+                    $month = (int)$matches[2];
+                    $target = \Illuminate\Support\Carbon::createFromDate($year, $month, 1)->startOfDay();
+                }
+                $inicio = $target->copy()->startOfMonth();
+                $fin = $target->copy()->endOfMonth();
                 $sqlGroup = "EXTRACT(DAY FROM creado_en)";
-                $daysInMonth = $now->daysInMonth;
+                $daysInMonth = $target->daysInMonth;
                 for ($d = 1; $d <= $daysInMonth; $d++) {
                     $labels[] = sprintf("%02d", $d);
                 }
@@ -326,11 +352,12 @@ class AdminController extends Controller
     public function estadisticasUsuarios(Request $request)
     {
         $rango = $request->query('rango', 'mes');
+        $fecha = $request->query('fecha');
         if (!in_array($rango, ['hoy', 'semana', 'mes', 'anio'])) {
             $rango = 'mes';
         }
 
-        $config = $this->obtenerRangoFechasYAgrupacion($rango);
+        $config = $this->obtenerRangoFechasYAgrupacion($rango, $fecha);
 
         $totalUsuarios = DB::table('usuario')->count();
 
@@ -379,12 +406,13 @@ class AdminController extends Controller
     public function estadisticasPortafolios(Request $request)
     {
         $rango = $request->query('rango', 'mes');
+        $fecha = $request->query('fecha');
         if (!in_array($rango, ['hoy', 'semana', 'mes', 'anio'])) {
             $rango = 'mes';
         }
         $profesion = $request->query('profesion');
 
-        $config = $this->obtenerRangoFechasYAgrupacion($rango);
+        $config = $this->obtenerRangoFechasYAgrupacion($rango, $fecha);
 
         // 1. Total histórico de portafolios activos (publicados)
         $queryTotal = DB::table('portafolio_publicacion')

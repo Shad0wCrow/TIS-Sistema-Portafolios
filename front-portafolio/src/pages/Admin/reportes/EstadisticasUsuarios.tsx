@@ -4,9 +4,33 @@ import { getAdminUserStats, type UserStatsResponse } from "../../../services/adm
 import "../AdminDashboard.css";
 import "./Estadisticas.css";
 
+const getTodayString = () => new Date().toISOString().split("T")[0];
+
+const getThisWeekString = () => {
+  const d = new Date();
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const year = d.getUTCFullYear();
+  const startOfYear = new Date(Date.UTC(year, 0, 1));
+  const week = Math.ceil((((d.getTime() - startOfYear.getTime()) / 86400000) + 1) / 7);
+  return `${year}-W${String(week).padStart(2, '0')}`;
+};
+
+const getThisMonthString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+const getThisYearString = () => {
+  return String(new Date().getFullYear());
+};
+
 export default function EstadisticasUsuarios() {
   const navigate = useNavigate();
   const [rango, setRango] = useState<string>("mes");
+  const [fecha, setFecha] = useState<string>(getThisMonthString());
   const [stats, setStats] = useState<UserStatsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,14 +46,14 @@ export default function EstadisticasUsuarios() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAdminUserStats(rango);
+      const data = await getAdminUserStats(rango, fecha);
       setStats(data);
     } catch {
       setError("No se pudieron cargar las estadísticas de usuarios.");
     } finally {
       setLoading(false);
     }
-  }, [rango]);
+  }, [rango, fecha]);
 
   useEffect(() => {
     loadStats();
@@ -123,14 +147,62 @@ export default function EstadisticasUsuarios() {
             <select
               id="rango-select"
               value={rango}
-              onChange={(e) => setRango(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setRango(val);
+                if (val === "hoy") setFecha(getTodayString());
+                else if (val === "semana") setFecha(getThisWeekString());
+                else if (val === "mes") setFecha(getThisMonthString());
+                else if (val === "anio") setFecha(getThisYearString());
+              }}
               className="stats-select"
             >
-              <option value="hoy">Hoy</option>
-              <option value="semana">Esta Semana</option>
-              <option value="mes">Este Mes</option>
-              <option value="anio">Este Año</option>
+              <option value="hoy">Por Día</option>
+              <option value="semana">Por Semana</option>
+              <option value="mes">Por Mes</option>
+              <option value="anio">Por Año</option>
             </select>
+
+            {rango === "hoy" && (
+              <input
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="stats-select"
+                style={{ marginLeft: "8px" }}
+              />
+            )}
+            {rango === "semana" && (
+              <input
+                type="week"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="stats-select"
+                style={{ marginLeft: "8px" }}
+              />
+            )}
+            {rango === "mes" && (
+              <input
+                type="month"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="stats-select"
+                style={{ marginLeft: "8px" }}
+              />
+            )}
+            {rango === "anio" && (
+              <select
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="stats-select"
+                style={{ marginLeft: "8px" }}
+              >
+                {Array.from({ length: new Date().getFullYear() - 2023 }).map((_, i) => {
+                  const y = String(2024 + i);
+                  return <option key={y} value={y}>{y}</option>;
+                }).reverse()}
+              </select>
+            )}
           </div>
         </div>
 
