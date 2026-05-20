@@ -270,6 +270,8 @@ export default function Portafolio() {
   }, [data]);
 
   const perfil = data?.perfil ?? null;
+  const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
+  const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
   const habilidadesBlandas = data?.habilidades_blandas ?? [];
   const proyectos = data?.proyectos ?? [];
@@ -330,6 +332,35 @@ export default function Portafolio() {
                 <p className={styles.fieldLabel}>Teléfono</p>
                 <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
               </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Ubicación</p>
+                <p className={styles.fieldValue}>{ubicacionPerfil || "Sin información"}</p>
+              </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Correo</p>
+                <p className={styles.fieldValue}>{perfil?.correo_contacto ?? "Sin información"}</p>
+              </div>
+
+              {enlacesPerfil.length > 0 && (
+                <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                  <p className={styles.fieldLabel}>Enlaces personalizados</p>
+                  <div className={styles.profileLinks}>
+                    {enlacesPerfil.map((enlace, index) => (
+                      <a
+                        key={`${enlace.url}-${index}`}
+                        href={enlace.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.profileLink}
+                      >
+                        {enlace.titulo}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </SectionShell>
         );
@@ -649,6 +680,7 @@ export default function Portafolio() {
             <div className={styles.profileHeader}>
               <h2 className={styles.profileName}>{nombreCompleto}</h2>
               {perfil?.profesion && <p className={styles.profileRole}>{perfil.profesion}</p>}
+              {ubicacionPerfil && <p className={styles.profileRole}>{ubicacionPerfil}</p>}
               {perfil?.descripcion && <p className={styles.profileDescription}>{perfil.descripcion}</p>}
             </div>
           </div>

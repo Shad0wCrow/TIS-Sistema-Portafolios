@@ -180,6 +180,7 @@ export interface PortafolioData {
 export interface ContactoDirecto {
   habilitado: boolean;
   correo: string | null;
+  telefono?: string | null;
 }
 
 export interface EstadoPublicacionPortafolio {
