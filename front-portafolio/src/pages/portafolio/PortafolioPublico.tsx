@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   eliminarPortafolioGuardado,
@@ -60,6 +61,29 @@ const emptyData: Required<Pick<
   experiencias: [],
 };
 
+const DEFAULT_ACCENT_COLOR = "#1a6644";
+
+function hexToRgba(hexColor: string, alpha: number): string {
+  const hex = hexColor.trim();
+  const normalized = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : DEFAULT_ACCENT_COLOR;
+  const r = parseInt(normalized.slice(1, 3), 16);
+  const g = parseInt(normalized.slice(3, 5), 16);
+  const b = parseInt(normalized.slice(5, 7), 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function buildAccentStyle(color?: string | null): CSSProperties {
+  const accent = color && /^#[0-9a-fA-F]{6}$/.test(color.trim())
+    ? color.trim()
+    : DEFAULT_ACCENT_COLOR;
+
+  return {
+    ["--color-accent" as any]: accent,
+    ["--color-accent-soft" as any]: hexToRgba(accent, 0.22),
+  };
+}
+
 const getRequestMessage = (err: unknown, fallback: string): string => {
   if (
     err &&
@@ -84,6 +108,10 @@ export default function PortafolioPublico() {
   const [savingGuardado, setSavingGuardado] = useState(false);
   const [guardadoMessage, setGuardadoMessage] = useState("");
   const [contactLoading, setContactLoading] = useState(false);
+  const [contactDropdownOpen, setContactDropdownOpen] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const contactBtnRef = useRef<HTMLButtonElement>(null);
   const [esPropioPerfil, setEsPropioPerfil] = useState(false);
 
   useEffect(() => {
@@ -146,14 +174,18 @@ export default function PortafolioPublico() {
   }, [certificaciones]);
   const experiencias = (data?.experiencias ?? emptyData.experiencias) as Experiencia[];
   const contactoDirecto = data?.contacto_directo;
+  const telefonoContacto = contactoDirecto?.telefono || perfil?.celular || null;
+  const correoContacto   = contactoDirecto?.correo  || perfil?.correo_contacto || null;
   const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
   const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
-  const mostrarContactoDirecto = Boolean(contactoDirecto?.habilitado && contactoDirecto.correo && slug);
+  const mostrarContactoDirecto = Boolean(contactoDirecto?.habilitado && (telefonoContacto || correoContacto) && slug);
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Portafolio profesional";
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Portafolio profesional";
   }, [perfil]);
+
+  const accentStyle = useMemo(() => buildAccentStyle(data?.color_acento), [data?.color_acento]);
 
   const sectionHasContent: Record<SectionId, boolean> = {
     perfil: Boolean(perfil),
@@ -197,19 +229,37 @@ export default function PortafolioPublico() {
     }
   };
 
-  const handleContactoDirecto = async () => {
-    if (!slug || !contactoDirecto?.correo || contactLoading) return;
+  const handleContactoDirecto = async (tipo: "whatsapp" | "correo") => {
+    if (!slug || contactLoading) return;
+    setContactError("");
 
-    const fallbackMailto = `mailto:${contactoDirecto.correo}`;
+    if (tipo === "whatsapp") {
+      if (!telefonoContacto) {
+        setContactError("El usuario no tiene número registrado");
+        return;
+      }
+      const numero = telefonoContacto.replace(/\D/g, "");
+      window.open(`https://wa.me/${numero}`, "_blank", "noreferrer");
+      setContactDropdownOpen(false);
+      return;
+    }
 
-    try {
-      setContactLoading(true);
-      const response = await registrarContactoDirecto(slug);
-      window.location.href = response.mailto || fallbackMailto;
-    } catch {
-      window.location.href = fallbackMailto;
-    } finally {
-      setContactLoading(false);
+    if (tipo === "correo") {
+      if (!correoContacto) {
+        setContactError("El usuario no tiene correo registrado");
+        return;
+      }
+      const fallbackMailto = `mailto:${correoContacto}`;
+      try {
+        setContactLoading(true);
+        const response = await registrarContactoDirecto(slug);
+        window.open(response.mailto || fallbackMailto, "_blank", "noreferrer");
+      } catch {
+        window.open(fallbackMailto, "_blank", "noreferrer");
+      } finally {
+        setContactLoading(false);
+        setContactDropdownOpen(false);
+      }
     }
   };
 
@@ -432,7 +482,7 @@ export default function PortafolioPublico() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} style={accentStyle}>
       <header className={styles.topBar}>
         <div className={styles.brandBlock}>
           <span className={styles.brandKicker}>Devfolio</span>
@@ -468,16 +518,34 @@ export default function PortafolioPublico() {
             <div className={styles.profileHeader}>
               <h2 className={styles.profileName}>{nombreCompleto}</h2>
               {perfil?.profesion && <p className={styles.profileRole}>{perfil.profesion}</p>}
+              {ubicacionPerfil && <p className={styles.profileRole}>{ubicacionPerfil}</p>}
               {perfil?.descripcion && <p className={styles.profileDescription}>{perfil.descripcion}</p>}
               {mostrarContactoDirecto && (
-                <button
-                  type="button"
-                  className={styles.contactButton}
-                  onClick={handleContactoDirecto}
-                  disabled={contactLoading}
-                >
-                  {contactLoading ? "Abriendo..." : "Contacto directo"}
-                </button>
+                <div className={styles.contactWrapper}>
+                  <button
+                    ref={contactBtnRef}
+                    type="button"
+                    className={styles.contactButton}
+                    onClick={() => {
+                      setContactError("");
+                      if (contactDropdownOpen) {
+                        setContactDropdownOpen(false);
+                        setDropdownPos(null);
+                      } else {
+                        const rect = contactBtnRef.current?.getBoundingClientRect();
+                        if (rect) setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
+                        setContactDropdownOpen(true);
+                      }
+                    }}
+                    aria-haspopup="true"
+                    aria-expanded={contactDropdownOpen}
+                  >
+                    Contacto directo
+                  </button>
+                  {contactError && (
+                    <p className={styles.contactErrorMsg} role="alert">{contactError}</p>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -500,6 +568,33 @@ export default function PortafolioPublico() {
       {/* CA #1 y #6: Botón flotante de reporte (oculto para el propietario) */}
       {slug && (
         <ReportarPortafolio slug={slug} esPropioPerfil={esPropioPerfil} />
+      )}
+      {contactDropdownOpen && dropdownPos && createPortal(
+        <div
+          className={styles.contactDropdown}
+          role="menu"
+          style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 99999 }}
+        >
+          <button
+            type="button"
+            className={styles.contactDropdownItem}
+            role="menuitem"
+            onClick={() => handleContactoDirecto("whatsapp")}
+            disabled={contactLoading}
+          >
+            WhatsApp
+          </button>
+          <button
+            type="button"
+            className={styles.contactDropdownItem}
+            role="menuitem"
+            onClick={() => handleContactoDirecto("correo")}
+            disabled={contactLoading}
+          >
+            Correo
+          </button>
+        </div>,
+        document.body
       )}
     </div>
   );

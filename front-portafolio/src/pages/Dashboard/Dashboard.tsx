@@ -100,7 +100,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
 
-    if (!token || profileStatus !== 'checking') return;
+    if (!token) return;
 
     fetch('http://localhost:8000/api/perfil/me', {
       headers: { Authorization: `Bearer ${token}` },
@@ -112,8 +112,11 @@ const Dashboard: React.FC = () => {
         if (exists) localStorage.setItem('hasPortafolio', 'true');
         setProfileStatus(exists ? 'exists' : 'missing');
       })
-      .catch(() => setProfileStatus('missing'));
-  }, [profileStatus]);
+      .catch(() => {
+        const stored = localStorage.getItem('hasProfile');
+        setProfileStatus(stored === 'true' ? 'exists' : 'missing');
+      });
+  }, []);
 
   const handleCopy = async () => {
     if (!publicacion?.url_publica) return;
@@ -184,7 +187,7 @@ const Dashboard: React.FC = () => {
               ) : profileStatus === 'exists' ? (
                 <EditarPerfil embedded onBack={() => setActiveView('inicio')} />
               ) : (
-                <CreateAccount embedded onSaved={handleProfileCreated} />
+                <CreateAccount embedded onSaved={handleProfileCreated} onCancel={() => setActiveView('inicio')} />
               )}
             </section>
           ) : (

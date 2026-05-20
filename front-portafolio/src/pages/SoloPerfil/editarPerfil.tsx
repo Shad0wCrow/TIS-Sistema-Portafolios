@@ -161,7 +161,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
     const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
-    const [activeProfileTab, setActiveProfileTab] = useState<"basic" | "advanced">("basic");
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
     useEffect(() => {
@@ -369,25 +368,21 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                     </div>
 
                     <div className={styles.content}>
-                        <div className={styles.profileTabs} aria-label="Secciones de perfil">
-                            <button
-                                type="button"
-                                className={`${styles.profileTab} ${activeProfileTab === "basic" ? styles.profileTabActive : ""}`}
-                                onClick={() => setActiveProfileTab("basic")}
-                            >
-                                Datos básicos
-                            </button>
-                            <button
-                                type="button"
-                                className={`${styles.profileTab} ${activeProfileTab === "advanced" ? styles.profileTabActive : ""}`}
-                                onClick={() => setActiveProfileTab("advanced")}
-                            >
-                                Perfil avanzado
-                            </button>
+                        <div style={{
+                            padding: "16px 20px",
+                            background: "#ffffff",
+                            border: "1px solid var(--border)",
+                            borderRadius: "8px",
+                            marginBottom: "20px"
+                        }}>
+                            <p style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "700", color: "var(--accent, #1a6644)" }}>
+                                Estás editando tu perfil.
+                            </p>
+                            <p style={{ margin: "0", fontSize: "12px", color: "var(--text2, #4a5e54)" }}>
+                                Los campos Nombre, Apellido, Profesión y País no se pueden editar porque ya fueron registrados.
+                            </p>
                         </div>
 
-                        {activeProfileTab === "basic" && (
-                            <>
                         <div className={styles.section}>
                             <div className={styles.sectionHeader}>
                                 <span className={styles.sectionTitle}>Foto de perfil</span>
@@ -493,22 +488,19 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                                 </div>
                             </div>
                         </div>
-                            </>
-                        )}
 
-                        {activeProfileTab === "advanced" && (
-                            <AdvancedProfileSection
-                                ciudad={form.ciudad}
-                                pais={form.pais}
-                                correoContacto={form.correo_contacto}
-                                enlaces={enlaces}
-                                errors={errors}
-                                onFieldChange={handleAdvancedFieldChange}
-                                onLinkChange={handleLinkChange}
-                                onAddLink={handleAddLink}
-                                onRemoveLink={handleRemoveLink}
-                            />
-                        )}
+                        <AdvancedProfileSection
+                            ciudad={form.ciudad}
+                            pais={form.pais}
+                            correoContacto={form.correo_contacto}
+                            enlaces={enlaces}
+                            errors={errors}
+                            onFieldChange={handleAdvancedFieldChange}
+                            onLinkChange={handleLinkChange}
+                            onAddLink={handleAddLink}
+                            onRemoveLink={handleRemoveLink}
+                            disabledPais={true}
+                        />
                     </div>
 
                     {/* ── Footer ── */}

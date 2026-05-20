@@ -15,6 +15,7 @@ interface AdvancedProfileSectionProps {
     onLinkChange: (index: number, field: keyof ProfileLinkForm, value: string) => void;
     onAddLink: () => void;
     onRemoveLink: (index: number) => void;
+    disabledPais?: boolean;
 }
 
 export default function AdvancedProfileSection({
@@ -27,11 +28,12 @@ export default function AdvancedProfileSection({
     onLinkChange,
     onAddLink,
     onRemoveLink,
+    disabledPais = false,
 }: AdvancedProfileSectionProps) {
     return (
         <div className={styles.section}>
             <div className={styles.sectionHeader}>
-                <span className={styles.sectionTitle}>Perfil avanzado</span>
+                <span className={styles.sectionTitle}>Ubicación y contacto</span>
             </div>
             <div className={styles.formCard}>
                 <div className={styles.grid}>
@@ -48,13 +50,14 @@ export default function AdvancedProfileSection({
                     </div>
 
                     <div className={styles.fieldGroup}>
-                        <label className={styles.label}>Pais</label>
+                        <label className={styles.label}>País</label>
                         <input
                             className={`${styles.input} ${errors.pais ? styles.inputError : ""}`}
                             value={pais}
                             onChange={(event) => onFieldChange("pais", event.target.value)}
                             placeholder="Ej: Bolivia"
                             maxLength={100}
+                            disabled={disabledPais}
                         />
                         {errors.pais && <span className={styles.fieldError}>{errors.pais}</span>}
                     </div>

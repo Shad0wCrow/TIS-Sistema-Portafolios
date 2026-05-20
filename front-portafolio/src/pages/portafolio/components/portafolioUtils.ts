@@ -151,3 +151,34 @@ export {
 };
 
 export type { SectionId, PreviewSnapshot };
+
+export const DEFAULT_ACCENT_COLOR = "#1a6644";
+
+function hexToRgb(hex: string) {
+  const clean = hex.replace("#", "");
+  return {
+    r: parseInt(clean.slice(0, 2), 16),
+    g: parseInt(clean.slice(2, 4), 16),
+    b: parseInt(clean.slice(4, 6), 16),
+  };
+}
+
+function darkenHex(hex: string, factor: number) {
+  const { r, g, b } = hexToRgb(hex);
+  const dr = Math.max(0, Math.round(r * factor));
+  const dg = Math.max(0, Math.round(g * factor));
+  const db = Math.max(0, Math.round(b * factor));
+  return `rgb(${dr}, ${dg}, ${db})`;
+}
+
+export function applyAccentColor(color: string): void {
+  const { r, g, b } = hexToRgb(color);
+
+  document.documentElement.style.setProperty("--color-accent", color);
+  document.documentElement.style.setProperty("--color-accent-soft", `rgba(${r}, ${g}, ${b}, 0.12)`);
+  document.documentElement.style.setProperty("--color-accent-dark", darkenHex(color, 0.8));
+  document.documentElement.style.setProperty("--color-accent-bg", `rgba(${r}, ${g}, ${b}, 0.18)`);
+  document.documentElement.style.setProperty("--color-accent-bg2", `rgba(${r}, ${g}, ${b}, 0.12)`);
+  document.documentElement.style.setProperty("--color-accent-border", `rgba(${r}, ${g}, ${b}, 0.22)`);
+  document.documentElement.style.setProperty("--color-accent-ring", `rgba(${r}, ${g}, ${b}, 0.28)`);
+}

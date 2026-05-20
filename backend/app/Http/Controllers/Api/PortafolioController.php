@@ -173,6 +173,13 @@ class PortafolioController extends Controller
         $enlaces = $data['enlaces_personalizados'] ?? null;
         unset($data['foto_file'], $data['enlaces_personalizados']);
 
+        // Prevent modifying restricted fields if they are already set
+        foreach (['nombre_perfil', 'apellido_perfil', 'profesion', 'pais'] as $restrictedField) {
+            if (isset($data[$restrictedField]) && !empty($perfil->$restrictedField)) {
+                unset($data[$restrictedField]);
+            }
+        }
+
         DB::transaction(function () use ($perfil, $data, $enlaces) {
             $perfil->update($data);
 

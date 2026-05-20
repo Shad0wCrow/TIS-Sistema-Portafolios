@@ -165,6 +165,7 @@ export interface Experiencia {
 export interface PortafolioData {
   perfil: Perfil | null;
   contacto_directo?: ContactoDirecto;
+  color_acento?: string | null;
   habilidades_tecnicas: HabilidadItem[];
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
@@ -180,6 +181,7 @@ export interface PortafolioData {
 export interface ContactoDirecto {
   habilitado: boolean;
   correo: string | null;
+  telefono?: string | null;
 }
 
 export interface EstadoPublicacionPortafolio {
