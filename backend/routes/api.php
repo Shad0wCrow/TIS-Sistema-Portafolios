@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\PortafolioGuardadoController;
 use App\Http\Controllers\Api\DashboardPortafolioController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ReportePortafolioController;
+use App\Http\Controllers\Api\GithubController;
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
@@ -46,6 +47,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/perfil/me', [PerfilController::class, 'me']);
     Route::post('/perfil',   [PerfilController::class, 'store']);
     Route::put('/perfil',    [PerfilController::class, 'update']);
+    Route::get('/github',     [GithubController::class, 'show']);
+    Route::post('/github',    [GithubController::class, 'save']);
+    Route::get('/github/repos', [GithubController::class, 'repos']);
 
     // Pantalla "Edición de Portafolio" 
     Route::get('/dashboard/portafolios',          [DashboardPortafolioController::class, 'show']);
