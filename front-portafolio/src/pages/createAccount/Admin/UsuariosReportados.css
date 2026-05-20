@@ -1,0 +1,128 @@
+:root {
+  --admin-bg: #f4f6f5;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #eef1ef;
+  --admin-border: #d8e1dc;
+  --admin-border-strong: #c2d1ca;
+  --admin-text: #111f18;
+  --admin-text-muted: #5f7168;
+  --admin-accent: #1a6644;
+  --admin-accent-soft: #e8f5ee;
+  --admin-danger: #a33c20;
+  --admin-danger-soft: #fff1ed;
+}
+
+.admin-users-page .admin-main {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 28px 32px 40px;
+}
+
+.admin-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #edf3ef;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-nav-link--active {
+  background: #ffffff;
+  color: var(--admin-accent);
+  border-color: transparent;
+}
+
+.admin-users-shell {
+  padding: 20px;
+}
+
+.admin-users-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-refresh-btn {
+  min-height: 38px;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--admin-text-muted);
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-refresh-btn:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.admin-users-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 0.9fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.admin-users-table-zone {
+  min-width: 0;
+}
+
+.admin-users-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-users-note .admin-empty-text {
+  margin-top: 10px;
+}
+
+.admin-users-empty {
+  margin-top: 14px;
+}
+
+@media (max-width: 1200px) {
+  .admin-users-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-users-page .admin-main {
+    padding: 18px;
+  }
+
+  .admin-users-shell {
+    padding: 14px;
+  }
+
+  .admin-nav {
+    width: 100%;
+  }
+
+  .admin-nav-link {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
