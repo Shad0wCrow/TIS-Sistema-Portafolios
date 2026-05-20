@@ -5,6 +5,7 @@ import PageLoader from '../../components/ui/PageLoader/PageLoader';
 import {
   getVisibilidadSecciones,
   updateVisibilidadSecciones,
+  getPortafolio,
 } from '../../services/portafolioservice';
 import type { ConfiguracionSecciones, EstadoVisibilidad } from '../../types/portafolioTypes';
 import { SECCION_LABELS } from '../../types/portafolioTypes';
@@ -102,6 +103,7 @@ function Toggle({
 export default function ConfiguracionPublicacion() {
   const navigate = useNavigate();
   const [config, setConfig]               = useState<ConfiguracionSecciones>(DEFAULTS);
+  const [perfil, setPerfil]               = useState<any>(null);
   const [loading, setLoading]             = useState(true);
   const [saving, setSaving]               = useState(false);
   const [savedOk, setSavedOk]             = useState(false);
@@ -115,9 +117,10 @@ export default function ConfiguracionPublicacion() {
       navigate('/login');
       return;
     }
-    getVisibilidadSecciones()
-      .then((seccionesData) => {
+    Promise.all([getVisibilidadSecciones(), getPortafolio()])
+      .then(([seccionesData, portafolioData]) => {
         setConfig(seccionesData);
+        setPerfil(portafolioData.perfil);
       })
       .catch(() => setError('No se pudo cargar la configuración. Intenta de nuevo.'))
       .finally(() => setLoading(false));
@@ -173,7 +176,10 @@ export default function ConfiguracionPublicacion() {
   };
 
   const publicasCount = SECCIONES.filter((k) => esPublico(config[k])).length;
+  const hasCorreo = Boolean(perfil?.correo_contacto);
+
   const handleToggleContacto = () => {
+    if (!hasCorreo) return;
     setValidationErr('');
     setSavedOk(false);
     setConfig((prev) => ({ ...prev, mostrar_correo: !prev.mostrar_correo }));
@@ -244,6 +250,15 @@ export default function ConfiguracionPublicacion() {
             <label htmlFor="toggle-contacto-directo" className={styles.sectionLabel}>
               <span className={`${styles.sectionName} ${config.mostrar_correo ? styles.sectionNameActive : ''}`}>
                 Contacto directo
+            {!hasCorreo && (
+              <span style={{ 
+                display: 'block', 
+                fontSize: '0.8em', 
+                color: 'var(--red, #e53e3e)', 
+                fontWeight: 'normal', 
+                marginTop: '2px' 
+              }}>Requiere un correo en tu perfil</span>
+            )}
               </span>
               <span className={`${styles.sectionBadge} ${config.mostrar_correo ? styles.badgePublico : styles.badgePrivado}`}>
                 {config.mostrar_correo ? 'Activo' : 'Inactivo'}
@@ -256,6 +271,8 @@ export default function ConfiguracionPublicacion() {
               id="toggle-contacto-directo"
               className={`${styles.toggle} ${config.mostrar_correo ? styles.toggleOn : styles.toggleOff}`}
               onClick={handleToggleContacto}
+          disabled={!hasCorreo}
+          style={{ opacity: !hasCorreo ? 0.5 : 1, cursor: !hasCorreo ? 'not-allowed' : 'pointer' }}
             >
               <span className={styles.toggleThumb} />
             </button>
