@@ -1,0 +1,64 @@
+/* AdminReportesTabs.css
+   Añadir este @import en AdminReportes.tsx:
+     import "./AdminReportesTabs.css";
+   O pegar al final de AdminReportes.css existente.
+*/
+
+/* ── Tabs internos (Reportes / Usuarios) ── */
+.ar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 32px 0;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+}
+
+.ar-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--admin-text-muted);
+  font: 600 13px/1 var(--admin-font);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: color var(--admin-transition), border-color var(--admin-transition);
+  border-radius: var(--admin-radius-sm) var(--admin-radius-sm) 0 0;
+  margin-bottom: -1px;
+}
+
+.ar-tab:hover {
+  color: var(--admin-text);
+  background: var(--admin-surface-hover);
+}
+
+.ar-tab--active {
+  color: var(--admin-accent);
+  border-bottom-color: var(--admin-accent);
+  background: transparent;
+}
+
+/* Badge numérico reutilizado */
+.ar-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--admin-danger);
+  color: #fff;
+  font: 700 10px/1 var(--admin-font-mono);
+}
+
+/* ── Quick links en Dashboard ── */
+.admin-dashboard-quick-links {
+  display: grid;
+  gap: 16px;
+}

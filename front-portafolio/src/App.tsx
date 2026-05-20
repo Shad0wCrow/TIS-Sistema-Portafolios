@@ -12,17 +12,18 @@ import PortafolioPublico from "./pages/portafolio/PortafolioPublico";
 import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
 import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicacion";
 import PublicarPortafolio from "./pages/Publicar/PublicarPortafolio";
-import AdminUsuariosReportados from "./pages/Admin/UsuariosReportados";
-import AdminDashboard from "./pages/Admin/AdminDashboard";
 
-import CvGenerator from './pages/editPortafolio/CvGenerator';
+// Admin — Dashboard: solo estadísticas de usuarios
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+// Admin — Reportes: gestión de reportes (HU-61) + habilitar/inhabilitar (HU-45, HU-46)
+import AdminReportes from "./pages/Admin/reportes/AdminReportes";
+
+import CvGenerator from "./pages/editPortafolio/CvGenerator";
 
 import CreateAccountRoute from "./components/CreateAccountRoute";
 import PortafolioRoute from "./components/PortafolioRoute";
 import ProfileRoute from "./components/ProfileRoute";
 import AdminRoute from "./components/AdminRoute";
-
-
 
 function App() {
   return (
@@ -43,19 +44,34 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/guardados" element={<Guardados />} />
 
+      {/* ── Rutas de administración ── */}
+
+      {/* /admin → solo estadísticas de usuarios */}
       <Route
         path="/admin"
         element={
           <AdminRoute>
-            <AdminUsuariosReportados />
+            <AdminDashboard />
           </AdminRoute>
         }
       />
+
+      {/* /admin/reportes → reportes (HU-61) + habilitar/inhabilitar (HU-45, HU-46) */}
+      <Route
+        path="/admin/reportes"
+        element={
+          <AdminRoute>
+            <AdminReportes />
+          </AdminRoute>
+        }
+      />
+
+      {/* Alias para compatibilidad con rutas anteriores */}
       <Route
         path="/admin/reportados"
         element={
           <AdminRoute>
-            <AdminUsuariosReportados />
+            <AdminReportes />
           </AdminRoute>
         }
       />
@@ -63,18 +79,12 @@ function App() {
         path="/admin/usuarios-reportados"
         element={
           <AdminRoute>
-            <AdminUsuariosReportados />
+            <AdminReportes />
           </AdminRoute>
         }
       />
-      <Route
-        path="/admin/reportes"
-        element={
-          <AdminRoute>
-            <AdminDashboard />
-          </AdminRoute>
-        }
-      />
+
+      {/* ── Rutas de perfil y portafolio ── */}
 
       <Route
         path="/perfil/editar"
@@ -112,7 +122,10 @@ function App() {
         }
       />
 
-      <Route path="/portafolio/publico/:slug" element={<PortafolioPublico />} />
+      <Route
+        path="/portafolio/publico/:slug"
+        element={<PortafolioPublico />}
+      />
 
       <Route
         path="/portafolio/editar"
@@ -122,6 +135,7 @@ function App() {
           </PortafolioRoute>
         }
       />
+
       <Route path="/generar-cv" element={<CvGenerator />} />
     </Routes>
   );
