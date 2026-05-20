@@ -23,7 +23,7 @@ class PortafoliosPublicosTest extends TestCase
         $this->mock(PortafolioExploracionService::class, function ($mock) {
             $mock->shouldReceive('listarPortafoliosAjenos')
                 ->once()
-                ->with(10, 5)
+                ->with(10, 5, null)
                 ->andReturn([
                     [
                         'id_publicacion' => 1,

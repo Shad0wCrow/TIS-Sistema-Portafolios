@@ -24,12 +24,20 @@ const PROFESIONES = [
 
 const URL_VALIDA = /^(https?:\/\/.+\..+|data:image\/.+)/
 
+export interface ProfileLinkForm {
+    titulo: string;
+    url: string;
+}
+
 interface FormValues {
     nombre: string
     apellido: string
     profesion: string
     celular: string
     descripcion: string
+    ciudad: string
+    pais: string
+    correo_contacto: string
 }
 
 interface FormErrors {
@@ -38,10 +46,15 @@ interface FormErrors {
     profesion?: string
     celular?: string
     descripcion?: string
+    ciudad?: string
+    pais?: string
+    correo_contacto?: string
     foto?: string
+    enlaces?: string
+    [key: string]: string | undefined
 }
 
-function validate(values: FormValues): FormErrors {
+function validate(values: FormValues, enlaces: ProfileLinkForm[]): FormErrors {
     const errors: FormErrors = {}
 
     if (!values.nombre.trim()) {
@@ -58,22 +71,71 @@ function validate(values: FormValues): FormErrors {
 
     if (!values.profesion.trim()) {
         errors.profesion = "La profesión es requerida"
+    } else if (/[<>"'`;{}()]/.test(values.profesion)) {
+        errors.profesion = "Caracteres no permitidos"
     }
 
     if (!values.celular.trim()) {
         errors.celular = "El celular es requerido"
-    } else if (!/^\d{7,15}$/.test(values.celular)) {
-        errors.celular = "Ingresa un número válido (7-15 dígitos)"
+    } else if (!/^\+?[0-9\s\-()]{7,20}$/.test(values.celular)) {
+        errors.celular = "Ingresa un número válido (7-20 dígitos)"
     }
 
     if (!values.descripcion.trim()) {
         errors.descripcion = "La descripción es requerida"
+    } else if (/[<>"'`;{}()]/.test(values.descripcion)) {
+        errors.descripcion = "Caracteres no permitidos"
     } else if (values.descripcion.length > 300) {
         errors.descripcion = "Máximo 300 caracteres"
     }
 
+    if (values.ciudad.trim()) {
+        if (/[<>"'`;{}()]/.test(values.ciudad)) {
+            errors.ciudad = "Caracteres no permitidos"
+        } else if (values.ciudad.trim().length > 100) {
+            errors.ciudad = "Máximo 100 caracteres"
+        }
+    }
+
+    if (values.pais.trim()) {
+        if (/[<>"'`;{}()]/.test(values.pais)) {
+            errors.pais = "Caracteres no permitidos"
+        } else if (values.pais.trim().length > 100) {
+            errors.pais = "Máximo 100 caracteres"
+        }
+    }
+
+    if (values.correo_contacto.trim()) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.correo_contacto.trim())) {
+            errors.correo_contacto = "Ingrese un correo válido"
+        } else if (!values.correo_contacto.trim().toLowerCase().endsWith("@gmail.com")) {
+            errors.correo_contacto = "El correo de contacto debe ser una dirección de @gmail.com"
+        }
+    }
+
+    enlaces.forEach((enlace, index) => {
+        const titulo = enlace.titulo.trim()
+        const url = enlace.url.trim()
+
+        if (!titulo && !url) return
+
+        if (!titulo) {
+            errors[`enlaces.${index}.titulo`] = "El título es obligatorio"
+        } else if (/[<>"'`;{}()]/.test(titulo)) {
+            errors[`enlaces.${index}.titulo`] = "Caracteres no permitidos"
+        }
+
+        if (!url) {
+            errors[`enlaces.${index}.url`] = "La URL es obligatoria"
+        } else if (!LINK_URL_VALIDA.test(url)) {
+            errors[`enlaces.${index}.url`] = "Debe ser una URL válida (ej: https://...)"
+        }
+    })
+
     return errors
 }
+
+const LINK_URL_VALIDA = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/
 
 function validarFotoUrl(url: string): string | undefined {
     const limpia = url.trim()
@@ -104,8 +166,12 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
         profesion: "",
         celular: "",
         descripcion: "",
+        ciudad: "",
+        pais: "",
+        correo_contacto: "",
     })
 
+    const [enlaces, setEnlaces] = useState<ProfileLinkForm[]>([])
     const [errors, setErrors] = useState<FormErrors>({})
     const [touched, setTouched] = useState<Partial<Record<keyof FormValues, boolean>>>({})
     const [saving, setSaving] = useState(false)
@@ -118,7 +184,7 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
             const updated = { ...values, [field]: e.target.value }
             setValues(updated)
             if (touched[field]) {
-                setErrors(validate(updated))
+                setErrors(validate(updated, enlaces))
             }
         }
     }
@@ -126,13 +192,41 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
     function handleBlur(field: keyof FormValues) {
         return () => {
             setTouched((prev) => ({ ...prev, [field]: true }))
-            setErrors(validate(values))
+            setErrors(validate(values, enlaces))
         }
     }
 
     function handleFotoUrlChange(next: string) {
         setFotoUrl(next)
         setFotoError(validarFotoUrl(next))
+    }
+
+    function handleAdvancedFieldChange(field: "ciudad" | "pais" | "correo_contacto", value: string) {
+        const updated = { ...values, [field]: value }
+        setValues(updated)
+        setErrors(validate(updated, enlaces))
+    }
+
+    function handleLinkChange(index: number, field: keyof ProfileLinkForm, value: string) {
+        const updated = enlaces.map((enlace, currentIndex) => (
+            currentIndex === index ? { ...enlace, [field]: value } : enlace
+        ))
+        setEnlaces(updated)
+        setErrors(validate(values, updated))
+    }
+
+    function handleAddLink() {
+        if (enlaces.length >= 8) {
+            setErrors((prev) => ({ ...prev, enlaces: "Máximo 8 enlaces personalizados." }))
+            return
+        }
+        setEnlaces((prev) => [...prev, { titulo: "", url: "" }])
+    }
+
+    function handleRemoveLink(index: number) {
+        const updated = enlaces.filter((_, currentIndex) => currentIndex !== index)
+        setEnlaces(updated)
+        setErrors(validate(values, updated))
     }
 
     const handleCancelar = () => {
@@ -148,7 +242,7 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
 
         setTouched(allTouched)
 
-        const currentErrors = validate(values)
+        const currentErrors = validate(values, enlaces)
         setErrors(currentErrors)
 
         const fotoUrlError = validarFotoUrl(fotoUrl)
@@ -157,12 +251,23 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
         if (Object.keys(currentErrors).length === 0 && !fotoUrlError) {
             setSaving(true)
             try {
+                const cleanLinks = enlaces
+                    .map((enlace) => ({
+                        titulo: enlace.titulo.trim(),
+                        url: enlace.url.trim(),
+                    }))
+                    .filter((enlace) => enlace.titulo || enlace.url)
+
                 await createProfile({
                     nombre_perfil: values.nombre,
                     apellido_perfil: values.apellido,
                     profesion: values.profesion,
                     celular: values.celular,
                     descripcion: values.descripcion,
+                    ciudad: values.ciudad.trim() || undefined,
+                    pais: values.pais.trim() || undefined,
+                    correo_contacto: values.correo_contacto.trim() || undefined,
+                    enlaces_personalizados: cleanLinks.length > 0 ? cleanLinks : undefined,
                     foto_url: fotoUrl.trim() || undefined,
                 })
 
@@ -253,6 +358,21 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
                 </div>
 
                 <div className={styles.formBody}>
+                    <div style={{
+                        padding: "16px 20px",
+                        background: "#ffffff",
+                        border: "1px solid var(--border2)",
+                        borderRadius: "10px",
+                        marginBottom: "10px"
+                    }}>
+                        <p style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "700", color: "var(--accent)" }}>
+                            Estás registrando tu perfil por primera vez.
+                        </p>
+                        <p style={{ margin: "0", fontSize: "12px", color: "var(--text2)" }}>
+                            Advertencia: Los campos Nombre, Apellido, Profesión y País son definitivos y no se podrán cambiar después de guardar el registro.
+                        </p>
+                    </div>
+
                     <div className={styles.section}>
                         <div className={styles.sectionTag}>
                             <div className={styles.sectionTagLeft}>
@@ -330,7 +450,7 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
                                         onChange={(v) => {
                                             const updated = { ...values, profesion: v }
                                             setValues(updated)
-                                            if (touched.profesion) setErrors(validate(updated))
+                                            if (touched.profesion) setErrors(validate(updated, enlaces))
                                         }}
                                         onBlur={handleBlur("profesion")}
                                         placeholder="Ej: Ingeniero de Software"
@@ -370,6 +490,149 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
                                     </div>
                                     <ErrorMessage message={touched.descripcion ? errors.descripcion : undefined} />
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={styles.section}>
+                        <div className={styles.sectionTag}>
+                            <div className={styles.sectionTagLeft}>
+                                <div className={styles.tagNum}>3</div>
+                                <span className={styles.tagLabel}>Ubicación y contacto</span>
+                            </div>
+                        </div>
+
+                        <div className={styles.sectionCard}>
+                            <div className={styles.grid}>
+                                <div className={styles.fieldGroup}>
+                                    <label className={styles.label}>Ciudad</label>
+                                    <Input
+                                        type="text"
+                                        placeholder="Ej: Cochabamba"
+                                        classname={styles.input}
+                                        value={values.ciudad}
+                                        onChange={(e) => handleAdvancedFieldChange("ciudad", e.target.value)}
+                                        error={!!errors.ciudad}
+                                    />
+                                    <ErrorMessage message={errors.ciudad} />
+                                </div>
+
+                                <div className={styles.fieldGroup}>
+                                    <label className={styles.label}>País</label>
+                                    <Input
+                                        type="text"
+                                        placeholder="Ej: Bolivia"
+                                        classname={styles.input}
+                                        value={values.pais}
+                                        onChange={(e) => handleAdvancedFieldChange("pais", e.target.value)}
+                                        error={!!errors.pais}
+                                    />
+                                    <ErrorMessage message={errors.pais} />
+                                </div>
+
+                                <div className={`${styles.fieldGroup} ${styles.textareaWrapper}`}>
+                                    <label className={styles.label}>Correo de contacto</label>
+                                    <Input
+                                        type="email"
+                                        placeholder="correo@ejemplo.com"
+                                        classname={styles.input}
+                                        value={values.correo_contacto}
+                                        onChange={(e) => handleAdvancedFieldChange("correo_contacto", e.target.value)}
+                                        error={!!errors.correo_contacto}
+                                    />
+                                    <ErrorMessage message={errors.correo_contacto} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={styles.section}>
+                        <div className={styles.sectionTag}>
+                            <div className={styles.sectionTagLeft}>
+                                <div className={styles.tagNum}>4</div>
+                                <span className={styles.tagLabel}>Enlaces personalizados</span>
+                            </div>
+                            <button
+                                type="button"
+                                style={{
+                                    background: "var(--accent-bg)",
+                                    border: "1px solid var(--accent-md)",
+                                    color: "var(--accent)",
+                                    padding: "6px 12px",
+                                    borderRadius: "6px",
+                                    fontSize: "11px",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    fontFamily: "inherit"
+                                }}
+                                onClick={handleAddLink}
+                            >
+                                Agregar enlace
+                            </button>
+                        </div>
+
+                        <div className={styles.sectionCard}>
+                            {errors.enlaces && <ErrorMessage message={errors.enlaces} />}
+                            
+                            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                {enlaces.length === 0 ? (
+                                    <p style={{ margin: "0", fontSize: "12px", color: "var(--text3)", textAlign: "center", padding: "10px 0" }}>
+                                        Aún no has agregado enlaces personalizados.
+                                    </p>
+                                ) : (
+                                    enlaces.map((enlace, index) => (
+                                        <div key={index} style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "1fr 1.5fr auto",
+                                            gap: "12px",
+                                            alignItems: "end",
+                                            borderBottom: "1px solid var(--border)",
+                                            paddingBottom: "16px"
+                                        }}>
+                                            <div className={styles.fieldGroup}>
+                                                <label className={styles.label}>Título</label>
+                                                <input
+                                                    className={`${styles.input} ${errors[`enlaces.${index}.titulo`] ? styles.inputError : ""}`}
+                                                    value={enlace.titulo}
+                                                    onChange={(e) => handleLinkChange(index, "titulo", e.target.value)}
+                                                    placeholder="Ej: CV, LinkedIn, GitHub"
+                                                    maxLength={80}
+                                                />
+                                                <ErrorMessage message={errors[`enlaces.${index}.titulo`]} />
+                                            </div>
+
+                                            <div className={styles.fieldGroup}>
+                                                <label className={styles.label}>URL</label>
+                                                <input
+                                                    className={`${styles.input} ${errors[`enlaces.${index}.url`] ? styles.inputError : ""}`}
+                                                    value={enlace.url}
+                                                    onChange={(e) => handleLinkChange(index, "url", e.target.value)}
+                                                    placeholder="https://..."
+                                                    maxLength={500}
+                                                />
+                                                <ErrorMessage message={errors[`enlaces.${index}.url`]} />
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                style={{
+                                                    background: "#ffffff",
+                                                    border: "1.5px solid var(--border2)",
+                                                    color: "var(--red)",
+                                                    padding: "8px 12px",
+                                                    borderRadius: "7px",
+                                                    fontSize: "12px",
+                                                    fontWeight: "600",
+                                                    cursor: "pointer",
+                                                    height: "38px"
+                                                }}
+                                                onClick={() => handleRemoveLink(index)}
+                                            >
+                                                Quitar
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
