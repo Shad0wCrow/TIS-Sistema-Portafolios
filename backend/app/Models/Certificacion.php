@@ -17,6 +17,7 @@ class Certificacion extends Model
         'fecha_obtencion',
         'fecha_expiracion',
         'url_certificado',
+        'url_imagen',
         'visibilidad',
         'eliminado',
     ];

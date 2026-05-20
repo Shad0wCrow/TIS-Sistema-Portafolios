@@ -279,10 +279,9 @@ export default function Portafolio() {
   const idiomas = (data?.idiomas ?? ([] as Idioma[])).filter((item) => item.visibilidad === "publico");
   const experienciasPublicas = experiencias.filter((item) => item.visibilidad !== "privado");
   const certificacionesConImagenes = useMemo(() => {
-    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
     return certificaciones.map((c) => ({
       ...c,
-      imagen_url: c.imagen_url || stored[c.id_certificacion] || null,
+      url_imagen: c.url_imagen ?? c.imagen_url ?? null,
     }));
   }, [certificaciones]);
 

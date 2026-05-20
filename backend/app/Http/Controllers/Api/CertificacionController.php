@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Certificacion;
 use App\Models\EntidadEmisora;
 use Illuminate\Http\Request;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
  
 class CertificacionController extends Controller
 {
@@ -19,8 +20,19 @@ class CertificacionController extends Controller
             'fecha_obtencion'     => 'required|date|before_or_equal:today',
             'fecha_expiracion'    => 'nullable|date|after:fecha_obtencion',
             'url_certificado'     => 'nullable|url|max:500',
+            'url_imagen'          => 'nullable|url|max:500',
+            'imagen_file'         => 'nullable|image|max:5120',
             'visibilidad'         => 'nullable|in:publico,privado',
         ]);
+
+        $urlImagen = $data['url_imagen'] ?? null;
+
+        if ($request->hasFile('imagen_file')) {
+            $resultado = Cloudinary::upload($request->file('imagen_file')->getRealPath(), [
+                'folder' => 'portafolios/certificaciones',
+            ]);
+            $urlImagen = $resultado->getSecurePath();
+        }
  
         $entidad = EntidadEmisora::firstOrCreate(
             ['nombre' => $data['nombre_entidad']],
@@ -34,6 +46,7 @@ class CertificacionController extends Controller
             'fecha_obtencion'     => $data['fecha_obtencion'],
             'fecha_expiracion'    => $data['fecha_expiracion'] ?? null,
             'url_certificado'     => $data['url_certificado'] ?? null,
+            'url_imagen'          => $urlImagen,
             'visibilidad'         => $data['visibilidad'] ?? 'publico',
             'eliminado'           => false,
         ]);

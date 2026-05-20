@@ -7,6 +7,7 @@ import { createProfile } from "../../services/profile"
 import { useNavigate } from "react-router-dom"
 import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput"
 import SuccessModal from "../../components/ui/SuccessModal/SuccessModal"
+import ProfilePhotoField from "../SoloPerfil/components/ProfilePhotoField"
 
 const PROFESIONES = [
     "Ingeniero de Software",
@@ -21,7 +22,7 @@ const PROFESIONES = [
     "Especialista en Ciberseguridad",
 ]
 
-const URL_VALIDA = /^https?:\/\/.+\..+/
+const URL_VALIDA = /^(https?:\/\/.+\..+|data:image\/.+)/
 
 interface FormValues {
     nombre: string
@@ -78,6 +79,7 @@ function validarFotoUrl(url: string): string | undefined {
     const limpia = url.trim()
     if (!limpia) return undefined
     if (!URL_VALIDA.test(limpia)) return "Ingresa una URL válida que comience con http:// o https://"
+    if (limpia.startsWith("data:image/")) return undefined
     if (limpia.length > 300) return "La URL no puede superar 300 caracteres"
     return undefined
 }
@@ -128,15 +130,9 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
         }
     }
 
-    function handleFotoUrlChange(e: ChangeEvent<HTMLInputElement>) {
-        const next = e.target.value
+    function handleFotoUrlChange(next: string) {
         setFotoUrl(next)
         setFotoError(validarFotoUrl(next))
-    }
-
-    function handleQuitarFoto() {
-        setFotoUrl("")
-        setFotoError(undefined)
     }
 
     const handleCancelar = () => {
@@ -266,71 +262,12 @@ export default function CreateAccount({ embedded = false, onSaved }: CreateAccou
                         </div>
 
                         <div className={styles.sectionCard}>
-                            <div className={styles.avatarZone}>
-                                <div className={styles.avatarRow}>
-                                    <div className={styles.avatar}>
-                                        {fotoUrl.trim() ? (
-                                            <img
-                                                src={fotoUrl.trim()}
-                                                alt="Foto de perfil"
-                                                className={styles.avatarPreview}
-                                                onError={() =>
-                                                    setFotoError("La URL no pudo cargarse. Revisa el enlace.")
-                                                }
-                                            />
-                                        ) : (
-                                            <svg
-                                                width="20"
-                                                height="20"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.5"
-                                                className={styles.avatarIconSvg}
-                                            >
-                                                <circle cx="12" cy="8" r="4" />
-                                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                                            </svg>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.avatarInfo}>
-                                        <label className={styles.label}>URL de foto</label>
-
-                                        <input
-                                            className={styles.input}
-                                            type="url"
-                                            placeholder="https://..."
-                                            value={fotoUrl}
-                                            onChange={handleFotoUrlChange}
-                                        />
-
-                                        {fotoUrl ? (
-                                            <button
-                                                type="button"
-                                                className={styles.quitarFoto}
-                                                onClick={handleQuitarFoto}
-                                            >
-                                                × Quitar foto
-                                            </button>
-                                        ) : (
-                                            <span className={styles.avatarLabel}>
-                                                Pega un enlace público de imagen
-                                            </span>
-                                        )}
-
-                                        <span className={styles.avatarLabel}>
-                                            JPG, PNG, WEBP o GIF por URL
-                                        </span>
-
-                                        {fotoError && (
-                                            <span className={styles.avatarError}>
-                                                {fotoError}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                            <ProfilePhotoField
+                                fotoUrl={fotoUrl}
+                                error={fotoError}
+                                onChange={handleFotoUrlChange}
+                                onError={setFotoError}
+                            />
                         </div>
                     </div>
 
