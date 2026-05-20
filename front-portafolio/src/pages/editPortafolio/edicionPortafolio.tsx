@@ -137,13 +137,7 @@ export default function EdicionPortafolio() {
   const logros = (data?.logros ?? []) as Logro[];
   const idiomas = (data?.idiomas ?? []) as Idioma[];
 
-  const certConImagenes = useMemo(() => {
-    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-    return certificaciones.map((c) => ({
-      ...c,
-      imagen_url: stored[c.id_certificacion] ?? null,
-    }));
-  }, [certificaciones]);
+  const certConImagenes = certificaciones;
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";

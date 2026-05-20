@@ -144,7 +144,8 @@ export interface Certificacion {
   fecha_obtencion: string;
   fecha_expiracion: string | null;
   url_certificado: string | null;
-  imagen_url: string | null;
+  url_imagen: string | null;
+  imagen_url?: string | null;
   visibilidad: "publico" | "privado";
 }
 

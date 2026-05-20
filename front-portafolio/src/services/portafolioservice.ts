@@ -423,8 +423,27 @@ export const addCertificacion = async (data: {
   fecha_obtencion: string;
   fecha_expiracion?: string;
   url_certificado?: string;
+  url_imagen?: string;
+  imagen_file?: File;
   visibilidad?: "publico" | "privado";
 }) => {
+  if (data.imagen_file) {
+    const formData = new FormData();
+    formData.append("nombre", data.nombre);
+    formData.append("nombre_entidad", data.nombre_entidad);
+    formData.append("fecha_obtencion", data.fecha_obtencion);
+    if (data.fecha_expiracion) formData.append("fecha_expiracion", data.fecha_expiracion);
+    if (data.url_certificado) formData.append("url_certificado", data.url_certificado);
+    if (data.url_imagen) formData.append("url_imagen", data.url_imagen);
+    if (data.visibilidad) formData.append("visibilidad", data.visibilidad);
+    formData.append("imagen_file", data.imagen_file, data.imagen_file.name);
+
+    const res = await axios.post(`${API}/certificaciones`, formData, {
+      headers: authHeaders(),
+    });
+    return res.data;
+  }
+
   const res = await axios.post(`${API}/certificaciones`, data, { headers: authHeaders() });
   return res.data;
 };
@@ -616,6 +635,7 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
     nombre_entidad?: string | null;
     entidad_nombre?: string | null;
     imagen_url?: string | null;
+    url_imagen?: string | null;
   };
 
   return {
@@ -633,7 +653,7 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
     certificaciones: (portafolio.certificaciones ?? []).map((cert: PublicRecord) => ({
       ...cert,
       nombre_entidad: cert.nombre_entidad ?? cert.entidad_emisora?.nombre ?? cert.entidadEmisora?.nombre ?? "",
-      imagen_url: cert.imagen_url ?? null,
+      url_imagen: cert.url_imagen ?? cert.imagen_url ?? null,
     })),
     logros: (portafolio.logros ?? []).map((logro: PublicRecord) => ({
       ...logro,

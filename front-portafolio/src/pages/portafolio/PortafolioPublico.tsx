@@ -139,10 +139,9 @@ export default function PortafolioPublico() {
   const idiomas = (data?.idiomas ?? emptyData.idiomas) as Idioma[];
   const certificaciones = (data?.certificaciones ?? emptyData.certificaciones) as Certificacion[];
   const certificacionesConImagenes = useMemo(() => {
-    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
     return certificaciones.map((c) => ({
       ...c,
-      imagen_url: c.imagen_url || stored[c.id_certificacion] || null,
+      url_imagen: c.url_imagen ?? c.imagen_url ?? null,
     }));
   }, [certificaciones]);
   const experiencias = (data?.experiencias ?? emptyData.experiencias) as Experiencia[];
