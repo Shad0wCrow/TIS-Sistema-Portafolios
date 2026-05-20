@@ -45,6 +45,10 @@ export interface Proyecto {
   roles: string[];
 }
 
+export interface GithubProyectoImportado extends Proyecto {
+  github_id: number | null;
+}
+
 export interface Curso {
   id_educacion: number;
   institucion: string;

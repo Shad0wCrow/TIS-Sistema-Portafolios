@@ -5,6 +5,7 @@ import type {
   EstadoPublicacionPortafolio,
   EstadoGuardadoPortafolio,
   GradoEducacion,
+  GithubProyectoImportado,
   PortafolioData,
   PortafolioGuardadoResumen,
   PortafolioPublicoResumen,
@@ -181,6 +182,39 @@ export const updateProyecto = async (
 export const removeProyecto = async (id: number) => {
   const res = await axios.delete(`${API}/portafolio/proyectos/${id}`, {
     headers: authHeaders(),
+  });
+  return res.data;
+};
+
+// ── GitHub ───────────────────────────────────────────────────────────────────
+export const getGithubConnection = async (): Promise<{
+  github_username: string | null;
+  github_conectado_en: string | null;
+}> => {
+  const res = await axios.get(`${API}/github`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const saveGithubUsername = async (github_username: string): Promise<{
+  message: string;
+  github_username: string;
+  github_conectado_en: string | null;
+}> => {
+  const res = await axios.post(`${API}/github`, { github_username }, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const getGithubRepos = async (username?: string): Promise<{
+  github_username: string;
+  repositorios: Omit<GithubProyectoImportado, "id_proyecto">[];
+}> => {
+  const res = await axios.get(`${API}/github/repos`, {
+    headers: authHeaders(),
+    params: username ? { username } : undefined,
   });
   return res.data;
 };
