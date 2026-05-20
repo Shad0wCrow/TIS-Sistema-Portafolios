@@ -12,6 +12,7 @@ import PortafolioPublico from "./pages/portafolio/PortafolioPublico";
 import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
 import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicacion";
 import PublicarPortafolio from "./pages/Publicar/PublicarPortafolio";
+import AdminUsuariosReportados from "./pages/Admin/UsuariosReportados";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 
 import CvGenerator from './pages/editPortafolio/CvGenerator';
@@ -44,6 +45,30 @@ function App() {
 
       <Route
         path="/admin"
+        element={
+          <AdminRoute>
+            <AdminUsuariosReportados />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/reportados"
+        element={
+          <AdminRoute>
+            <AdminUsuariosReportados />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/usuarios-reportados"
+        element={
+          <AdminRoute>
+            <AdminUsuariosReportados />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/reportes"
         element={
           <AdminRoute>
             <AdminDashboard />

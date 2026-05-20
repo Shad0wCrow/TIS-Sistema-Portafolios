@@ -109,3 +109,60 @@ export const getAdminReportSummary = async (): Promise<AdminReportSummary> => {
   });
   return res.data;
 };
+
+// ── Tipos de reportes de portafolios ──────────────────────────────────────
+
+export type EstadoReporte = "pendiente" | "revisado" | "desestimado";
+
+export interface ReportePortafolio {
+  id_reporte: number;
+  publicacion_id: number;
+  slug_publico: string | null;
+  nombre_reportado: string;
+  nombre_usuario_reportado: string;
+  usuario_id_reportado: number;
+  estado_cuenta: "activo" | "inhabilitado";
+  eliminado: boolean;
+  motivo: string;
+  comentario: string | null;
+  estado: EstadoReporte;
+  nota_moderador: string | null;
+  reportado_por_nombre: string | null;
+  creado_en: string;
+  revisado_en: string | null;
+}
+
+export interface ReportesPortafolioResponse {
+  data: ReportePortafolio[];
+  current_page: number;
+  last_page: number;
+  total: number;
+}
+
+export const getReportesPortafolios = async (params?: {
+  estado?: EstadoReporte | "todos";
+  page?: number;
+  per_page?: number;
+}): Promise<ReportesPortafolioResponse> => {
+  const res = await axios.get(`${API}/admin/reportes/portafolios`, {
+    headers: authHeaders(),
+    params,
+  });
+  return res.data;
+};
+
+export const resolverReporte = async (
+  idReporte: number,
+  data: {
+    estado: "revisado" | "desestimado";
+    nota_moderador?: string;
+    accion_cuenta?: "inhabilitar" | "habilitar" | null;
+  }
+): Promise<{ message: string; reporte: ReportePortafolio }> => {
+  const res = await axios.patch(
+    `${API}/admin/reportes/portafolios/${idReporte}/resolver`,
+    data,
+    { headers: authHeaders() }
+  );
+  return res.data;
+};

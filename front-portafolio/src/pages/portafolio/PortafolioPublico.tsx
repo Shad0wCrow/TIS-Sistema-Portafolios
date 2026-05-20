@@ -3,11 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   eliminarPortafolioGuardado,
   getEstadoGuardado,
+  getEstadoPublicacion,
   getPortafolioPublico,
   guardarPortafolio,
   registrarContactoDirecto,
   registrarVisualizacionPortafolio,
 } from "../../services/portafolioservice";
+import ReportarPortafolio from "./components/ReportarPortafolio";
 import type {
   Certificacion,
   Curso,
@@ -82,6 +84,7 @@ export default function PortafolioPublico() {
   const [savingGuardado, setSavingGuardado] = useState(false);
   const [guardadoMessage, setGuardadoMessage] = useState("");
   const [contactLoading, setContactLoading] = useState(false);
+  const [esPropioPerfil, setEsPropioPerfil] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -110,6 +113,20 @@ export default function PortafolioPublico() {
     getEstadoGuardado(slug)
       .then((estado) => setGuardado(estado.guardado))
       .catch(() => setGuardado(false));
+  }, [slug]);
+
+  // CA #6: Detectar si el portafolio pertenece al usuario logueado
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!slug || !token) return;
+
+    getEstadoPublicacion()
+      .then((publicacion) => {
+        if (publicacion.slug_publico && publicacion.slug_publico === slug) {
+          setEsPropioPerfil(true);
+        }
+      })
+      .catch(() => undefined);
   }, [slug]);
 
   const perfil = (data?.perfil ?? null) as Perfil | null;
@@ -480,6 +497,11 @@ export default function PortafolioPublico() {
           {visibleSections.map(renderSection)}
         </section>
       </main>
+
+      {/* CA #1 y #6: Botón flotante de reporte (oculto para el propietario) */}
+      {slug && (
+        <ReportarPortafolio slug={slug} esPropioPerfil={esPropioPerfil} />
+      )}
     </div>
   );
 }
