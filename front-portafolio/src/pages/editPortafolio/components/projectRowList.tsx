@@ -85,6 +85,15 @@ export default function ProjectRowList({
                 if (showEdit) onEdit(p);
                 if (showRemove) onRemove(p.id_proyecto);
               }}
+              tabIndex={isActionActive ? 0 : undefined}
+              role={isActionActive ? "button" : undefined}
+              onKeyDown={(e) => {
+                if (isActionActive && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  if (showEdit) onEdit(p);
+                  if (showRemove) onRemove(p.id_proyecto);
+                }
+              }}
             >
               <div className={styles.itemIcon}>
                 <ProjectIcon />
@@ -122,6 +131,10 @@ export default function ProjectRowList({
                         target="_blank"
                         rel="noreferrer"
                         className={styles.demoLink}
+                        tabIndex={isActionActive ? -1 : 0}
+                        onClick={(e) => {
+                          if (isActionActive) e.preventDefault();
+                        }}
                       >
                         Ver demo ↗
                       </a>
@@ -133,6 +146,10 @@ export default function ProjectRowList({
                         target="_blank"
                         rel="noreferrer"
                         className={styles.repoLink}
+                        tabIndex={isActionActive ? -1 : 0}
+                        onClick={(e) => {
+                          if (isActionActive) e.preventDefault();
+                        }}
                       >
                         Repositorio ↗
                       </a>

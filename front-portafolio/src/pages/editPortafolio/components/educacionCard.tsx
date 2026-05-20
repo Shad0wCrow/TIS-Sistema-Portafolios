@@ -58,6 +58,14 @@ export default function EducacionCard({
               onClick={() => {
                 if (showRemove) onRemove(edu.id_educacion);
               }}
+              tabIndex={isActionActive ? 0 : undefined}
+              role={isActionActive ? "button" : undefined}
+              onKeyDown={(e) => {
+                if (isActionActive && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  if (showRemove) onRemove(edu.id_educacion);
+                }
+              }}
             >
               <div className={styles.itemIcon}>🎓</div>
 
