@@ -641,7 +641,7 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
   return {
     ...portafolio,
     perfil: portafolio.perfil ?? null,
-    contacto_directo: portafolio.contacto_directo ?? { habilitado: false, correo: null },
+    contacto_directo: portafolio.contacto_directo ?? { habilitado: false, correo: null, telefono: null },
     habilidades_tecnicas: portafolio.habilidades_tecnicas ?? [],
     habilidades_blandas: portafolio.habilidades_blandas ?? [],
     proyectos: portafolio.proyectos ?? [],
@@ -662,8 +662,11 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
   };
 };
 
-export const registrarContactoDirecto = async (slug: string): Promise<{ mailto: string }> => {
-  const res = await axios.post(`${API}/public/portafolios/${slug}/contacto`);
+export const registrarContactoDirecto = async (
+  slug: string,
+  medio: "email" | "whatsapp"
+): Promise<{ mailto?: string; whatsapp_url?: string; telefono?: string | null }> => {
+  const res = await axios.post(`${API}/public/portafolios/${slug}/contacto`, { medio });
   return res.data;
 };
 
