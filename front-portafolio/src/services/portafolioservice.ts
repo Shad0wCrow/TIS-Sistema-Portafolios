@@ -508,7 +508,7 @@ export const getSugerenciasProfecion = async (q: string): Promise<string[]> => {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function dataUrlToBlob(dataUrl: string): Blob {
+export function dataUrlToBlob(dataUrl: string): Blob {
   const [header, base64] = dataUrl.split(",");
   const mime = header.match(/:(.*?);/)?.[1] ?? "image/jpeg";
   const binary = atob(base64);
