@@ -246,4 +246,234 @@ class AdminController extends Controller
             $metricKey => (int) $item->{$metricKey},
         ];
     }
+
+    /**
+     * Helper to compute date range boundaries, label sets, and PostgreSQL date extraction groupings.
+     * Centralized to allow future scalability to other types of stats reports (e.g., visualizaciones, contactos).
+     */
+    protected function obtenerRangoFechasYAgrupacion(string $rango): array
+    {
+        $now = \Illuminate\Support\Carbon::now();
+        $labels = [];
+        $sqlGroup = '';
+        $inicio = null;
+        $fin = null;
+        $formateadorClave = null;
+
+        switch ($rango) {
+            case 'hoy':
+                $inicio = $now->copy()->startOfDay();
+                $fin = $now->copy()->endOfDay();
+                $sqlGroup = "EXTRACT(HOUR FROM creado_en)";
+                for ($i = 0; $i < 24; $i++) {
+                    $labels[] = sprintf("%02d:00", $i);
+                }
+                $formateadorClave = function ($rowKey) {
+                    return sprintf("%02d:00", (int)$rowKey);
+                };
+                break;
+
+            case 'semana':
+                $inicio = $now->copy()->startOfWeek(); // Monday
+                $fin = $now->copy()->endOfWeek(); // Sunday
+                $sqlGroup = "EXTRACT(ISODOW FROM creado_en)";
+                $labels = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                $formateadorClave = function ($rowKey) use ($labels) {
+                    $idx = (int)$rowKey - 1;
+                    return $labels[$idx] ?? 'Desconocido';
+                };
+                break;
+
+            case 'anio':
+                $inicio = $now->copy()->startOfYear();
+                $fin = $now->copy()->endOfYear();
+                $sqlGroup = "EXTRACT(MONTH FROM creado_en)";
+                $labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                $formateadorClave = function ($rowKey) use ($labels) {
+                    $idx = (int)$rowKey - 1;
+                    return $labels[$idx] ?? 'Desconocido';
+                };
+                break;
+
+            case 'mes':
+            default:
+                $inicio = $now->copy()->startOfMonth();
+                $fin = $now->copy()->endOfMonth();
+                $sqlGroup = "EXTRACT(DAY FROM creado_en)";
+                $daysInMonth = $now->daysInMonth;
+                for ($d = 1; $d <= $daysInMonth; $d++) {
+                    $labels[] = sprintf("%02d", $d);
+                }
+                $formateadorClave = function ($rowKey) {
+                    return sprintf("%02d", (int)$rowKey);
+                };
+                break;
+        }
+
+        return [
+            'inicio' => $inicio,
+            'fin' => $fin,
+            'labels' => $labels,
+            'sql_group' => $sqlGroup,
+            'formateador_clave' => $formateadorClave,
+        ];
+    }
+
+    /**
+     * HU-40: User Growth statistics.
+     * Returns total historical users, new users in period, and time-series growth.
+     */
+    public function estadisticasUsuarios(Request $request)
+    {
+        $rango = $request->query('rango', 'mes');
+        if (!in_array($rango, ['hoy', 'semana', 'mes', 'anio'])) {
+            $rango = 'mes';
+        }
+
+        $config = $this->obtenerRangoFechasYAgrupacion($rango);
+
+        $totalUsuarios = DB::table('usuario')->count();
+
+        $nuevosUsuarios = DB::table('usuario')
+            ->where('creado_en', '>=', $config['inicio'])
+            ->where('creado_en', '<=', $config['fin'])
+            ->count();
+
+        // Crecimiento agrupado
+        $resultados = DB::table('usuario')
+            ->select(DB::raw("{$config['sql_group']} as grupo, COUNT(*) as cantidad"))
+            ->where('creado_en', '>=', $config['inicio'])
+            ->where('creado_en', '<=', $config['fin'])
+            ->groupBy(DB::raw($config['sql_group']))
+            ->get();
+
+        // Inicializar datos en 0
+        $datosCrecimiento = array_fill_keys($config['labels'], 0);
+        foreach ($resultados as $r) {
+            $clave = call_user_func($config['formateador_clave'], $r->grupo);
+            if (array_key_exists($clave, $datosCrecimiento)) {
+                $datosCrecimiento[$clave] = (int)$r->cantidad;
+            }
+        }
+
+        // Formatear para el frontend
+        $crecimiento = [];
+        foreach ($datosCrecimiento as $label => $valor) {
+            $crecimiento[] = [
+                'label' => $label,
+                'valor' => $valor
+            ];
+        }
+
+        return response()->json([
+            'total_usuarios' => $totalUsuarios,
+            'nuevos_usuarios' => $nuevosUsuarios,
+            'crecimiento' => $crecimiento,
+        ]);
+    }
+
+    /**
+     * HU-40: Portfolio statistics.
+     * Returns total active portfolios, created in period, time-series growth, and professional area distribution.
+     */
+    public function estadisticasPortafolios(Request $request)
+    {
+        $rango = $request->query('rango', 'mes');
+        if (!in_array($rango, ['hoy', 'semana', 'mes', 'anio'])) {
+            $rango = 'mes';
+        }
+        $profesion = $request->query('profesion');
+
+        $config = $this->obtenerRangoFechasYAgrupacion($rango);
+
+        // 1. Total histórico de portafolios activos (publicados)
+        $queryTotal = DB::table('portafolio_publicacion')
+            ->where('portafolio_publicacion.publicado', true);
+
+        if ($profesion) {
+            $queryTotal->join('perfil', 'perfil.usuario_id', '=', 'portafolio_publicacion.usuario_id')
+                ->where('perfil.eliminado', false)
+                ->whereRaw('LOWER(perfil.profesion) = ?', [mb_strtolower($profesion)]);
+        }
+
+        $totalPortafoliosActivos = $queryTotal->count();
+
+        // 2. Portafolios creados en el periodo seleccionado
+        $queryPeriodo = DB::table('portafolio_publicacion')
+            ->where('portafolio_publicacion.creado_en', '>=', $config['inicio'])
+            ->where('portafolio_publicacion.creado_en', '<=', $config['fin']);
+
+        if ($profesion) {
+            $queryPeriodo->join('perfil', 'perfil.usuario_id', '=', 'portafolio_publicacion.usuario_id')
+                ->where('perfil.eliminado', false)
+                ->whereRaw('LOWER(perfil.profesion) = ?', [mb_strtolower($profesion)]);
+        }
+
+        $creadosEnPeriodo = $queryPeriodo->count();
+
+        // 3. Crecimiento de portafolios en el tiempo
+        $queryCrecimiento = DB::table('portafolio_publicacion')
+            ->select(DB::raw("{$config['sql_group']} as grupo, COUNT(*) as cantidad"))
+            ->where('portafolio_publicacion.creado_en', '>=', $config['inicio'])
+            ->where('portafolio_publicacion.creado_en', '<=', $config['fin']);
+
+        if ($profesion) {
+            $queryCrecimiento->join('perfil', 'perfil.usuario_id', '=', 'portafolio_publicacion.usuario_id')
+                ->where('perfil.eliminado', false)
+                ->whereRaw('LOWER(perfil.profesion) = ?', [mb_strtolower($profesion)]);
+        }
+
+        $resultados = $queryCrecimiento->groupBy(DB::raw($config['sql_group']))->get();
+
+        $datosCrecimiento = array_fill_keys($config['labels'], 0);
+        foreach ($resultados as $r) {
+            $clave = call_user_func($config['formateador_clave'], $r->grupo);
+            if (array_key_exists($clave, $datosCrecimiento)) {
+                $datosCrecimiento[$clave] = (int)$r->cantidad;
+            }
+        }
+
+        $crecimiento = [];
+        foreach ($datosCrecimiento as $label => $valor) {
+            $crecimiento[] = [
+                'label' => $label,
+                'valor' => $valor
+            ];
+        }
+
+        // 4. Distribución por áreas profesionales (profesion) en el periodo
+        $queryDist = DB::table('portafolio_publicacion')
+            ->join('perfil', 'perfil.usuario_id', '=', 'portafolio_publicacion.usuario_id')
+            ->where('perfil.eliminado', false)
+            ->where('portafolio_publicacion.creado_en', '>=', $config['inicio'])
+            ->where('portafolio_publicacion.creado_en', '<=', $config['fin'])
+            ->select('perfil.profesion', DB::raw('COUNT(*) as total'))
+            ->groupBy('perfil.profesion')
+            ->orderByDesc('total')
+            ->limit(10);
+
+        $distribucion = $queryDist->get()->map(function ($item) {
+            return [
+                'profesion' => $item->profesion ?: 'Sin especificar',
+                'total' => (int) $item->total,
+            ];
+        });
+
+        // 5. Lista de todas las profesiones con portafolios
+        $profesionesDisponibles = DB::table('perfil')
+            ->where('eliminado', false)
+            ->whereNotNull('profesion')
+            ->where('profesion', '!=', '')
+            ->distinct()
+            ->orderBy('profesion')
+            ->pluck('profesion');
+
+        return response()->json([
+            'total_historico_activo' => $totalPortafoliosActivos,
+            'periodo_creados' => $creadosEnPeriodo,
+            'crecimiento' => $crecimiento,
+            'distribucion_profesiones' => $distribucion,
+            'profesiones_disponibles' => $profesionesDisponibles,
+        ]);
+    }
 }

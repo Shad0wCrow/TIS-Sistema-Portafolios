@@ -266,3 +266,38 @@ export const getReportesPorPublicacion = async (params?: {
 
   return { data, current_page: 1, last_page: 1, total: data.length };
 };
+
+// ── Estadísticas e Indicadores (HU-40) ───────────────────────────────────
+
+export interface UserStatsResponse {
+  total_usuarios: number;
+  nuevos_usuarios: number;
+  crecimiento: Array<{ label: string; valor: number }>;
+}
+
+export interface PortfolioStatsResponse {
+  total_historico_activo: number;
+  periodo_creados: number;
+  crecimiento: Array<{ label: string; valor: number }>;
+  distribucion_profesiones: Array<{ profesion: string; total: number }>;
+  profesiones_disponibles: string[];
+}
+
+export const getAdminUserStats = async (rango: string): Promise<UserStatsResponse> => {
+  const res = await axios.get(`${API}/admin/estadisticas/usuarios`, {
+    headers: authHeaders(),
+    params: { rango },
+  });
+  return res.data;
+};
+
+export const getAdminPortfolioStats = async (
+  rango: string,
+  profesion?: string
+): Promise<PortfolioStatsResponse> => {
+  const res = await axios.get(`${API}/admin/estadisticas/portafolios`, {
+    headers: authHeaders(),
+    params: { rango, profesion: profesion || undefined },
+  });
+  return res.data;
+};
