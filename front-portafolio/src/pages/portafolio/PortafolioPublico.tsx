@@ -176,9 +176,12 @@ export default function PortafolioPublico() {
   const contactoDirecto = data?.contacto_directo;
   const telefonoContacto = contactoDirecto?.telefono || perfil?.celular || null;
   const correoContacto   = contactoDirecto?.correo  || perfil?.correo_contacto || null;
+  const tieneTelefonoContacto = Boolean(telefonoContacto);
+  const tieneCorreoContacto = Boolean(correoContacto);
   const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
   const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
-  const mostrarContactoDirecto = Boolean(contactoDirecto?.habilitado && (telefonoContacto || correoContacto) && slug);
+  const mostrarContactoDirecto = Boolean(contactoDirecto?.habilitado && (tieneTelefonoContacto || tieneCorreoContacto) && slug);
+  const tieneMultiplesMediosContacto = tieneTelefonoContacto && tieneCorreoContacto;
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Portafolio profesional";
@@ -239,8 +242,21 @@ export default function PortafolioPublico() {
         return;
       }
       const numero = telefonoContacto.replace(/\D/g, "");
-      window.open(`https://wa.me/${numero}`, "_blank", "noreferrer");
-      setContactDropdownOpen(false);
+      if (!numero) {
+        setContactError("El usuario no tiene número de WhatsApp válido");
+        return;
+      }
+      const fallbackWhatsapp = `https://wa.me/${numero}`;
+      try {
+        setContactLoading(true);
+        const response = await registrarContactoDirecto(slug, "whatsapp");
+        window.open(response.whatsapp_url || fallbackWhatsapp, "_blank", "noreferrer");
+      } catch {
+        window.open(fallbackWhatsapp, "_blank", "noreferrer");
+      } finally {
+        setContactLoading(false);
+        setContactDropdownOpen(false);
+      }
       return;
     }
 
@@ -252,7 +268,7 @@ export default function PortafolioPublico() {
       const fallbackMailto = `mailto:${correoContacto}`;
       try {
         setContactLoading(true);
-        const response = await registrarContactoDirecto(slug);
+        const response = await registrarContactoDirecto(slug, "email");
         window.open(response.mailto || fallbackMailto, "_blank", "noreferrer");
       } catch {
         window.open(fallbackMailto, "_blank", "noreferrer");
@@ -528,6 +544,11 @@ export default function PortafolioPublico() {
                     className={styles.contactButton}
                     onClick={() => {
                       setContactError("");
+                      if (!tieneMultiplesMediosContacto) {
+                        handleContactoDirecto(tieneTelefonoContacto ? "whatsapp" : "correo");
+                        return;
+                      }
+
                       if (contactDropdownOpen) {
                         setContactDropdownOpen(false);
                         setDropdownPos(null);
@@ -537,7 +558,7 @@ export default function PortafolioPublico() {
                         setContactDropdownOpen(true);
                       }
                     }}
-                    aria-haspopup="true"
+                    aria-haspopup={tieneMultiplesMediosContacto ? "true" : undefined}
                     aria-expanded={contactDropdownOpen}
                   >
                     Contacto directo
@@ -569,30 +590,34 @@ export default function PortafolioPublico() {
       {slug && (
         <ReportarPortafolio slug={slug} esPropioPerfil={esPropioPerfil} />
       )}
-      {contactDropdownOpen && dropdownPos && createPortal(
+      {contactDropdownOpen && dropdownPos && tieneMultiplesMediosContacto && createPortal(
         <div
           className={styles.contactDropdown}
           role="menu"
           style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 99999 }}
         >
-          <button
-            type="button"
-            className={styles.contactDropdownItem}
-            role="menuitem"
-            onClick={() => handleContactoDirecto("whatsapp")}
-            disabled={contactLoading}
-          >
-            WhatsApp
-          </button>
-          <button
-            type="button"
-            className={styles.contactDropdownItem}
-            role="menuitem"
-            onClick={() => handleContactoDirecto("correo")}
-            disabled={contactLoading}
-          >
-            Correo
-          </button>
+          {tieneTelefonoContacto && (
+            <button
+              type="button"
+              className={styles.contactDropdownItem}
+              role="menuitem"
+              onClick={() => handleContactoDirecto("whatsapp")}
+              disabled={contactLoading}
+            >
+              WhatsApp
+            </button>
+          )}
+          {tieneCorreoContacto && (
+            <button
+              type="button"
+              className={styles.contactDropdownItem}
+              role="menuitem"
+              onClick={() => handleContactoDirecto("correo")}
+              disabled={contactLoading}
+            >
+              Correo
+            </button>
+          )}
         </div>,
         document.body
       )}

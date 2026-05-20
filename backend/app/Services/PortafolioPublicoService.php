@@ -156,14 +156,17 @@ class PortafolioPublicoService
             return [
                 'habilitado' => false,
                 'correo' => null,
+                'telefono' => null,
             ];
         }
 
         $correo = $this->portafolioRepository->correoContacto($usuarioId);
+        $telefono = $this->portafolioRepository->telefonoContacto($usuarioId);
 
         return [
-            'habilitado' => $correo !== null,
+            'habilitado' => $correo !== null || $telefono !== null,
             'correo' => $correo,
+            'telefono' => $telefono,
         ];
     }
 }
