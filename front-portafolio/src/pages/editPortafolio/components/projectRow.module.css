@@ -29,6 +29,14 @@
   margin-top: 2px;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .btnAdd {
   display: inline-flex;
   align-items: center;
@@ -251,6 +259,14 @@
   background: var(--accent);
   color: #ffffff;
   border-color: var(--accent);
+}
+
+.btnEdit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg2);
+  color: var(--text3);
+  border-color: var(--border2);
 }
 
 .btnEdit svg {

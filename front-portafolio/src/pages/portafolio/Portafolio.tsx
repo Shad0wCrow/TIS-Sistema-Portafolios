@@ -5,6 +5,7 @@ import {
   getExperiencias,
   getPortafolio,
   getVisibilidadSecciones,
+  guardarColorAcento,
 } from "../../services/portafolioservice";
 import type {
   Certificacion,
@@ -28,6 +29,7 @@ import {
   DEFAULTS_SECCIONES,
   DEFAULT_SECTION_ORDER,
   SECTION_LABELS,
+  applyAccentColor,
   isSectionPublic,
   loadSectionOrder,
   saveSectionOrder,
@@ -65,16 +67,6 @@ function saveAccentColor(color: string): void {
   } catch { /* noop */ }
 }
 
-function applyAccentColor(color: string): void {
-  document.documentElement.style.setProperty("--color-accent", color);
-  const r = parseInt(color.slice(1, 3), 16);
-  const g = parseInt(color.slice(3, 5), 16);
-  const b = parseInt(color.slice(5, 7), 16);
-  document.documentElement.style.setProperty(
-    "--color-accent-soft",
-    `rgba(${r},${g},${b},0.12)`
-  );
-}
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function Portafolio() {
@@ -113,6 +105,7 @@ export default function Portafolio() {
     setAccentColor(draftColor);
     applyAccentColor(draftColor);
     setShowColorModal(false);
+    guardarColorAcento(draftColor).catch(() => undefined);
   };
   // ────────────────────────────────────────────────────────────────────────────
 
@@ -145,13 +138,29 @@ export default function Portafolio() {
         }
       });
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
-      });
+const canvas = await html2canvas(element, {
+  scale: 2,
+  useCORS: true,
+  logging: false,
+  backgroundColor: "#ffffff",
+  ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
+  onclone: (clonedDoc) => {
+    const root = clonedDoc.documentElement;
+    const style = clonedDoc.createElement("style");
+    style.textContent = `
+      :root {
+        --color-accent: ${accentColor};
+        --color-accent-soft: rgba(26, 102, 68, 0.12);
+        --color-accent-dark: #14523a;
+        --color-accent-bg: rgba(26, 102, 68, 0.18);
+        --color-accent-bg2: rgba(26, 102, 68, 0.12);
+        --color-accent-border: rgba(26, 102, 68, 0.22);
+        --color-accent-ring: rgba(26, 102, 68, 0.28);
+      }
+    `;
+    root.appendChild(style);
+  },
+});
 
       sectionsToHide.forEach((el) => {
         el.style.visibility = "";
@@ -270,6 +279,8 @@ export default function Portafolio() {
   }, [data]);
 
   const perfil = data?.perfil ?? null;
+  const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
+  const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
   const habilidadesBlandas = data?.habilidades_blandas ?? [];
   const proyectos = data?.proyectos ?? [];
@@ -279,10 +290,9 @@ export default function Portafolio() {
   const idiomas = (data?.idiomas ?? ([] as Idioma[])).filter((item) => item.visibilidad === "publico");
   const experienciasPublicas = experiencias.filter((item) => item.visibilidad !== "privado");
   const certificacionesConImagenes = useMemo(() => {
-    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
     return certificaciones.map((c) => ({
       ...c,
-      imagen_url: c.imagen_url || stored[c.id_certificacion] || null,
+      url_imagen: c.url_imagen ?? c.imagen_url ?? null,
     }));
   }, [certificaciones]);
 
@@ -331,6 +341,35 @@ export default function Portafolio() {
                 <p className={styles.fieldLabel}>Teléfono</p>
                 <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
               </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Ubicación</p>
+                <p className={styles.fieldValue}>{ubicacionPerfil || "Sin información"}</p>
+              </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Correo</p>
+                <p className={styles.fieldValue}>{perfil?.correo_contacto ?? "Sin información"}</p>
+              </div>
+
+              {enlacesPerfil.length > 0 && (
+                <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                  <p className={styles.fieldLabel}>Enlaces personalizados</p>
+                  <div className={styles.profileLinks}>
+                    {enlacesPerfil.map((enlace, index) => (
+                      <a
+                        key={`${enlace.url}-${index}`}
+                        href={enlace.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.profileLink}
+                      >
+                        {enlace.titulo}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </SectionShell>
         );
@@ -650,6 +689,7 @@ export default function Portafolio() {
             <div className={styles.profileHeader}>
               <h2 className={styles.profileName}>{nombreCompleto}</h2>
               {perfil?.profesion && <p className={styles.profileRole}>{perfil.profesion}</p>}
+              {ubicacionPerfil && <p className={styles.profileRole}>{ubicacionPerfil}</p>}
               {perfil?.descripcion && <p className={styles.profileDescription}>{perfil.descripcion}</p>}
             </div>
           </div>

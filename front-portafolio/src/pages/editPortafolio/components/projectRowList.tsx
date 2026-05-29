@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import styles from "./projectRow.module.css";
 import type { Proyecto } from "../../../types/portafolioTypes";
 
@@ -9,6 +10,12 @@ interface ProjectRowListProps {
   onRemove: (id: number) => void;
   onAdd: () => void;
   activeAction?: SectionAction;
+  headerAction?: ReactNode;
+  importState?: {
+    importedUrls: Set<string>;
+    importingUrls: Set<string>;
+    onImport: (proyecto: Proyecto) => void;
+  };
 }
 
 const ESTADO_LABEL: Record<Proyecto["estado"], string> = {
@@ -47,6 +54,8 @@ export default function ProjectRowList({
   onEdit,
   onRemove,
   activeAction,
+  headerAction,
+  importState,
 }: ProjectRowListProps) {
   const showEdit = activeAction === "editar";
   const showRemove = activeAction === "eliminar";
@@ -64,6 +73,11 @@ export default function ProjectRowList({
           </span>
         </div>
 
+        {headerAction && (
+          <div className={styles.headerActions}>
+            {headerAction}
+          </div>
+        )}
       </div>
 
       {proyectos.length === 0 ? (
@@ -157,6 +171,30 @@ export default function ProjectRowList({
                   </div>
                 )}
               </div>
+
+              {importState && (
+                <div className={styles.itemActions}>
+                  <button
+                    type="button"
+                    className={styles.btnEdit}
+                    disabled={
+                      !p.repositorio_url ||
+                      importState.importedUrls.has(p.repositorio_url) ||
+                      importState.importingUrls.has(p.repositorio_url)
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      importState.onImport(p);
+                    }}
+                  >
+                    {p.repositorio_url && importState.importedUrls.has(p.repositorio_url)
+                      ? "Importado"
+                      : p.repositorio_url && importState.importingUrls.has(p.repositorio_url)
+                        ? "Importando..."
+                        : "Importar"}
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>

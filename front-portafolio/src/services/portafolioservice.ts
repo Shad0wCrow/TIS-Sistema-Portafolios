@@ -5,6 +5,7 @@ import type {
   EstadoPublicacionPortafolio,
   EstadoGuardadoPortafolio,
   GradoEducacion,
+  GithubProyectoImportado,
   PortafolioData,
   PortafolioGuardadoResumen,
   PortafolioPublicoResumen,
@@ -181,6 +182,39 @@ export const updateProyecto = async (
 export const removeProyecto = async (id: number) => {
   const res = await axios.delete(`${API}/portafolio/proyectos/${id}`, {
     headers: authHeaders(),
+  });
+  return res.data;
+};
+
+// ── GitHub ───────────────────────────────────────────────────────────────────
+export const getGithubConnection = async (): Promise<{
+  github_username: string | null;
+  github_conectado_en: string | null;
+}> => {
+  const res = await axios.get(`${API}/github`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const saveGithubUsername = async (github_username: string): Promise<{
+  message: string;
+  github_username: string;
+  github_conectado_en: string | null;
+}> => {
+  const res = await axios.post(`${API}/github`, { github_username }, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const getGithubRepos = async (username?: string): Promise<{
+  github_username: string;
+  repositorios: Omit<GithubProyectoImportado, "id_proyecto">[];
+}> => {
+  const res = await axios.get(`${API}/github/repos`, {
+    headers: authHeaders(),
+    params: username ? { username } : undefined,
   });
   return res.data;
 };
@@ -389,8 +423,27 @@ export const addCertificacion = async (data: {
   fecha_obtencion: string;
   fecha_expiracion?: string;
   url_certificado?: string;
+  url_imagen?: string;
+  imagen_file?: File;
   visibilidad?: "publico" | "privado";
 }) => {
+  if (data.imagen_file) {
+    const formData = new FormData();
+    formData.append("nombre", data.nombre);
+    formData.append("nombre_entidad", data.nombre_entidad);
+    formData.append("fecha_obtencion", data.fecha_obtencion);
+    if (data.fecha_expiracion) formData.append("fecha_expiracion", data.fecha_expiracion);
+    if (data.url_certificado) formData.append("url_certificado", data.url_certificado);
+    if (data.url_imagen) formData.append("url_imagen", data.url_imagen);
+    if (data.visibilidad) formData.append("visibilidad", data.visibilidad);
+    formData.append("imagen_file", data.imagen_file, data.imagen_file.name);
+
+    const res = await axios.post(`${API}/certificaciones`, formData, {
+      headers: authHeaders(),
+    });
+    return res.data;
+  }
+
   const res = await axios.post(`${API}/certificaciones`, data, { headers: authHeaders() });
   return res.data;
 };
@@ -455,7 +508,7 @@ export const getSugerenciasProfecion = async (q: string): Promise<string[]> => {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function dataUrlToBlob(dataUrl: string): Blob {
+export function dataUrlToBlob(dataUrl: string): Blob {
   const [header, base64] = dataUrl.split(",");
   const mime = header.match(/:(.*?);/)?.[1] ?? "image/jpeg";
   const binary = atob(base64);
@@ -582,12 +635,13 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
     nombre_entidad?: string | null;
     entidad_nombre?: string | null;
     imagen_url?: string | null;
+    url_imagen?: string | null;
   };
 
   return {
     ...portafolio,
     perfil: portafolio.perfil ?? null,
-    contacto_directo: portafolio.contacto_directo ?? { habilitado: false, correo: null },
+    contacto_directo: portafolio.contacto_directo ?? { habilitado: false, correo: null, telefono: null },
     habilidades_tecnicas: portafolio.habilidades_tecnicas ?? [],
     habilidades_blandas: portafolio.habilidades_blandas ?? [],
     proyectos: portafolio.proyectos ?? [],
@@ -599,7 +653,7 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
     certificaciones: (portafolio.certificaciones ?? []).map((cert: PublicRecord) => ({
       ...cert,
       nombre_entidad: cert.nombre_entidad ?? cert.entidad_emisora?.nombre ?? cert.entidadEmisora?.nombre ?? "",
-      imagen_url: cert.imagen_url ?? null,
+      url_imagen: cert.url_imagen ?? cert.imagen_url ?? null,
     })),
     logros: (portafolio.logros ?? []).map((logro: PublicRecord) => ({
       ...logro,
@@ -608,8 +662,11 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
   };
 };
 
-export const registrarContactoDirecto = async (slug: string): Promise<{ mailto: string }> => {
-  const res = await axios.post(`${API}/public/portafolios/${slug}/contacto`);
+export const registrarContactoDirecto = async (
+  slug: string,
+  medio: "email" | "whatsapp"
+): Promise<{ mailto?: string; whatsapp_url?: string; telefono?: string | null }> => {
+  const res = await axios.post(`${API}/public/portafolios/${slug}/contacto`, { medio });
   return res.data;
 };
 
@@ -624,4 +681,8 @@ export const registrarVisualizacionPortafolio = async (slug: string): Promise<vo
   }
 
   await axios.post(`${API}/public/portafolios/${slug}/visualizacion`, {}, { headers });
+};
+
+export const guardarColorAcento = async (colorAcento: string | null): Promise<void> => {
+  await axios.patch(`${API}/portafolio/color`, { color_acento: colorAcento }, { headers: authHeaders() });
 };

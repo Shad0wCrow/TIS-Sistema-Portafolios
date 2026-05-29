@@ -1,10 +1,10 @@
-import { useState, useRef, type ChangeEvent } from "react";
+import { useEffect, useState, useRef, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
 import { addCertificacion, getSugerenciasEntidadEmisora } from "../../../services/portafolioservice";
 
 interface ModalCertificacionProps {
   onClose: () => void;
-  onSave: (data: Parameters<typeof addCertificacion>[0], imagen: string | null) => Promise<boolean | void>;
+  onSave: (data: Parameters<typeof addCertificacion>[0]) => Promise<boolean | void>;
   duplicadoWarning?: string;
 }
 
@@ -33,10 +33,16 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [sugerencias, setSugerencias] = useState<string[]>([]);
-  const [imagenBase64, setImagenBase64] = useState<string | null>(null);
+  const [imagenFile, setImagenFile] = useState<File | null>(null);
   const [imagenPreview, setImagenPreview] = useState<string | null>(null);
   const [verImagenGrande, setVerImagenGrande] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (imagenPreview) URL.revokeObjectURL(imagenPreview);
+    };
+  }, [imagenPreview]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -69,13 +75,11 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
     }
 
     setErrors((prev) => ({ ...prev, imagen: undefined }));
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      setImagenBase64(result);
-      setImagenPreview(result);
-    };
-    reader.readAsDataURL(file);
+    setImagenFile(file);
+    setImagenPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
   };
 
   const validate = (): boolean => {
@@ -107,9 +111,9 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
           fecha_obtencion: form.fecha_obtencion,
           fecha_expiracion: form.fecha_expiracion || undefined,
           url_certificado: form.url_certificado.trim() || undefined,
+          imagen_file: imagenFile || undefined,
           visibilidad: form.visibilidad,
-        },
-        imagenBase64
+        }
       );
       if (guardado === false) return;
       setSuccessMsg("¡Certificación registrada correctamente!");
@@ -216,7 +220,7 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
                       onClick={() => setVerImagenGrande(true)}
                       title="Clic para ver la imagen en tamaño completo"
                     />
-                    <button type="button" onClick={() => { setImagenBase64(null); setImagenPreview(null); if (fileRef.current) fileRef.current.value = ""; }}
+                    <button type="button" onClick={() => { if (imagenPreview) URL.revokeObjectURL(imagenPreview); setImagenFile(null); setImagenPreview(null); if (fileRef.current) fileRef.current.value = ""; }}
                       style={{ display: "block", marginTop: 4, fontSize: 11, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>
                       Quitar imagen
                     </button>

@@ -4,26 +4,33 @@ namespace App\Services;
 
 use App\Models\ConfiguracionPrivacidad;
 use App\Repositories\ConfiguracionPrivacidadRepository;
+use App\Repositories\PortafolioPublicacionRepository;
 use App\Repositories\PortafolioRepository;
 
 class PortafolioPublicoService
 {
     private $configuracionRepository;
     private $portafolioRepository;
+    private $publicacionRepository;
 
     public function __construct(
         ConfiguracionPrivacidadRepository $configuracionRepository,
-        PortafolioRepository $portafolioRepository
+        PortafolioRepository $portafolioRepository,
+        PortafolioPublicacionRepository $publicacionRepository
     ) {
         $this->configuracionRepository = $configuracionRepository;
-        $this->portafolioRepository = $portafolioRepository;
+        $this->portafolioRepository    = $portafolioRepository;
+        $this->publicacionRepository   = $publicacionRepository;
     }
 
     public function construirPortafolioPublico(int $usuarioId): array
     {
         $configuracion = $this->configuracionRepository->obtenerOCrearPorUsuario($usuarioId);
+        $publicacion   = $this->publicacionRepository->buscarPorUsuario($usuarioId);
+
         $data = [
             'configuracion' => $configuracion->only(ConfiguracionPrivacidad::SECCIONES),
+            'color_acento'  => $publicacion ? $publicacion->color_acento : null,
         ];
 
         if ($this->seccionPublica($configuracion, 'seccion_perfil')) {
@@ -149,14 +156,17 @@ class PortafolioPublicoService
             return [
                 'habilitado' => false,
                 'correo' => null,
+                'telefono' => null,
             ];
         }
 
         $correo = $this->portafolioRepository->correoContacto($usuarioId);
+        $telefono = $this->portafolioRepository->telefonoContacto($usuarioId);
 
         return [
-            'habilitado' => $correo !== null,
+            'habilitado' => $correo !== null || $telefono !== null,
             'correo' => $correo,
+            'telefono' => $telefono,
         ];
     }
 }

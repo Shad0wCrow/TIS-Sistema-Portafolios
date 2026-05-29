@@ -89,6 +89,14 @@ class PortafolioPublicacionRepository
             ]);
     }
 
+    public function guardarColorAcento(int $usuarioId, ?string $color): void
+    {
+        PortafolioPublicacion::updateOrCreate(
+            ['usuario_id' => $usuarioId],
+            ['color_acento' => $color]
+        );
+    }
+
     /**
      * Publica el portafolio en plataforma. Recibe el slug generado por el Service.
      */

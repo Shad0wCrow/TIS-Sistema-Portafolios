@@ -63,6 +63,10 @@ class PortafolioPublicoController extends Controller
     public function registrarContacto(Request $request, string $slug)
     {
         try {
+            $data = $request->validate([
+                'medio' => 'nullable|in:email,whatsapp',
+            ]);
+
             $publicacion = $this->publicacionRepository->buscarPublicadoPorSlug($slug)
                         ?? $this->publicacionRepository->buscarPorSlugConEnlaceActivo($slug);
 
@@ -74,11 +78,17 @@ class PortafolioPublicoController extends Controller
 
             $configuracion = $this->configuracionRepository->obtenerOCrearPorUsuario($publicacion->usuario_id);
             $correo = $this->portafolioRepository->correoContacto($publicacion->usuario_id);
+            $telefono = $this->portafolioRepository->telefonoContacto($publicacion->usuario_id);
+            $medio = $data['medio'] ?? ($telefono !== null ? 'whatsapp' : 'email');
+            $numeroWhatsapp = $telefono ? preg_replace('/\D+/', '', $telefono) : null;
+            $contactoDisponible = $medio === 'whatsapp'
+                ? $numeroWhatsapp !== null && $numeroWhatsapp !== ''
+                : $correo !== null;
 
             if (
                 !$configuracion->seccionEsPublica('seccion_perfil') ||
                 !$configuracion->mostrar_correo ||
-                $correo === null
+                !$contactoDisponible
             ) {
                 return response()->json([
                     'message' => 'El contacto directo no esta disponible.',
@@ -89,15 +99,24 @@ class PortafolioPublicoController extends Controller
                 'publicacion_id' => $publicacion->id_publicacion,
                 'usuario_id_propietario' => $publicacion->usuario_id,
                 'slug_publico' => $publicacion->slug_publico,
-                'medio' => 'email',
+                'medio' => $medio,
                 'ip_hash' => $request->ip() ? hash('sha256', $request->ip()) : null,
                 'user_agent' => substr((string) $request->userAgent(), 0, 500),
             ]);
 
-            return response()->json([
+            $response = [
                 'message' => 'Contacto registrado correctamente.',
-                'mailto' => 'mailto:' . $correo,
-            ]);
+                'medio' => $medio,
+            ];
+
+            if ($medio === 'whatsapp') {
+                $response['telefono'] = $telefono;
+                $response['whatsapp_url'] = 'https://wa.me/' . $numeroWhatsapp;
+            } else {
+                $response['mailto'] = 'mailto:' . $correo;
+            }
+
+            return response()->json($response);
         } catch (\Throwable $exception) {
             Log::error('Error al registrar contacto directo', [
                 'slug' => $slug,
