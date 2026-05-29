@@ -8,6 +8,8 @@ import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import ConfirmModal from "../../components/ui/ConfirmModal/ConfirmModal";
 import { IconPersona } from "../editPortafolio/components/icons";
 import AdvancedProfileSection, { type ProfileLinkForm } from "./components/AdvancedProfileSection";
+import ModalSuccess from "../editPortafolio/components/modalSuccess";
+import ModalError from "../editPortafolio/components/ModalError";
 
 const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
 const SOLO_NUMEROS = /^\+?[0-9\s\-()]{7,20}$/;
@@ -161,6 +163,7 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
     const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [activeProfileTab, setActiveProfileTab] = useState<"basic" | "advanced">("basic");
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
@@ -334,7 +337,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
 
         if (!hasUnsavedChanges) {
             setSuccessMsg("No hay cambios para guardar.");
-            setTimeout(() => setSuccessMsg(null), 2500);
             return;
         }
 
@@ -368,9 +370,9 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
             setErrors({});
             setConfirmAction(null);
             setSuccessMsg("Perfil actualizado correctamente.");
-            setTimeout(() => setSuccessMsg(null), 3000);
         } catch {
-            setErrors({ descripcion: "Error al guardar. Intenta de nuevo." });
+            setConfirmAction(null);
+            setErrorMessage("No se pudo guardar el perfil. Verifica tu conexión e intenta de nuevo.");
         } finally {
             setSaving(false);
         }
@@ -386,7 +388,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         setTouched({});
         setConfirmAction(null);
         setSuccessMsg("Cambios descartados.");
-        setTimeout(() => setSuccessMsg(null), 2500);
     }
 
     function handleCancelar() {
@@ -712,6 +713,21 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                 onConfirm={restoreOriginalProfile}
                 onCancel={() => setConfirmAction(null)}
             />
+
+            {successMsg && (
+                <ModalSuccess
+                    title="Operación completada"
+                    message={successMsg}
+                    onClose={() => setSuccessMsg(null)}
+                />
+            )}
+
+            {errorMessage && (
+                <ModalError
+                    message={errorMessage}
+                    onClose={() => setErrorMessage(null)}
+                />
+            )}
 
             {/* ── Modal foto ── */}
             {modalOpen && (

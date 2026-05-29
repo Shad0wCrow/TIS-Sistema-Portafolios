@@ -57,6 +57,7 @@ import CertificacionCard from "./components/certificacionCard";
 import ModalCertificacion from "./components/modalCertificacion";
 import PerfilSection from "./components/PerfilSection";
 import ModalError from "./components/ModalError";
+import ModalSeleccionHabilidad from "./components/modalSeleccionHabilidad";
 
 export default function EdicionPortafolio() {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ export default function EdicionPortafolio() {
   const [activeSection, setActiveSection] = useState<ActiveSection>("perfil");
   const [activeAction, setActiveAction] = useState<SectionAction>("mostrar");
 
-  const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | null>(null);
+  const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | "seleccion" | null>(null);
   const [modalEditarHab, setModalEditarHab] = useState<HabilidadItem | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
   const [modalExp, setModalExp] = useState<ModalExperienciaState>(null);
@@ -192,7 +193,7 @@ export default function EdicionPortafolio() {
   const openRegistrarModal = (section: ActiveSection) => {
     switch (section) {
       case "habilidades":
-        setModalHab("tecnica");
+        setModalHab("seleccion");
         break;
       case "proyectos":
         setModalProy("nuevo");
@@ -548,7 +549,14 @@ export default function EdicionPortafolio() {
         </div>
       </main>
 
-      {modalHab && (
+      {modalHab === "seleccion" && (
+        <ModalSeleccionHabilidad
+          onSelect={(tipo) => setModalHab(tipo)}
+          onClose={() => setModalHab(null)}
+        />
+      )}
+
+      {(modalHab === "tecnica" || modalHab === "blanda") && (
         <ModalAgregarHabilidad
           tipo={modalHab}
           catalogo={catalogo}
