@@ -7,6 +7,8 @@ import Input from "../../components/ui/Input/input";
 import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import ConfirmModal from "../../components/ui/ConfirmModal/ConfirmModal";
 import AdvancedProfileSection, { type ProfileLinkForm } from "./components/AdvancedProfileSection";
+import ModalSuccess from "../editPortafolio/components/modalSuccess";
+import ModalError from "../editPortafolio/components/ModalError";
 import ProfilePhotoField from "./components/ProfilePhotoField";
 
 const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
@@ -161,6 +163,8 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
     const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [activeProfileTab, setActiveProfileTab] = useState<"basic" | "advanced">("basic");
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
     useEffect(() => {
@@ -272,7 +276,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
 
         if (!hasUnsavedChanges) {
             setSuccessMsg("No hay cambios para guardar.");
-            setTimeout(() => setSuccessMsg(null), 2500);
             return;
         }
 
@@ -306,9 +309,9 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
             setErrors({});
             setConfirmAction(null);
             setSuccessMsg("Perfil actualizado correctamente.");
-            setTimeout(() => setSuccessMsg(null), 3000);
         } catch {
-            setErrors({ descripcion: "Error al guardar. Intenta de nuevo." });
+            setConfirmAction(null);
+            setErrorMessage("No se pudo guardar el perfil. Verifica tu conexión e intenta de nuevo.");
         } finally {
             setSaving(false);
         }
@@ -324,7 +327,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         setTouched({});
         setConfirmAction(null);
         setSuccessMsg("Cambios descartados.");
-        setTimeout(() => setSuccessMsg(null), 2500);
     }
 
     function handleCancelar() {
@@ -561,6 +563,144 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                 onCancel={() => setConfirmAction(null)}
             />
 
+            {successMsg && (
+                <ModalSuccess
+                    title="Operación completada"
+                    message={successMsg}
+                    onClose={() => setSuccessMsg(null)}
+                />
+            )}
+
+            {errorMessage && (
+                <ModalError
+                    message={errorMessage}
+                    onClose={() => setErrorMessage(null)}
+                />
+            )}
+
+            {/* ── Modal foto ── */}
+            {modalOpen && (
+                <div className={styles.modalOverlay} onClick={handleCloseModal}>
+                    <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+
+                        <div className={styles.modalHeader}>
+                            <span className={styles.modalTitle}>Foto de perfil</span>
+                            <button className={styles.modalClose} onClick={handleCloseModal} type="button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className={styles.modalTabs}>
+                            <button
+                                className={`${styles.modalTab} ${modalTab === "upload" ? styles.modalTabActive : ""}`}
+                                onClick={() => setModalTab("upload")}
+                                type="button"
+                            >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Subir archivo
+                            </button>
+                            <button
+                                className={`${styles.modalTab} ${modalTab === "url" ? styles.modalTabActive : ""}`}
+                                onClick={() => setModalTab("url")}
+                                type="button"
+                            >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                </svg>
+                                Desde URL
+                            </button>
+                        </div>
+
+                        <div className={styles.modalBody}>
+                            {modalTab === "upload" ? (
+                                <div
+                                    className={`${styles.dropzone} ${dragging ? styles.dropzoneDragging : ""}`}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: "none" }}
+                                        onChange={handleFileSelect}
+                                    />
+                                    {modalPreview ? (
+                                        <div className={styles.dropzonePreview}>
+                                            <img src={modalPreview} alt="Vista previa" />
+                                            <span className={styles.dropzoneChange}>Haz clic para cambiar</span>
+                                        </div>
+                                    ) : (
+                                        <div className={styles.dropzoneEmpty}>
+                                            <div className={styles.dropzoneIcon}>
+                                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                    <polyline points="17 8 12 3 7 8"/>
+                                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                                </svg>
+                                            </div>
+                                            <p className={styles.dropzoneText}>Arrastra tu foto aquí</p>
+                                            <p className={styles.dropzoneSubtext}>o haz clic para seleccionar · JPG, PNG, WEBP</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className={styles.modalUrlTab}>
+                                    <label className={styles.modalLabel}>URL de la imagen</label>
+                                    <input
+                                        className={styles.modalInput}
+                                        type="url"
+                                        value={modalUrl}
+                                        onChange={(e) => {
+                                            setModalUrl(e.target.value);
+                                            if (URL_VALIDA.test(e.target.value.trim())) {
+                                                setModalPreview(e.target.value.trim());
+                                            } else {
+                                                setModalPreview(null);
+                                            }
+                                        }}
+                                        placeholder="https://ejemplo.com/mi-foto.jpg"
+                                        autoFocus
+                                    />
+                                    {modalPreview && (
+                                        <div className={styles.modalUrlPreview}>
+                                            <img
+                                                src={modalPreview}
+                                                alt="Vista previa"
+                                                onError={() => setModalPreview(null)}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className={styles.modalFooter}>
+                            <button className={styles.modalCancelBtn} onClick={handleCloseModal} type="button">
+                                Cancelar
+                            </button>
+                            <button
+                                className={styles.modalConfirmBtn}
+                                onClick={handleModalConfirm}
+                                type="button"
+                                disabled={modalTab === "url" && !modalUrl.trim()}
+                            >
+                                Aplicar foto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
