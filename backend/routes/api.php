@@ -139,8 +139,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/portafolio/enlace/generar',  [PortafolioPublicacionController::class, 'generarEnlace']);
     Route::post('/portafolio/enlace/revocar',  [PortafolioPublicacionController::class, 'revocarEnlace']);
 
-    Route::patch('/portafolio/color', [PortafolioController::class, 'updateColor']);
-
+    Route::patch('/portafolio/color', [PortafolioPublicacionController::class, 'guardarColor']);
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/usuarios', [AdminController::class, 'usuarios']);
         Route::patch('/usuarios/{id}/estado', [AdminController::class, 'actualizarEstadoUsuario']);

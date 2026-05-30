@@ -405,4 +405,25 @@ class PortafolioController extends Controller
 
         return response()->json(['message' => 'Proyecto eliminado correctamente']);
     }
+    public function updateColor(Request $request)
+{
+    $user = $request->user();
+
+    $data = $request->validate([
+        'color_acento' => 'nullable|string|max:7',
+    ]);
+
+    $publicacion = \App\Models\PortafolioPublicacion::where('usuario_id', $user->id_usuario)
+        ->first();
+
+    if (!$publicacion) {
+        // Aún no ha publicado, guardar en perfil temporalmente
+        return response()->json(['color_acento' => $data['color_acento'] ?? null]);
+    }
+
+    $publicacion->color_acento = $data['color_acento'] ?? null;
+    $publicacion->save();
+
+    return response()->json(['color_acento' => $publicacion->color_acento]);
+}
 }

@@ -9,6 +9,7 @@ import {
   getVisibilidadSecciones,
   publicarPortafolio,
   revocarEnlacePublico,
+  guardarColorAcento,
 } from '../../services/portafolioservice';
 import type { ConfiguracionSecciones, EstadoPublicacionPortafolio } from '../../types/portafolioTypes';
 
@@ -93,17 +94,22 @@ export default function PublicarPortafolio() {
   // --- Handlers: Publicar en plataforma ---
 
   const handlePublicar = async () => {
-    if (!validarPublicacion()) return;
-    setPublishing(true); setPubError(''); setPubValidation(''); setPubSuccess('');
-    try {
-      const estado = await publicarPortafolio();
-      setPublicacion(estado);
-      setPubSuccess('¡Portafolio publicado exitosamente!');
-      setTimeout(() => setPubSuccess(''), 4000);
-    } catch (err) {
-      setPubValidation(getErrorMessage(err, 'No se pudo publicar. Intenta nuevamente.'));
-    } finally { setPublishing(false); }
-  };
+  if (!validarPublicacion()) return;
+  setPublishing(true); setPubError(''); setPubValidation(''); setPubSuccess('');
+  try {
+    const estado = await publicarPortafolio();
+    setPublicacion(estado);
+    // Guardar el color después de publicar, cuando ya existe el registro
+    const colorGuardado = localStorage.getItem('portafolio_accent_color');
+    if (colorGuardado) {
+      await guardarColorAcento(colorGuardado).catch(() => undefined);
+    }
+    setPubSuccess('¡Portafolio publicado exitosamente!');
+    setTimeout(() => setPubSuccess(''), 4000);
+  } catch (err) {
+    setPubValidation(getErrorMessage(err, 'No se pudo publicar. Intenta nuevamente.'));
+  } finally { setPublishing(false); }
+};
 
   const handleDespublicar = async () => {
     setPublishing(true); setPubError(''); setPubValidation(''); setPubSuccess('');
@@ -120,16 +126,21 @@ export default function PublicarPortafolio() {
   // --- Handlers: Exportar enlace público ---
 
   const handleGenerarEnlace = async () => {
-    setGeneratingLink(true); setLinkError(''); setLinkSuccess('');
-    try {
-      const estado = await generarEnlacePublico();
-      setPublicacion(estado);
-      setLinkSuccess('¡Enlace público generado correctamente!');
-      setTimeout(() => setLinkSuccess(''), 4000);
-    } catch (err) {
-      setLinkError(getErrorMessage(err, 'No se pudo generar el enlace. Intenta nuevamente.'));
-    } finally { setGeneratingLink(false); }
-  };
+  setGeneratingLink(true); setLinkError(''); setLinkSuccess('');
+  try {
+    const estado = await generarEnlacePublico();
+    setPublicacion(estado);
+    // Guardar el color después de generar el enlace
+    const colorGuardado = localStorage.getItem('portafolio_accent_color');
+    if (colorGuardado) {
+      await guardarColorAcento(colorGuardado).catch(() => undefined);
+    }
+    setLinkSuccess('¡Enlace público generado correctamente!');
+    setTimeout(() => setLinkSuccess(''), 4000);
+  } catch (err) {
+    setLinkError(getErrorMessage(err, 'No se pudo generar el enlace. Intenta nuevamente.'));
+  } finally { setGeneratingLink(false); }
+};
 
   const handleRevocarEnlace = async () => {
     setGeneratingLink(true); setLinkError(''); setLinkSuccess('');
