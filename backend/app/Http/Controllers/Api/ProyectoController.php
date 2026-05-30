@@ -144,4 +144,19 @@ class ProyectoController extends Controller
             'message' => 'Proyecto eliminado correctamente',
         ]);
     }
+    public function updateVisibilidad(Request $request, $id)
+{
+    $user = $request->user();
+ 
+    $item = Proyecto::where('id_proyecto', $id)
+        ->where('usuario_id', $user->id_usuario)
+        ->firstOrFail();
+ 
+    $request->validate(['visibilidad' => 'required|in:publico,privado']);
+ 
+    $item->visibilidad = $request->visibilidad;
+    $item->save();
+ 
+    return response()->json(['visibilidad' => $item->visibilidad]);
+}
 }

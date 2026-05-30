@@ -113,6 +113,20 @@ public function sugerencias(Request $request)
         ->pluck('nombre');
     return response()->json(['sugerencias' => $sugerencias]);
 }
-
+public function updateVisibilidad(Request $request, $id)
+{
+    $user = $request->user();
+ 
+    $item = Certificacion::where('id_certificacion', $id)
+        ->where('usuario_id', $user->id_usuario)
+        ->firstOrFail();
+ 
+    $request->validate(['visibilidad' => 'required|in:publico,privado']);
+ 
+    $item->visibilidad = $request->visibilidad;
+    $item->save();
+ 
+    return response()->json(['visibilidad' => $item->visibilidad]);
+}
 
 }
