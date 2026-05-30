@@ -202,8 +202,8 @@ export function usePortafolioHandlers({
         ? proyectos.filter((proyecto) => proyecto.id_proyecto !== modalProy.id_proyecto)
         : proyectos;
 
-    if (detectarDuplicado(proyectosAComparar, { titulo: formData.titulo }, ["titulo"])) {
-      setWarningProyecto("Ya tienes un proyecto con ese título.");
+    if (detectarDuplicado(proyectosAComparar, { titulo: formData.titulo, fecha_inicio: formData.fecha_inicio }, ["titulo", "fecha_inicio"])) {
+      setWarningProyecto("Ya tienes un proyecto registrado con ese título y fecha de inicio.");
       return false;
     }
 
@@ -254,8 +254,14 @@ export function usePortafolioHandlers({
         ? experiencias.filter((experiencia) => experiencia.id_experiencia !== modalExp.id_experiencia)
         : experiencias;
 
-    if (detectarDuplicado(experienciasAComparar, { nombre_empresa: formData.nombre_empresa, puesto: formData.puesto }, ["nombre_empresa", "puesto"])) {
-      setWarningExperiencia("Ya tienes una experiencia registrada con esa empresa y puesto.");
+    if (detectarDuplicado(experienciasAComparar, { 
+      nombre_empresa: formData.nombre_empresa, 
+      puesto: formData.puesto,
+      tipo: formData.tipo,
+      ubicacion: formData.ubicacion,
+      fecha_inicio: formData.fecha_inicio
+    }, ["nombre_empresa", "puesto", "tipo", "ubicacion", "fecha_inicio"])) {
+      setWarningExperiencia("Ya tienes una experiencia registrada con la misma empresa, puesto, tipo de empleo, ubicación y fecha de inicio.");
       return false;
     }
 
@@ -291,8 +297,8 @@ export function usePortafolioHandlers({
   };
 
   const handleSaveEducacion = async (formData: Parameters<typeof addEducacion>[0]) => {
-    if (detectarDuplicado(educaciones, { institucion: formData.institucion, titulo: formData.titulo }, ["institucion", "titulo"])) {
-      setWarningEducacion("Ya tienes este registro de educación en tu perfil.");
+    if (detectarDuplicado(educaciones, { institucion: formData.institucion, titulo: formData.titulo, grado: formData.grado }, ["institucion", "titulo", "grado"])) {
+      setWarningEducacion("Ya tienes este registro de educación en tu perfil con la misma institución, grado y título.");
       return false;
     }
     setWarningEducacion(undefined);
@@ -321,8 +327,8 @@ export function usePortafolioHandlers({
   };
 
   const handleSaveCurso = async (formData: Parameters<typeof addCurso>[0]) => {
-    if (detectarDuplicado(cursos, { titulo: formData.nombre_curso, institucion: formData.institucion }, ["titulo", "institucion"])) {
-      setWarningCurso("Ya tienes este curso registrado en tu perfil.");
+    if (detectarDuplicado(cursos, { titulo: formData.nombre_curso, institucion: formData.institucion, rol_curso: formData.rol_curso }, ["titulo", "institucion", "rol_curso"])) {
+      setWarningCurso("Ya tienes este curso registrado en tu perfil con el mismo nombre, institución y rol.");
       return false;
     }
     setWarningCurso(undefined);
@@ -370,8 +376,8 @@ export function usePortafolioHandlers({
   };
 
   const handleAddLogro = async (formData: Parameters<typeof addLogro>[0]) => {
-    if (detectarDuplicado(logros as any[], { titulo: formData.titulo, entidad_nombre: formData.nombre_entidad }, ["titulo", "entidad_nombre"])) {
-      setWarningLogro("Ya tienes este logro registrado en tu perfil.");
+    if (detectarDuplicado(logros as any[], { titulo: formData.titulo, entidad_nombre: formData.nombre_entidad, fecha_obtencion: formData.fecha_obtencion }, ["titulo", "entidad_nombre", "fecha_obtencion"])) {
+      setWarningLogro("Ya tienes este logro registrado en tu perfil con el mismo título, fecha y entidad emisora.");
       return false;
     }
     setWarningLogro(undefined);
@@ -420,9 +426,12 @@ export function usePortafolioHandlers({
     });
   };
 
-  const handleSaveCertificacion = async (formData: Parameters<typeof addCertificacion>[0]) => {
-    if (detectarDuplicado(certificaciones as any[], { nombre: formData.nombre, nombre_entidad: formData.nombre_entidad }, ["nombre", "nombre_entidad"])) {
-      setWarningCertificacion("Ya tienes esta certificación registrada en tu perfil.");
+  const handleSaveCertificacion = async (
+    formData: Parameters<typeof addCertificacion>[0],
+    imagenBase64: string | null
+  ) => {
+    if (detectarDuplicado(certificaciones as any[], { nombre: formData.nombre, nombre_entidad: formData.nombre_entidad, url_certificado: formData.url_certificado }, ["nombre", "nombre_entidad", "url_certificado"])) {
+      setWarningCertificacion("Ya tienes esta certificación registrada en tu perfil con el mismo título, entidad emisora y URL.");
       return false;
     }
     setWarningCertificacion(undefined);
