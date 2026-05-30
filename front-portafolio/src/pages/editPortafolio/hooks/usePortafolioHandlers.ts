@@ -17,6 +17,7 @@ import {
   removeLogro,
   addIdioma,
   removeIdioma,
+  updateIdioma,
   addCertificacion,
   removeCertificacion
 } from "../../../services/portafolioservice";
@@ -254,8 +255,8 @@ export function usePortafolioHandlers({
         ? experiencias.filter((experiencia) => experiencia.id_experiencia !== modalExp.id_experiencia)
         : experiencias;
 
-    if (detectarDuplicado(experienciasAComparar, { 
-      nombre_empresa: formData.nombre_empresa, 
+    if (detectarDuplicado(experienciasAComparar, {
+      nombre_empresa: formData.nombre_empresa,
       puesto: formData.puesto,
       tipo: formData.tipo,
       ubicacion: formData.ubicacion,
@@ -407,6 +408,25 @@ export function usePortafolioHandlers({
     return true;
   };
 
+  const handleEditIdioma = async (
+  id: number,
+  datos: { nivel: string; visibilidad: "publico" | "privado" }
+) => {
+  await updateIdioma(id, datos);
+  setData((prev) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      idiomas: prev.idiomas.map((idioma) =>
+        idioma.id_usuario_idioma === id
+          ? { ...idioma, nivel: datos.nivel as Idioma["nivel"], visibilidad: datos.visibilidad }
+          : idioma
+      ),
+    };
+  });
+  setSuccessMessage("El idioma ha sido actualizado correctamente.");
+};
+
   const handleRemoveIdioma = async (id: number) => {
     setModalAlert({
       mensaje: "Este idioma será eliminado permanentemente.",
@@ -418,18 +438,17 @@ export function usePortafolioHandlers({
             ? { ...prev, idiomas: prev.idiomas.filter((idioma) => idioma.id_usuario_idioma !== id) }
             : prev
           );
-          setSuccessMessage("El idioma ha sido eliminado correctamente.");
+          setSuccessMessage("El idioma ha sido actualizado correctamente.");
         } catch (error) {
-          setErrorMessage("Error al eliminar el idioma. Intenta de nuevo.");
+          setErrorMessage("Error al actualizar el idioma. Intenta de nuevo.");
         }
       },
     });
   };
 
   const handleSaveCertificacion = async (
-    formData: Parameters<typeof addCertificacion>[0],
-    imagenBase64: string | null
-  ) => {
+  formData: Parameters<typeof addCertificacion>[0]
+) => {
     if (detectarDuplicado(certificaciones as any[], { nombre: formData.nombre, nombre_entidad: formData.nombre_entidad, url_certificado: formData.url_certificado }, ["nombre", "nombre_entidad", "url_certificado"])) {
       setWarningCertificacion("Ya tienes esta certificación registrada en tu perfil con el mismo título, entidad emisora y URL.");
       return false;
@@ -476,6 +495,7 @@ export function usePortafolioHandlers({
     handleRemoveLogro,
     handleAddLogro,
     handleAddIdioma,
+    handleEditIdioma,
     handleRemoveIdioma,
     handleSaveCertificacion,
     handleRemoveCertificacion,

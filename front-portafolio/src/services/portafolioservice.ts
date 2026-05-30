@@ -661,7 +661,10 @@ export const getPortafolioPublico = async (slug: string): Promise<PortafolioData
     })),
   };
 };
-
+export const updateIdioma = async (id: number, data: { nivel: string; visibilidad: 'publico' | 'privado' }) => {
+  const res = await axios.put(`${API}/idiomas/${id}`, data, { headers: authHeaders() });
+  return res.data;
+};
 export const registrarContactoDirecto = async (
   slug: string,
   medio: "email" | "whatsapp"

@@ -128,7 +128,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/idiomas',                           [IdiomaController::class, 'store']);
     Route::delete('/idiomas/{id}',                    [IdiomaController::class, 'destroy']);
     Route::patch('/idiomas/{id}/visibilidad',         [IdiomaController::class, 'updateVisibilidad']);
-
+    Route::put('/idiomas/{id}',                       [IdiomaController::class, 'update']);
     // HU-23: Configuración de visibilidad de secciones del portafolio
     Route::get('/visibilidad/secciones',  [VisibilidadController::class, 'show']);
     Route::put('/visibilidad/secciones',  [VisibilidadController::class, 'update']);

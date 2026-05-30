@@ -60,7 +60,7 @@ const SECTION_ACTIONS: Record<ActiveSection, SectionAction[]> = {
   educacion:       ["mostrar", "registrar", "eliminar"],
   cursos:          ["mostrar", "registrar", "eliminar"],
   logros:          ["mostrar", "registrar", "eliminar"],
-  idiomas:         ["mostrar", "registrar", "eliminar"],
+  idiomas:         ["mostrar", "registrar", "editar", "eliminar"],
   certificaciones: ["mostrar", "registrar", "eliminar"],
 };
 

@@ -54,6 +54,7 @@ import ModalSuccess from "./components/modalSuccess";
 import ModalLogro from "./components/modalLogro";
 import LogroCard from "./components/logroCard";
 import ModalIdioma from "./components/modalIdioma";
+import ModalEditarIdioma from "./components/ModalEditarIdioma";
 import IdiomaCard from "./components/idiomaCard";
 import CertificacionCard from "./components/certificacionCard";
 import ModalCertificacion from "./components/modalCertificacion";
@@ -84,6 +85,7 @@ export default function EdicionPortafolio() {
   const [modalCurso, setModalCurso] = useState(false);
   const [modalLogro, setModalLogro] = useState(false);
   const [modalIdioma, setModalIdioma] = useState(false);
+  const [modalEditarIdioma, setModalEditarIdioma] = useState<Idioma | null>(null);
   const [modalCertificacion, setModalCertificacion] = useState(false);
   const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
 
@@ -160,6 +162,7 @@ export default function EdicionPortafolio() {
     handleRemoveLogro,
     handleAddLogro,
     handleAddIdioma,
+    handleEditIdioma,
     handleRemoveIdioma,
     handleSaveCertificacion,
     handleRemoveCertificacion,
@@ -338,7 +341,6 @@ export default function EdicionPortafolio() {
                   }}
                   activeAction={activeAction}
                 />
-
                 <SkillCard
                   tipo="blanda"
                   lista={habilidadesBlandas}
@@ -525,6 +527,11 @@ export default function EdicionPortafolio() {
                     handleRemoveIdioma(id);
                   }
                 }}
+                onEdit={(idioma) => {
+                  if (activeAction === "editar" || activeAction === "mostrar") {
+                    setModalEditarIdioma(idioma);
+                  }
+                }}
                 activeAction={activeAction}
               />
             </div>
@@ -662,6 +669,14 @@ export default function EdicionPortafolio() {
           }}
           onSave={handleAddIdioma}
           duplicadoWarning={warningIdioma}
+        />
+      )}
+
+      {modalEditarIdioma && (
+        <ModalEditarIdioma
+          idioma={modalEditarIdioma}
+          onClose={() => setModalEditarIdioma(null)}
+          onSave={handleEditIdioma}
         />
       )}
 
