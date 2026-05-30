@@ -175,10 +175,10 @@ export function applyAccentColor(color: string): void {
   const { r, g, b } = hexToRgb(color);
 
   document.documentElement.style.setProperty("--color-accent", color);
-  document.documentElement.style.setProperty("--color-accent-soft", `rgba(${r}, ${g}, ${b}, 0.12)`);
-  document.documentElement.style.setProperty("--color-accent-dark", darkenHex(color, 0.8));
-  document.documentElement.style.setProperty("--color-accent-bg", `rgba(${r}, ${g}, ${b}, 0.18)`);
-  document.documentElement.style.setProperty("--color-accent-bg2", `rgba(${r}, ${g}, ${b}, 0.12)`);
-  document.documentElement.style.setProperty("--color-accent-border", `rgba(${r}, ${g}, ${b}, 0.22)`);
-  document.documentElement.style.setProperty("--color-accent-ring", `rgba(${r}, ${g}, ${b}, 0.28)`);
+  document.documentElement.style.setProperty("--color-accent-soft", `rgba(${r}, ${g}, ${b}, 0.20)`);
+  document.documentElement.style.setProperty("--color-accent-dark", darkenHex(color, 0.7));
+  document.documentElement.style.setProperty("--color-accent-bg", `rgba(${r}, ${g}, ${b}, 0.35)`);
+  document.documentElement.style.setProperty("--color-accent-bg2", `rgba(${r}, ${g}, ${b}, 0.22)`);
+  document.documentElement.style.setProperty("--color-accent-border", `rgba(${r}, ${g}, ${b}, 0.50)`);
+  document.documentElement.style.setProperty("--color-accent-ring", `rgba(${r}, ${g}, ${b}, 0.55)`);
 }
