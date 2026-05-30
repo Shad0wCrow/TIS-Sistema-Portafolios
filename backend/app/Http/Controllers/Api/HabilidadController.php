@@ -153,4 +153,20 @@ class HabilidadController extends Controller
             'message' => 'Habilidad eliminada correctamente',
         ]);
     }
+    public function updateVisibilidad(Request $request, $id)
+{
+    $user = $request->user();
+ 
+    $item = UsuarioHabilidad::where('id_usuario_habilidad', $id)
+        ->where('usuario_id', $user->id_usuario)
+        ->where('eliminado', false)
+        ->firstOrFail();
+ 
+    $request->validate(['visibilidad' => 'required|in:publico,privado']);
+ 
+    $item->visibilidad = $request->visibilidad;
+    $item->save();
+ 
+    return response()->json(['visibilidad' => $item->visibilidad]);
+}
 }

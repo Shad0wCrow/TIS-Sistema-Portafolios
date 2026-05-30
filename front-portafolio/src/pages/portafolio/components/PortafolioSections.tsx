@@ -96,12 +96,12 @@ function CertificacionCard({ cert }: { cert: Certificacion }) {
 
   return (
     <article className={styles.certCard}>
-      {cert.imagen_url ? (
+      {cert.url_imagen ? (
         <img
           className={styles.certImage}
-          src={cert.imagen_url}
+          src={cert.url_imagen}
           alt={cert.nombre}
-          onClick={() => setPreviewImage(cert.imagen_url)}
+          onClick={() => setPreviewImage(cert.url_imagen || null)}
           style={{ cursor: "zoom-in" }}
           title="Clic para ampliar"
         />

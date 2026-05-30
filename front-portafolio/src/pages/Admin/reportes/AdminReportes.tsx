@@ -26,7 +26,7 @@ import {
 import "../AdminDashboard.css";
 import "../AdminReportes.css";
 import "../UsuariosReportados.css";
-import "./AdminReportestabs.css";
+import "./Adminreportestabs.css";
 const MOTIVO_LABELS: Record<string, string> = {
   contenido_inapropiado: "Contenido inapropiado",
   spam: "Spam",

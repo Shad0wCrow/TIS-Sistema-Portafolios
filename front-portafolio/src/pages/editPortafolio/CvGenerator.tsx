@@ -99,6 +99,8 @@ export default function CvGenerator() {
   if (!data) return <div style={{ padding: "40px", color: "#333", fontSize: "1.2rem", background: "#f3f4f6", height: "100vh" }}>No se pudo cargar la información del portafolio.</div>;
 
   const perfil = data.perfil;
+  const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
+  const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
   const educaciones = (data.educaciones || []) as Educacion[];
   const proyectos = (data.proyectos || []) as Proyecto[];
   const habilidadesTecnicas = data.habilidades_tecnicas || [];
@@ -121,9 +123,23 @@ export default function CvGenerator() {
         
         <div className={styles.cascadeContact}>
           <h3 className={styles.cascadeSectionTitleLeft}>Contacto</h3>
-          
           {perfil?.celular && <p className={styles.cascadeText}>{perfil.celular}</p>}
+          {perfil?.correo_contacto && <p className={styles.cascadeText}>{perfil.correo_contacto}</p>}
+          {ubicacionPerfil && <p className={styles.cascadeText}>{ubicacionPerfil}</p>}
         </div>
+
+        {enlacesPerfil.length > 0 && (
+          <div className={styles.cascadeContact}>
+            <h3 className={styles.cascadeSectionTitleLeft}>Enlaces</h3>
+            {enlacesPerfil.map((enlace: any, i: number) => (
+              <p key={`${enlace.url}-${i}`} className={styles.cascadeText}>
+                <a href={enlace.url} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                  {enlace.titulo}
+                </a>
+              </p>
+            ))}
+          </div>
+        )}
 
         {idiomas.length > 0 && (
           <div className={styles.cascadeLanguages}>
@@ -227,7 +243,7 @@ export default function CvGenerator() {
         <div className={styles.classicHeaderInfo}>
           <h1 className={styles.classicName}>{perfil?.nombre_perfil} {perfil?.apellido_perfil}</h1>
           <p className={styles.classicContact}>
-           
+            {[perfil?.celular, perfil?.correo_contacto, ubicacionPerfil].filter(Boolean).join(" | ")}
           </p>
         </div>
         {perfil?.foto_url && <img src={perfil.foto_url} alt="Perfil" className={styles.classicPhoto} />}
@@ -353,7 +369,7 @@ export default function CvGenerator() {
         <div className={styles.influxHeaderInfo}>
           <h1 className={styles.influxName}>{perfil?.nombre_perfil} {perfil?.apellido_perfil}</h1>
           <p className={styles.influxContact}>
-            
+            {[perfil?.celular, perfil?.correo_contacto, ubicacionPerfil].filter(Boolean).join(" | ")}
           </p>
         </div>
         {perfil?.foto_url && <img src={perfil.foto_url} alt="Perfil" className={styles.influxPhoto} />}

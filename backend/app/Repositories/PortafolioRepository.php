@@ -41,6 +41,14 @@ class PortafolioRepository
         return $correoUsuario !== '' ? $correoUsuario : null;
     }
 
+    public function telefonoContacto(int $usuarioId): ?string
+    {
+        $perfil = $this->perfil($usuarioId);
+        $telefono = trim((string) ($perfil->celular ?? ''));
+
+        return $telefono !== '' ? $telefono : null;
+    }
+
     public function habilidadesPublicas(int $usuarioId)
     {
         return UsuarioHabilidad::with('habilidad')

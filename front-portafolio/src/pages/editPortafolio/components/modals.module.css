@@ -150,6 +150,13 @@
   resize: vertical;
 }
 
+.inlineFieldAction {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .modalActions {
   display: flex;
   justify-content: flex-end;
@@ -258,6 +265,10 @@
   .btnSave {
     width: 100%;
     justify-content: center;
+  }
+
+  .inlineFieldAction {
+    grid-template-columns: 1fr;
   }
 }
 

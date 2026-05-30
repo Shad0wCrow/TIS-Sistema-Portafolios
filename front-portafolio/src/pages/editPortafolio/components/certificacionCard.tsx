@@ -58,14 +58,14 @@ export default function CertificacionCard({
                 if (showRemove) onRemove(cert.id_certificacion);
               }}
             >
-              {cert.imagen_url ? (
+              {cert.url_imagen ? (
                 <img
-                  src={cert.imagen_url}
+                  src={cert.url_imagen}
                   alt={cert.nombre}
                   className={styles.itemImage}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setPreviewImage(cert.imagen_url || null);
+                    setPreviewImage(cert.url_imagen || null);
                   }}
                   style={{ cursor: "zoom-in" }}
                   title="Clic para ver la imagen en grande"

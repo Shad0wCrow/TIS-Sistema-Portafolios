@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./edicionPortafolio.module.css";
 import skillStyles from "./components/skillCard.module.css";
+import projectStyles from "./components/projectRow.module.css";
 
 import {
   getPortafolio,
@@ -42,6 +43,7 @@ import ExperienciaRowList from "./components/experienciaRowList";
 import ModalAgregarHabilidad from "./components/modalAgregarHabilidad";
 import ModalEditarHabilidad from "./components/ModalEditarHabilidad";
 import ModalProyecto from "./components/modalProyecto";
+import ModalGithubImport from "./components/ModalGithubImport";
 import ModalExperiencia from "./components/modalExperiencia";
 import ModalEducacion from "./components/modalEducacion";
 import ModalCurso from "./components/modalCurso";
@@ -72,6 +74,7 @@ export default function EdicionPortafolio() {
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | "seleccion" | null>(null);
   const [modalEditarHab, setModalEditarHab] = useState<HabilidadItem | null>(null);
   const [modalProy, setModalProy] = useState<ModalProyectoState>(null);
+  const [modalGithubImport, setModalGithubImport] = useState(false);
   const [modalExp, setModalExp] = useState<ModalExperienciaState>(null);
   const [modalAlert, setModalAlert] = useState<AlertState>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -135,13 +138,7 @@ export default function EdicionPortafolio() {
   const logros = (data?.logros ?? []) as Logro[];
   const idiomas = (data?.idiomas ?? []) as Idioma[];
 
-  const certConImagenes = useMemo(() => {
-    const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-    return certificaciones.map((c) => ({
-      ...c,
-      imagen_url: stored[c.id_certificacion] ?? null,
-    }));
-  }, [certificaciones]);
+  const certConImagenes = certificaciones;
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Nombre completo";
@@ -392,6 +389,17 @@ export default function EdicionPortafolio() {
                   }
                 }}
                 activeAction={activeAction}
+                headerAction={
+                  activeAction === "registrar" ? (
+                    <button
+                      type="button"
+                      className={projectStyles.btnAdd}
+                      onClick={() => setModalGithubImport(true)}
+                    >
+                      Importar desde GitHub
+                    </button>
+                  ) : null
+                }
               />
             </div>
           )}
@@ -586,6 +594,17 @@ export default function EdicionPortafolio() {
           }}
           onSave={handleSaveProyecto}
           duplicadoWarning={warningProyecto}
+        />
+      )}
+
+      {modalGithubImport && (
+        <ModalGithubImport
+          proyectosExistentes={proyectos}
+          onClose={() => {
+            setModalGithubImport(false);
+            setWarningProyecto(undefined);
+          }}
+          onImport={handleSaveProyecto}
         />
       )}
 

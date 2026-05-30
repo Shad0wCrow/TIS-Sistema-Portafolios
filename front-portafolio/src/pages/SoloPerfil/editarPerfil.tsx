@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./editarperfil.module.css";
 import { getPerfilMe, updatePerfil, getSugerenciasProfecion } from "../../services/portafolioservice";
@@ -6,10 +6,10 @@ import AutocompleteInput from "../../components/ui/AutocompleteInput/Autocomplet
 import Input from "../../components/ui/Input/input";
 import PageLoader from "../../components/ui/PageLoader/PageLoader";
 import ConfirmModal from "../../components/ui/ConfirmModal/ConfirmModal";
-import { IconPersona } from "../editPortafolio/components/icons";
 import AdvancedProfileSection, { type ProfileLinkForm } from "./components/AdvancedProfileSection";
 import ModalSuccess from "../editPortafolio/components/modalSuccess";
 import ModalError from "../editPortafolio/components/ModalError";
+import ProfilePhotoField from "./components/ProfilePhotoField";
 
 const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
 const SOLO_NUMEROS = /^\+?[0-9\s\-()]{7,20}$/;
@@ -167,13 +167,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
     const [activeProfileTab, setActiveProfileTab] = useState<"basic" | "advanced">("basic");
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalTab, setModalTab] = useState<"upload" | "url">("upload");
-    const [modalUrl, setModalUrl] = useState("");
-    const [dragging, setDragging] = useState(false);
-    const [modalPreview, setModalPreview] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
     useEffect(() => {
         getPerfilMe()
             .then((res) => {
@@ -260,63 +253,9 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         setErrors(validar(form, fotoUrl, updated));
     }
 
-    function handleQuitarFoto() {
-        setFotoUrl("");
-        setErrors(validar(form, "", enlaces));
-    }
-
-    function handleOpenModal() {
-        setModalUrl(fotoUrl);
-        setModalPreview(fotoUrl || null);
-        setModalTab("upload");
-        setDragging(false);
-        setModalOpen(true);
-    }
-
-    function handleCloseModal() {
-        setModalOpen(false);
-        setModalUrl("");
-        setModalPreview(null);
-    }
-
-    function handleModalConfirm() {
-    if (modalTab === "url" && modalUrl.trim()) {
-        setFotoUrl(modalUrl.trim());
-        setErrors(validar(form, modalUrl.trim(), enlaces));
-    } else if (modalTab === "upload" && modalPreview) {
-        setFotoUrl(modalPreview);
-        setErrors(validar(form, modalPreview, enlaces));
-    }
-    setModalOpen(false);
-}
-
-    function handleDragOver(e: React.DragEvent) {
-        e.preventDefault();
-        setDragging(true);
-    }
-
-    function handleDragLeave() {
-        setDragging(false);
-    }
-
-    function handleDrop(e: React.DragEvent) {
-        e.preventDefault();
-        setDragging(false);
-        const file = e.dataTransfer.files?.[0];
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (ev) => setModalPreview(ev.target?.result as string);
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (ev) => setModalPreview(ev.target?.result as string);
-            reader.readAsDataURL(file);
-        }
+    function handleFotoChange(nextFotoUrl: string) {
+        setFotoUrl(nextFotoUrl);
+        setErrors(validar(form, nextFotoUrl, enlaces));
     }
 
     function handleGuardar() {
@@ -431,118 +370,31 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                     </div>
 
                     <div className={styles.content}>
-                        <div className={styles.profileTabs} aria-label="Secciones de perfil">
-                            <button
-                                type="button"
-                                className={`${styles.profileTab} ${activeProfileTab === "basic" ? styles.profileTabActive : ""}`}
-                                onClick={() => setActiveProfileTab("basic")}
-                            >
-                                Datos básicos
-                            </button>
-                            <button
-                                type="button"
-                                className={`${styles.profileTab} ${activeProfileTab === "advanced" ? styles.profileTabActive : ""}`}
-                                onClick={() => setActiveProfileTab("advanced")}
-                            >
-                                Perfil avanzado
-                            </button>
+                        <div style={{
+                            padding: "16px 20px",
+                            background: "#ffffff",
+                            border: "1px solid var(--border)",
+                            borderRadius: "8px",
+                            marginBottom: "20px"
+                        }}>
+                            <p style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "700", color: "var(--accent, #1a6644)" }}>
+                                Estás editando tu perfil.
+                            </p>
+                            <p style={{ margin: "0", fontSize: "12px", color: "var(--text2, #4a5e54)" }}>
+                                Los campos Nombre, Apellido, Profesión y País no se pueden editar porque ya fueron registrados.
+                            </p>
                         </div>
 
-                        {activeProfileTab === "basic" && (
-                            <>
                         <div className={styles.section}>
                             <div className={styles.sectionHeader}>
                                 <span className={styles.sectionTitle}>Foto de perfil</span>
                             </div>
-                            <div className={styles.fotoCard}>
-                                <div className={styles.fotoLeft}>
-                                    <div className={styles.fotoCircleWrap}>
-                                        <div className={styles.fotoCircle} onClick={handleOpenModal}>
-                                            {fotoUrl.trim() ? (
-                                                <img
-                                                    src={fotoUrl.trim()}
-                                                    alt="Foto de perfil"
-                                                    onError={() =>
-                                                        setErrors((prev) => ({
-                                                            ...prev,
-                                                            foto: "La URL no pudo cargarse. Revisa el enlace.",
-                                                        }))
-                                                    }
-                                                />
-                                            ) : (
-                                                <IconPersona />
-                                            )}
-                                            <div className={styles.fotoOverlay}>
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                                    <polyline points="17 8 12 3 7 8"/>
-                                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={styles.fotoRight}>
-                                    <div className={styles.fotoMeta}>
-                                        <p className={styles.fotoTitle}>
-                                            {fotoUrl.trim() ? "Foto cargada" : "Sin foto de perfil"}
-                                        </p>
-                                        <p className={styles.fotoSubtitle}>
-                                            {fotoUrl.trim()
-                                                ? "Haz clic en la imagen o en el botón para cambiarla."
-                                                : "Sube una foto o pega una URL pública para mostrarla en tu portafolio."}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.fotoActions}>
-                                        <button
-                                            className={styles.addFotoBtn}
-                                            type="button"
-                                            onClick={handleOpenModal}
-                                        >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                                <polyline points="17 8 12 3 7 8"/>
-                                                <line x1="12" y1="3" x2="12" y2="15"/>
-                                            </svg>
-                                            {fotoUrl.trim() ? "Cambiar foto" : "Agregar foto"}
-                                        </button>
-
-                                        {fotoUrl.trim() && (
-                                            <>
-                                                <button
-                                                    className={styles.fotoRemoveBtn}
-                                                    type="button"
-                                                    onClick={handleQuitarFoto}
-                                                >
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <polyline points="3 6 5 6 21 6"/>
-                                                        <path d="M19 6l-1 14H6L5 6"/>
-                                                        <path d="M10 11v6M14 11v6"/>
-                                                    </svg>
-                                                    Quitar
-                                                </button>
-                                                <div className={styles.fotoUrlPreview}>
-                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                                                    </svg>
-                                                    <span>
-                                                        {fotoUrl.trim().length > 38
-                                                            ? fotoUrl.trim().slice(0, 38) + "…"
-                                                            : fotoUrl.trim()}
-                                                    </span>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {errors.foto && (
-                                        <span className={styles.fotoError}>{errors.foto}</span>
-                                    )}
-                                </div>
-                            </div>
+                            <ProfilePhotoField
+                                fotoUrl={fotoUrl}
+                                error={errors.foto}
+                                onChange={handleFotoChange}
+                                onError={(message) => setErrors((prev) => ({ ...prev, foto: message }))}
+                            />
                         </div>
 
                         {/* ── Sección datos personales ── */}
@@ -638,22 +490,19 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                                 </div>
                             </div>
                         </div>
-                            </>
-                        )}
 
-                        {activeProfileTab === "advanced" && (
-                            <AdvancedProfileSection
-                                ciudad={form.ciudad}
-                                pais={form.pais}
-                                correoContacto={form.correo_contacto}
-                                enlaces={enlaces}
-                                errors={errors}
-                                onFieldChange={handleAdvancedFieldChange}
-                                onLinkChange={handleLinkChange}
-                                onAddLink={handleAddLink}
-                                onRemoveLink={handleRemoveLink}
-                            />
-                        )}
+                        <AdvancedProfileSection
+                            ciudad={form.ciudad}
+                            pais={form.pais}
+                            correoContacto={form.correo_contacto}
+                            enlaces={enlaces}
+                            errors={errors}
+                            onFieldChange={handleAdvancedFieldChange}
+                            onLinkChange={handleLinkChange}
+                            onAddLink={handleAddLink}
+                            onRemoveLink={handleRemoveLink}
+                            disabledPais={true}
+                        />
                     </div>
 
                     {/* ── Footer ── */}

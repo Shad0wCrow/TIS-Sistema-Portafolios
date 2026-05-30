@@ -5,12 +5,12 @@
 /* ── Variable de acento (valor por defecto, se sobreescribe desde JS) ── */
 :root {
   --color-accent: #1a6644;
-  --color-accent-soft: rgba(26, 102, 68, 0.22);
-  --color-accent-dark: color-mix(in srgb, var(--color-accent) 80%, black);
-  --color-accent-bg: color-mix(in srgb, var(--color-accent) 18%, white);
-  --color-accent-bg2: color-mix(in srgb, var(--color-accent) 12%, white);
-  --color-accent-border: color-mix(in srgb, var(--color-accent) 22%, transparent);
-  --color-accent-ring: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  --color-accent-soft: rgba(26, 102, 68, 0.12);
+  --color-accent-dark: #14523a;
+  --color-accent-bg: rgba(26, 102, 68, 0.18);
+  --color-accent-bg2: rgba(26, 102, 68, 0.12);
+  --color-accent-border: rgba(26, 102, 68, 0.22);
+  --color-accent-ring: rgba(26, 102, 68, 0.28);
 }
 
 .page {
@@ -109,7 +109,7 @@
 }
 
 .savePortfolioBtnActive {
-  border-color: color-mix(in srgb, var(--color-accent) 40%, white);
+  border-color: var(--color-accent-border);
   background: var(--color-accent-bg);
   color: var(--color-accent);
 }
@@ -176,7 +176,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, var(--color-accent-bg) 0%, color-mix(in srgb, var(--color-accent) 14%, white) 100%);
+  background: linear-gradient(180deg, var(--color-accent-bg) 0%, var(--color-accent-bg2) 100%);
   color: var(--color-accent);
   border: 1px solid var(--color-accent-border);
 }
@@ -255,6 +255,75 @@
 .contactButton:disabled {
   cursor: wait;
   opacity: 0.72;
+}
+
+/* CA #51 - Dropdown de contacto directo */
+.contactWrapper {
+  position: relative;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.contactWrapper .contactButton {
+  margin-top: 0;
+  background: #1a8a55;
+  border-color: #1a8a55;
+}
+
+.contactWrapper .contactButton:hover:not(:disabled) {
+  background: #14703f;
+  border-color: #14703f;
+  transform: translateY(-1px);
+}
+
+.contactDropdown {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+  z-index: 99999;
+  overflow: hidden;
+}
+
+.contactDropdownItem {
+  display: block;
+  width: 100%;
+  padding: 11px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a6644;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.contactDropdownItem + .contactDropdownItem {
+  border-top: 1px solid #f0f4f2;
+}
+
+.contactDropdownItem:hover:not(:disabled) {
+  background: #f0f7f3;
+}
+
+.contactDropdownItem:focus-visible {
+  outline: 2px solid var(--color-accent-ring, #1a6644);
+  outline-offset: -2px;
+}
+
+.contactDropdownItem:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.contactErrorMsg {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b91c1c;
+  text-align: center;
 }
 
 .profileStats {
@@ -339,7 +408,7 @@
     linear-gradient(
       135deg,
       var(--color-accent-bg) 0%,
-      color-mix(in srgb, var(--color-accent) 10%, white) 100%
+      var(--color-accent-bg2) 100%
     );
 
   border-bottom: 1px solid var(--color-accent-border);
@@ -454,8 +523,8 @@
 }
 
 .profileLink:hover {
-  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--color-accent) 14%, white);
+  border-color: rgba(26, 102, 68, 0.45);
+background: var(--color-accent-bg);
 }
 
 .splitGrid {
@@ -638,7 +707,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, var(--color-accent-bg) 0%, color-mix(in srgb, var(--color-accent) 14%, white) 100%);
+  background: linear-gradient(180deg, var(--color-accent-bg) 0%, var(--color-accent-bg2) 100%);
   color: var(--color-accent);
 }
 

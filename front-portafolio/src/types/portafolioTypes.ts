@@ -45,6 +45,10 @@ export interface Proyecto {
   roles: string[];
 }
 
+export interface GithubProyectoImportado extends Proyecto {
+  github_id: number | null;
+}
+
 export interface Curso {
   id_educacion: number;
   institucion: string;
@@ -140,7 +144,8 @@ export interface Certificacion {
   fecha_obtencion: string;
   fecha_expiracion: string | null;
   url_certificado: string | null;
-  imagen_url: string | null;
+  url_imagen: string | null;
+  imagen_url?: string | null;
   visibilidad: "publico" | "privado";
 }
 
@@ -160,6 +165,7 @@ export interface Experiencia {
 export interface PortafolioData {
   perfil: Perfil | null;
   contacto_directo?: ContactoDirecto;
+  color_acento?: string | null;
   habilidades_tecnicas: HabilidadItem[];
   habilidades_blandas: HabilidadItem[];
   proyectos: Proyecto[];
@@ -175,6 +181,7 @@ export interface PortafolioData {
 export interface ContactoDirecto {
   habilitado: boolean;
   correo: string | null;
+  telefono?: string | null;
 }
 
 export interface EstadoPublicacionPortafolio {

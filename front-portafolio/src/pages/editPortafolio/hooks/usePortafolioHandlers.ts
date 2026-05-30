@@ -44,6 +44,7 @@ type CertificacionApi = Certificacion & {
   entidad_emisora?: { nombre?: string | null } | null;
   entidadEmisora?: { nombre?: string | null } | null;
   nombre_entidad_emisora?: string | null;
+  imagen_url?: string | null;
 };
 
 type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas" | "experiencia" | "certificaciones";
@@ -69,6 +70,7 @@ const normalizarCertificaciones = (items: CertificacionApi[] = []): Certificacio
       cert.entidadEmisora?.nombre ??
       cert.nombre_entidad_emisora ??
       "",
+    url_imagen: cert.url_imagen ?? cert.imagen_url ?? null,
   }));
 
 interface UsePortafolioHandlersParams {
@@ -434,16 +436,10 @@ export function usePortafolioHandlers({
     }
     setWarningCertificacion(undefined);
     const res = await addCertificacion(formData);
-    const id = res.certificacion?.id_certificacion;
-    if (imagenBase64 && id) {
-      const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-      stored[id] = imagenBase64;
-      localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
-    }
     const certificacion = {
       ...res.certificacion,
       nombre_entidad: formData.nombre_entidad,
-      imagen_url: imagenBase64,
+      url_imagen: res.certificacion?.url_imagen ?? null,
     };
     setCertificaciones((prev) => [certificacion, ...prev]);
     return true;
@@ -456,9 +452,6 @@ export function usePortafolioHandlers({
         setModalAlert(null);
         try {
           await removeCertificacion(id);
-          const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-          delete stored[id];
-          localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
           setCertificaciones((prev) => prev.filter((certificacion) => certificacion.id_certificacion !== id));
           setSuccessMessage("La certificacion ha sido eliminada correctamente.");
         } catch (error) {
