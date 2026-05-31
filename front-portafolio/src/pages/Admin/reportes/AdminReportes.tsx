@@ -18,10 +18,12 @@ import {
   resolverReporte,
   getAdminUsers,
   updateAdminUserStatus,
+  getAdminUserStateHistory,
   type EstadoReporte,
   type ReportePortafolio,
   type ReportesDePublicacion,
   type AdminUser,
+  type AdminUserStateHistoryEvent,
 } from "../../../services/adminService";
 import "../AdminDashboard.css";
 import "../AdminReportes.css";
@@ -153,8 +155,7 @@ export default function AdminReportes() {
   const [grupos, setGrupos] = useState<ReportesDePublicacion[]>([]);
   const [loadingGrupos, setLoadingGrupos] = useState(false);
   const [filtroGrupo, setFiltroGrupo] = useState<EstadoReporte | "todos">("todos");
-  /** publicacion_id del grupo expandido (null = ninguno) */
-  const [grupoExpandido, setGrupoExpandido] = useState<number | null>(null);
+  const [grupoExpandido, setGrupoExpandido] = useState<string | null>(null);
 
   const cargarGrupos = useCallback(async () => {
     setLoadingGrupos(true);
@@ -174,7 +175,7 @@ export default function AdminReportes() {
 
   useEffect(() => { setGrupoExpandido(null); }, [filtroGrupo]);
 
-  function toggleGrupo(id: number) {
+  function toggleGrupo(id: string) {
     setGrupoExpandido((prev) => (prev === id ? null : id));
   }
 
@@ -202,6 +203,8 @@ export default function AdminReportes() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
   const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
+  const [historialEstados, setHistorialEstados] = useState<AdminUserStateHistoryEvent[]>([]);
+  const [loadingHistorialEstados, setLoadingHistorialEstados] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoadingUsers(true);
@@ -228,6 +231,23 @@ export default function AdminReportes() {
     if (vista === "usuarios") loadUsers();
   }, [loadUsers, vista]);
 
+  const loadStateHistory = useCallback(async () => {
+    setLoadingHistorialEstados(true);
+    try {
+      const data = await getAdminUserStateHistory({ accion: "todos", per_page: 8 });
+      setHistorialEstados(data.data);
+    } catch {
+      setHistorialEstados([]);
+      showError("No se pudo cargar el historial de estados.");
+    } finally {
+      setLoadingHistorialEstados(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (vista === "usuarios") loadStateHistory();
+  }, [loadStateHistory, vista]);
+
   async function confirmToggle() {
     if (!userToToggle) return;
     setUpdatingUserId(userToToggle.id_usuario);
@@ -236,6 +256,7 @@ export default function AdminReportes() {
       showMessage(response.message);
       setUserToToggle(null);
       await loadUsers();
+      await loadStateHistory();
     } catch (err: any) {
       showError(err?.response?.data?.message || "No se pudo actualizar el estado.");
     } finally {
@@ -498,10 +519,10 @@ export default function AdminReportes() {
               <div className="ar-grupos">
                 {grupos.map((g) => (
                   <GrupoPublicacion
-                    key={g.publicacion_id}
+                    key={g.grupo_key}
                     grupo={g}
-                    expandido={grupoExpandido === g.publicacion_id}
-                    onToggle={() => toggleGrupo(g.publicacion_id)}
+                    expandido={grupoExpandido === g.grupo_key}
+                    onToggle={() => toggleGrupo(g.grupo_key)}
                     onResolver={(r, ef) => abrirResolucion(r, ef)}
                   />
                 ))}
@@ -562,6 +583,34 @@ export default function AdminReportes() {
                     Usa el botón en cada fila para cambiar el estado. Un modal de confirmación
                     se mostrará antes de aplicar cualquier cambio.
                   </p>
+                </article>
+                <article className="admin-report-card admin-users-note">
+                  <h2>Historial de estados</h2>
+                  {loadingHistorialEstados ? (
+                    <p className="admin-empty-text">Cargando historial...</p>
+                  ) : historialEstados.length === 0 ? (
+                    <p className="admin-empty-text">Aún no hay cambios de estado registrados.</p>
+                  ) : (
+                    <div style={{ display: "grid", gap: 10 }}>
+                      {historialEstados.map((evento) => (
+                        <div key={evento.id_evento} style={{ borderBottom: "1px solid rgba(148, 163, 184, 0.25)", paddingBottom: 10 }}>
+                          <strong style={{ display: "block" }}>
+                            @{evento.nombre_usuario ?? "usuario"}
+                          </strong>
+                          <span className="admin-muted" style={{ display: "block", fontSize: 12 }}>
+                            {evento.accion === "inhabilitado" ? "Inhabilitado" : "Habilitado"}
+                            {evento.admin_nombre_usuario ? ` por @${evento.admin_nombre_usuario}` : ""}
+                          </span>
+                          <span className="admin-muted" style={{ display: "block", fontSize: 12 }}>
+                            {new Date(evento.creado_en).toLocaleDateString("es", {
+                              day: "2-digit", month: "short", year: "numeric",
+                            })}
+                            {evento.reporte_id ? ` · reporte #${evento.reporte_id}` : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </article>
               </aside>
             </div>
@@ -723,6 +772,18 @@ function PreviewReporte({
           </span>
         </div>
       </div>
+
+      {(r.ip_reportante || r.user_agent_reportante) && (
+        <div className="ar-preview-section">
+          <p className="ar-preview-label">Origen del reporte</p>
+          {r.ip_reportante && <p className="ar-preview-value">IP: {r.ip_reportante}</p>}
+          {r.user_agent_reportante && (
+            <p className="ar-preview-comment" title={r.user_agent_reportante}>
+              {r.user_agent_reportante}
+            </p>
+          )}
+        </div>
+      )}
 
       {r.nota_moderador && (
         <div className="ar-preview-section">
