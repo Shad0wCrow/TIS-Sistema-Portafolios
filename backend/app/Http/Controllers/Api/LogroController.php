@@ -75,6 +75,50 @@ class LogroController extends Controller
         return response()->json(['message' => 'Logro eliminado correctamente']);
     }
 
+    public function update(Request $request, $id)
+    {
+        $user = $request->user();
+ 
+        $logro = Logro::where('id_logro', $id)
+            ->where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->first();
+ 
+        if (!$logro) {
+            return response()->json(['message' => 'Logro no encontrado'], 404);
+        }
+
+        // CA6: Rechazar modificación de campos bloqueados si intentan alterarlos mediante peticiones interceptadas
+        if ($request->has('titulo') && $request->titulo !== $logro->titulo) {
+            return response()->json(['message' => 'Error', 'errors' => ['titulo' => ['No puedes modificar el título de un logro existente.']]], 422);
+        }
+        if ($request->has('identificador') && $request->identificador !== $logro->identificador) {
+            return response()->json(['message' => 'Error', 'errors' => ['identificador' => ['No puedes modificar el ID de un logro existente.']]], 422);
+        }
+        if ($request->has('fecha_obtencion') && $request->fecha_obtencion !== $logro->fecha_obtencion) {
+            return response()->json(['message' => 'Error', 'errors' => ['fecha_obtencion' => ['No puedes modificar la fecha de un logro existente.']]], 422);
+        }
+        if ($request->has('nombre_entidad') && $logro->entidadEmisora && $request->nombre_entidad !== $logro->entidadEmisora->nombre) {
+            return response()->json(['message' => 'Error', 'errors' => ['nombre_entidad' => ['No puedes modificar la entidad emisora.']]], 422);
+        }
+
+        // CA4 y CA5: Solo validar y guardar los campos permitidos
+        $data = $request->validate([
+            'descripcion'     => 'nullable|string|max:255',
+            'visibilidad'     => 'nullable|in:publico,privado',
+        ]);
+
+        $logro->update([
+            'descripcion' => array_key_exists('descripcion', $data) ? $data['descripcion'] : $logro->descripcion,
+            'visibilidad' => $data['visibilidad'] ?? $logro->visibilidad,
+        ]);
+ 
+        return response()->json([
+            'message' => 'Logro actualizado correctamente',
+            'logro'   => $logro->fresh()->load('entidadEmisora'),
+        ]);
+    }
+
     public function sugerencias(Request $request)
     {
         $q = $request->query('q', '');

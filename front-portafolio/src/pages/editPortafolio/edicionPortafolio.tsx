@@ -32,6 +32,7 @@ import type {
   AlertState,
   ModalProyectoState,
   ModalExperienciaState,
+  ModalLogroState,
   ActiveSection,
 } from "./hooks/usePortafolioHandlers";
 
@@ -82,7 +83,7 @@ export default function EdicionPortafolio() {
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [modalEducacion, setModalEducacion] = useState(false);
   const [modalCurso, setModalCurso] = useState(false);
-  const [modalLogro, setModalLogro] = useState(false);
+  const [modalLogro, setModalLogro] = useState<ModalLogroState>(null);
   const [modalIdioma, setModalIdioma] = useState(false);
   const [modalCertificacion, setModalCertificacion] = useState(false);
   const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
@@ -173,6 +174,7 @@ export default function EdicionPortafolio() {
     setCertificaciones,
     modalProy,
     modalExp,
+    modalLogro,
     setModalAlert,
     setSuccessMessage,
     setErrorMessage,
@@ -205,7 +207,7 @@ export default function EdicionPortafolio() {
         setModalCurso(true);
         break;
       case "logros":
-        setModalLogro(true);
+        setModalLogro("nuevo");
         break;
       case "idiomas":
         setModalIdioma(true);
@@ -492,12 +494,17 @@ export default function EdicionPortafolio() {
                 logros={logros}
                 onAdd={() => {
                   if (activeAction === "registrar" || activeAction === "mostrar") {
-                    setModalLogro(true);
+                    setModalLogro("nuevo");
                   }
                 }}
                 onRemove={(id) => {
                   if (activeAction === "eliminar" || activeAction === "mostrar") {
                     handleRemoveLogro(id);
+                  }
+                }}
+                onEdit={(l) => {
+                  if (activeAction === "editar" || activeAction === "mostrar") {
+                    setModalLogro(l);
                   }
                 }}
                 activeAction={activeAction}
@@ -642,10 +649,11 @@ export default function EdicionPortafolio() {
         />
       )}
 
-      {modalLogro && (
+      {modalLogro !== null && (
         <ModalLogro
+          logro={modalLogro === "nuevo" ? null : modalLogro}
           onClose={() => {
-            setModalLogro(false);
+            setModalLogro(null);
             setWarningLogro(undefined);
           }}
           onSave={handleAddLogro}
