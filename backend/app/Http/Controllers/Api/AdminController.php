@@ -4,13 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Usuario;
+use App\Services\UsuarioEstadoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
-use Laravel\Sanctum\PersonalAccessToken;
 
 class AdminController extends Controller
 {
+    private UsuarioEstadoService $usuarioEstadoService;
+
+    public function __construct(UsuarioEstadoService $usuarioEstadoService)
+    {
+        $this->usuarioEstadoService = $usuarioEstadoService;
+    }
+
     public function usuarios(Request $request)
     {
         $data = $request->validate([
@@ -109,31 +115,23 @@ class AdminController extends Controller
     {
         $data = $request->validate([
             'eliminado' => 'required|boolean',
+            'motivo' => 'sometimes|nullable|string|max:255',
+            'detalle' => 'sometimes|nullable|string|max:1000',
         ]);
 
         $admin = $request->user();
         $usuario = Usuario::where('id_usuario', $id)->firstOrFail();
         $inhabilitar = (bool) $data['eliminado'];
 
-        if ((int) $admin->id_usuario === (int) $usuario->id_usuario && $inhabilitar) {
-            throw ValidationException::withMessages([
-                'usuario' => ['No puedes inhabilitar tu propia cuenta de administrador.'],
-            ]);
-        }
-
-        if ($usuario->rol === 'admin' && $inhabilitar && $this->esUltimoAdminActivo($usuario)) {
-            throw ValidationException::withMessages([
-                'usuario' => ['No puedes inhabilitar al último administrador activo.'],
-            ]);
-        }
-
-        $usuario->update(['eliminado' => $inhabilitar]);
-
-        if ($inhabilitar) {
-            PersonalAccessToken::where('tokenable_type', Usuario::class)
-                ->where('tokenable_id', $usuario->id_usuario)
-                ->delete();
-        }
+        $usuario = $this->usuarioEstadoService->cambiarEstado(
+            $usuario,
+            $inhabilitar,
+            $admin,
+            'gestion_usuarios',
+            null,
+            $data['motivo'] ?? ($inhabilitar ? 'Inhabilitacion manual' : 'Habilitacion manual'),
+            $data['detalle'] ?? null
+        );
 
         return response()->json([
             'message' => $inhabilitar ? 'Usuario inhabilitado correctamente.' : 'Usuario habilitado correctamente.',
@@ -146,6 +144,79 @@ class AdminController extends Controller
                 'eliminado' => (bool) $usuario->eliminado,
             ],
         ]);
+    }
+
+    public function historialEstadosUsuario(Request $request)
+    {
+        $data = $request->validate([
+            'usuario_id' => 'sometimes|nullable|integer',
+            'accion' => 'sometimes|nullable|in:todos,habilitado,inhabilitado',
+            'per_page' => 'sometimes|integer|min:5|max:100',
+        ]);
+
+        $query = DB::table('usuario_estado_historial as h')
+            ->leftJoin('usuario as u', 'u.id_usuario', '=', 'h.usuario_id')
+            ->leftJoin('perfil as p', function ($join) {
+                $join->on('p.usuario_id', '=', 'u.id_usuario')
+                    ->where('p.eliminado', false);
+            })
+            ->leftJoin('usuario as admin', 'admin.id_usuario', '=', 'h.admin_id')
+            ->leftJoin('reporte_portafolio as r', 'r.id_reporte', '=', 'h.reporte_id')
+            ->select([
+                'h.id_evento',
+                'h.usuario_id',
+                'u.nombre_usuario',
+                'p.nombre_perfil',
+                'p.apellido_perfil',
+                'h.admin_id',
+                'admin.nombre_usuario as admin_nombre_usuario',
+                'h.reporte_id',
+                'r.motivo as reporte_motivo',
+                'h.accion',
+                'h.estado_anterior',
+                'h.estado_nuevo',
+                'h.origen',
+                'h.motivo',
+                'h.detalle',
+                'h.creado_en',
+            ]);
+
+        if (!empty($data['usuario_id'])) {
+            $query->where('h.usuario_id', $data['usuario_id']);
+        }
+
+        $accion = $data['accion'] ?? 'todos';
+        if ($accion !== 'todos') {
+            $query->where('h.accion', $accion);
+        }
+
+        $historial = $query
+            ->orderByDesc('h.creado_en')
+            ->paginate($data['per_page'] ?? 10);
+
+        $historial->getCollection()->transform(function ($evento) {
+            $nombre = trim(($evento->nombre_perfil ?? '') . ' ' . ($evento->apellido_perfil ?? ''));
+
+            return [
+                'id_evento' => $evento->id_evento,
+                'usuario_id' => $evento->usuario_id,
+                'nombre_usuario' => $evento->nombre_usuario,
+                'nombre_usuario_completo' => $nombre !== '' ? $nombre : $evento->nombre_usuario,
+                'admin_id' => $evento->admin_id,
+                'admin_nombre_usuario' => $evento->admin_nombre_usuario,
+                'reporte_id' => $evento->reporte_id,
+                'reporte_motivo' => $evento->reporte_motivo,
+                'accion' => $evento->accion,
+                'estado_anterior' => $evento->estado_anterior,
+                'estado_nuevo' => $evento->estado_nuevo,
+                'origen' => $evento->origen,
+                'motivo' => $evento->motivo,
+                'detalle' => $evento->detalle,
+                'creado_en' => $evento->creado_en,
+            ];
+        });
+
+        return response()->json($historial);
     }
 
     public function reporteResumen()
@@ -222,14 +293,6 @@ class AdminController extends Controller
                     'creado_en' => $usuario->creado_en,
                 ]),
         ]);
-    }
-
-    private function esUltimoAdminActivo(Usuario $usuario): bool
-    {
-        return Usuario::where('rol', 'admin')
-            ->where('eliminado', false)
-            ->where('id_usuario', '!=', $usuario->id_usuario)
-            ->doesntExist();
     }
 
     private function formatearRanking($item, string $metricKey): array

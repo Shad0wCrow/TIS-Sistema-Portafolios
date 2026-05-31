@@ -13,9 +13,16 @@ class ReportePortafolio extends Model
 
     protected $fillable = [
         'publicacion_id',
+        'usuario_reportado_id',
+        'slug_publico_snapshot',
+        'nombre_reportado_snapshot',
+        'nombre_usuario_reportado_snapshot',
         'reportado_por',
+        'reportado_por_snapshot',
         'motivo',
         'comentario',
+        'ip_reportante',
+        'user_agent_reportante',
         'estado',
         'revisado_por',
         'nota_moderador',
@@ -38,6 +45,11 @@ class ReportePortafolio extends Model
     public function reportadoPor()
     {
         return $this->belongsTo(Usuario::class, 'reportado_por', 'id_usuario');
+    }
+
+    public function usuarioReportado()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_reportado_id', 'id_usuario');
     }
 
     public function revisadoPor()
