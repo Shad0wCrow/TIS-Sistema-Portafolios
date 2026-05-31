@@ -294,7 +294,7 @@ export default function AdminReportes() {
           className={`ar-tab${vista === "reportes" ? " ar-tab--active" : ""}`}
           onClick={() => setVista("reportes")}
         >
-          📋 Reportes individuales
+           Reportes individuales
           {pendientesCount !== undefined && pendientesCount > 0 && (
             <span className="ar-nav-badge">{pendientesCount}</span>
           )}
@@ -304,14 +304,14 @@ export default function AdminReportes() {
           className={`ar-tab${vista === "por_publicacion" ? " ar-tab--active" : ""}`}
           onClick={() => setVista("por_publicacion")}
         >
-          📊 Por publicación
+           Por publicación
         </button>
         <button
           type="button"
           className={`ar-tab${vista === "usuarios" ? " ar-tab--active" : ""}`}
           onClick={() => setVista("usuarios")}
         >
-          👥 Gestión de usuarios
+           Gestión de usuarios
         </button>
       </div>
 
@@ -358,8 +358,7 @@ export default function AdminReportes() {
                       <th>Reportado por</th>
                       <th>Fecha</th>
                       <th>Cuenta</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
+                      <th>Estado</th>                
                     </tr>
                   </thead>
                   <tbody>
@@ -383,7 +382,7 @@ export default function AdminReportes() {
                         <td>
                           <span className="ar-motivo-chip">{MOTIVO_LABELS[r.motivo] ?? r.motivo}</span>
                           {r.comentario && (
-                            <span className="ar-comentario-hint" title={r.comentario}>💬</span>
+                            <span className="ar-comentario-hint" title={r.comentario}></span>
                           )}
                         </td>
                         <td className="admin-muted">
@@ -399,23 +398,7 @@ export default function AdminReportes() {
                             {r.eliminado ? "Inhabilitado" : "Activo"}
                           </span>
                         </td>
-                        <td><EstadoBadge estado={r.estado} /></td>
-                        <td onClick={(e) => e.stopPropagation()}>
-                          {r.estado === "pendiente" ? (
-                            <div className="ar-actions">
-                              <button type="button" className="ar-btn ar-btn--resolve"
-                                onClick={() => abrirResolucion(r, "revisado")}>Resolver</button>
-                              <button type="button" className="ar-btn ar-btn--dismiss"
-                                onClick={() => abrirResolucion(r, "desestimado")}>Desestimar</button>
-                            </div>
-                          ) : (
-                            <span className="admin-muted" style={{ fontSize: 12 }}>
-                              {r.nota_moderador
-                                ? <span title={r.nota_moderador} style={{ cursor: "help" }}>📝 Con nota</span>
-                                : "Procesado"}
-                            </span>
-                          )}
-                        </td>
+                        <td><EstadoBadge estado={r.estado} /></td>                  
                       </tr>
                     ))}
                   </tbody>
