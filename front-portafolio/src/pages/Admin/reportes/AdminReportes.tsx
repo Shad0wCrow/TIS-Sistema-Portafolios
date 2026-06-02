@@ -1,19 +1,6 @@
-/**
- * AdminReportes.tsx
- * Ruta: /admin/reportes
- *
- * Cuatro tabs:
- *  1. "Usuarios reportados"     — HU-95: botón "Resolver conflictos", selección por fila,
- *                                  modal inhabilitar/desestimar con comentario obligatorio
- *  2. "Por publicación"         — agrupados por portafolio, con conteo y detalle
- *  3. "Gestión de usuarios"     — habilitar / inhabilitar cuentas (HU-45, HU-46)
- *  4. "Solicitudes reactivación"— HU-95 CAs 11–18: revisar y resolver solicitudes
- */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmModal from "../../../components/ui/ConfirmModal/ConfirmModal";
-import AdminUserFilters from "../components/AdminUserFilters";
-import AdminUsersTable from "../components/AdminUsersTable";
 import {
   getReportesPortafolios,
   getReportesPorPublicacion,
@@ -286,6 +273,7 @@ export default function AdminReportes() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
   const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [historialEstados, setHistorialEstados] = useState<AdminUserStateHistoryEvent[]>([]);
   const [loadingHistorialEstados, setLoadingHistorialEstados] = useState(false);
 
@@ -337,6 +325,7 @@ export default function AdminReportes() {
       const response = await updateAdminUserStatus(userToToggle.id_usuario, !userToToggle.eliminado);
       showMessage(response.message);
       setUserToToggle(null);
+      setSelectedUser(null);
       await loadUsers();
       await loadStateHistory();
     } catch (err: any) {
@@ -723,82 +712,281 @@ export default function AdminReportes() {
           TAB 3: GESTIÓN DE USUARIOS (HU-45 + HU-46)
       ════════════════════════════════════════════════════════════════════ */}
       {vista === "usuarios" && (
-        <main className="admin-main" role="tabpanel">
-          <section className="admin-section admin-users-shell">
+        <main className="admin-main" role="tabpanel" aria-label="Gestión de usuarios">
+          <section className="admin-section">
             <div className="admin-section-header">
               <div>
                 <h2>Gestión de usuarios</h2>
-                <p>{totalUsuarios} usuario{totalUsuarios !== 1 ? "s" : ""} encontrado{totalUsuarios !== 1 ? "s" : ""}.</p>
-              </div>
-              <button type="button" className="admin-refresh-btn" onClick={loadUsers} disabled={loadingUsers}>
-                ↺ Actualizar
-              </button>
-            </div>
-
-            <AdminUserFilters
-              search={search} estado={estadoUsuario} rol={rol}
-              onSearchChange={(v) => { setSearch(v); setPageUsuarios(1); }}
-              onEstadoChange={(v) => { setEstadoUsuario(v); setPageUsuarios(1); }}
-              onRolChange={(v) => { setRol(v); setPageUsuarios(1); }}
-            />
-
-            <div className="admin-users-layout">
-              <div className="admin-users-table-zone">
-                <div className="admin-table-wrap">
-                  <AdminUsersTable
-                    users={users} loading={loadingUsers}
-                    updatingUserId={updatingUserId} currentUserId={currentUserId}
-                    onToggleStatus={(u) => setUserToToggle(u)}
-                  />
-                </div>
-                {lastPageUsuarios > 1 && (
-                  <div className="admin-pagination">
-                    <button type="button"
-                      onClick={() => setPageUsuarios((c) => Math.max(1, c - 1))}
-                      disabled={pageUsuarios <= 1 || loadingUsers}>← Anterior</button>
-                    <span>Página {pageUsuarios} de {lastPageUsuarios}</span>
-                    <button type="button"
-                      onClick={() => setPageUsuarios((c) => Math.min(lastPageUsuarios, c + 1))}
-                      disabled={pageUsuarios >= lastPageUsuarios || loadingUsers}>Siguiente →</button>
-                  </div>
-                )}
-              </div>
-              <aside className="admin-users-sidebar">
-                <article className="admin-report-card admin-users-note">
-                  <h2>Habilitar / Inhabilitar cuentas</h2>
-                  <p className="admin-empty-text">
-                    Usa el botón en cada fila para cambiar el estado. Un modal de confirmación
-                    se mostrará antes de aplicar cualquier cambio.
-                  </p>
-                </article>
-                <article className="admin-report-card admin-users-note">
-                  <h2>Historial de estados</h2>
-                  {loadingHistorialEstados ? (
-                    <p className="admin-empty-text">Cargando historial...</p>
-                  ) : historialEstados.length === 0 ? (
-                    <p className="admin-empty-text">Aún no hay cambios de estado registrados.</p>
-                  ) : (
-                    <div style={{ display: "grid", gap: 10 }}>
-                      {historialEstados.map((evento) => (
-                        <div key={evento.id_evento} style={{ borderBottom: "1px solid rgba(148, 163, 184, 0.25)", paddingBottom: 10 }}>
-                          <strong style={{ display: "block" }}>@{evento.nombre_usuario ?? "usuario"}</strong>
-                          <span className="admin-muted" style={{ display: "block", fontSize: 12 }}>
-                            {evento.accion === "inhabilitado" ? "Inhabilitado" : "Habilitado"}
-                            {evento.admin_nombre_usuario ? ` por @${evento.admin_nombre_usuario}` : ""}
-                          </span>
-                          <span className="admin-muted" style={{ display: "block", fontSize: 12 }}>
-                            {new Date(evento.creado_en).toLocaleDateString("es", {
-                              day: "2-digit", month: "short", year: "numeric",
-                            })}
-                            {evento.reporte_id ? ` · reporte #${evento.reporte_id}` : ""}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                <p>
+                  {totalUsuarios} usuario{totalUsuarios !== 1 ? "s" : ""} encontrado{totalUsuarios !== 1 ? "s" : ""}
+                  {selectedUser && (
+                    <span className="ar-selected-hint">
+                      {" "}· @{selectedUser.nombre_usuario} seleccionado
+                    </span>
                   )}
-                </article>
-              </aside>
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                {estadoUsuario === "activos" && (
+                  <button
+                    type="button"
+                    className={`ar-resolve-main-btn ar-resolve-main-btn--danger${selectedUser ? " ar-resolve-main-btn--ready" : ""}`}
+                    onClick={() => {
+                      if (!selectedUser) {
+                        showError("Selecciona un usuario de la lista para inhabilitar.");
+                        return;
+                      }
+                      setUserToToggle(selectedUser);
+                    }}
+                    aria-label={selectedUser ? `Inhabilitar a @${selectedUser.nombre_usuario}` : "Selecciona un usuario para inhabilitar"}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    Inhabilitar
+                  </button>
+                )}
+                {estadoUsuario === "inhabilitados" && (
+                  <button
+                    type="button"
+                    className={`ar-resolve-main-btn${selectedUser ? " ar-resolve-main-btn--ready" : ""}`}
+                    onClick={() => {
+                      if (!selectedUser) {
+                        showError("Selecciona un usuario de la lista para habilitar.");
+                        return;
+                      }
+                      setUserToToggle(selectedUser);
+                    }}
+                    aria-label={selectedUser ? `Habilitar a @${selectedUser.nombre_usuario}` : "Selecciona un usuario para habilitar"}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17 4 12" />
+                    </svg>
+                    Habilitar
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="admin-refresh-btn"
+                  onClick={() => { loadUsers(); loadStateHistory(); }}
+                  disabled={loadingUsers}
+                  aria-label="Actualizar listado de usuarios"
+                >
+                  ↺ Actualizar
+                </button>
+              </div>
             </div>
+
+            <div className="admin-filters" role="search" aria-label="Filtros de usuarios">
+              <div className="admin-filter-field">
+                <span id="search-label">Buscar</span>
+                <input
+                  type="search"
+                  aria-labelledby="search-label"
+                  placeholder="Nombre, usuario o correo…"
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPageUsuarios(1); setSelectedUser(null); }}
+                />
+              </div>
+              <div className="admin-filter-field">
+                <span id="estado-label">Estado</span>
+                <select
+                  aria-labelledby="estado-label"
+                  value={estadoUsuario}
+                  onChange={(e) => {
+                    setEstadoUsuario(e.target.value as "todos" | "activos" | "inhabilitados");
+                    setPageUsuarios(1);
+                    setSelectedUser(null);
+                  }}
+                >
+                  <option value="todos">Todos</option>
+                  <option value="activos">Activos</option>
+                  <option value="inhabilitados">Inhabilitados</option>
+                </select>
+              </div>
+              <div className="admin-filter-field">
+                <span id="rol-label">Rol</span>
+                <select
+                  aria-labelledby="rol-label"
+                  value={rol}
+                  onChange={(e) => { setRol(e.target.value); setPageUsuarios(1); setSelectedUser(null); }}
+                >
+                  <option value="">Todos los roles</option>
+                  <option value="admin">Administrador</option>
+                  <option value="user">Usuario</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="admin-table-wrap">
+              {loadingUsers ? (
+                <div className="admin-table-state">Cargando usuarios…</div>
+              ) : users.length === 0 ? (
+                <div className="admin-table-state">
+                  No hay usuarios disponibles{search || estadoUsuario !== "todos" || rol ? " con los filtros aplicados" : ""}.
+                </div>
+              ) : (
+                <table
+                  className="admin-users-table"
+                  aria-label="Listado de usuarios registrados"
+                >
+                  <colgroup>
+                    <col style={{ width: "52px" }} />
+                    <col style={{ width: "28%" }} />
+                    <col style={{ width: "12%" }} />
+                    <col style={{ width: "12%" }} />
+                    <col style={{ width: "12%" }} />
+                    <col style={{ width: "14%" }} />
+                    <col style={{ width: "14%" }} />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th scope="col">Selección</th>
+                      <th scope="col">Usuario</th>
+                      <th scope="col">Rol</th>
+                      <th scope="col">Estado</th>
+                      <th scope="col">Perfil</th>
+                      <th scope="col">Portafolio</th>
+                      <th scope="col">Fecha de creación</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => {
+                      const isSelected = selectedUser?.id_usuario === u.id_usuario;
+                      const isSelf = currentUserId === u.id_usuario;
+                      return (
+                        <tr
+                          key={u.id_usuario}
+                          role="button"
+                          aria-pressed={isSelected}
+                          tabIndex={0}
+                          className={`ar-row ar-row--selectable${isSelected ? " ar-row--selected" : ""}${isSelf ? " ar-row--self" : ""}`}
+                          onClick={() => setSelectedUser(isSelected ? null : u)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedUser(isSelected ? null : u);
+                            }
+                          }}
+                          title={isSelf ? "Tu propia cuenta" : isSelected ? "Haz clic para deseleccionar" : "Haz clic para seleccionar"}
+                        >
+                          <td>
+                            <span
+                              className={`ar-row-check${isSelected ? " ar-row-check--on" : ""}`}
+                              aria-hidden="true"
+                            >
+                              {isSelected ? "✓" : "○"}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="admin-user-cell">
+                              <div className="admin-avatar" aria-hidden="true">
+                                {u.perfil?.nombre
+                                  ? u.perfil.nombre.charAt(0).toUpperCase()
+                                  : u.nombre_usuario.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <strong>{u.perfil?.nombre ?? u.nombre_usuario}</strong>
+                                <span>@{u.nombre_usuario}</span>
+                                <span>{u.correo}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="ar-motivo-chip">
+                              {u.rol === "admin" ? "Administrador" : "Usuario"}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`admin-badge${u.eliminado ? " admin-badge-disabled" : " admin-badge-active"}`}>
+                              {u.eliminado ? "Inhabilitado" : "Activo"}
+                            </span>
+                            {isSelf && (
+                              <span className="admin-muted" style={{ fontSize: 11, display: "block", marginTop: 2 }}>
+                                (tú)
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            {u.perfil !== null
+                              ? <span className="admin-badge admin-badge-active">Con perfil</span>
+                              : <span className="admin-muted">Sin perfil</span>}
+                          </td>
+                          <td>
+                            {u.portafolio !== null
+                              ? u.portafolio.publicado
+                                ? <span className="admin-badge admin-badge-active">Publicado</span>
+                                : <span className="ar-badge ar-badge--pending">No publicado</span>
+                              : <span className="admin-muted">Sin portafolio</span>}
+                          </td>
+                          <td className="admin-muted">
+                            {u.creado_en
+                              ? new Date(u.creado_en).toLocaleDateString("es", {
+                                  day: "2-digit", month: "short", year: "numeric",
+                                })
+                              : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {lastPageUsuarios > 1 && (
+              <div className="admin-pagination">
+                <button
+                  type="button"
+                  onClick={() => { setPageUsuarios((c) => Math.max(1, c - 1)); setSelectedUser(null); }}
+                  disabled={pageUsuarios <= 1 || loadingUsers}
+                >
+                  ← Anterior
+                </button>
+                <span>Página {pageUsuarios} de {lastPageUsuarios}</span>
+                <button
+                  type="button"
+                  onClick={() => { setPageUsuarios((c) => Math.min(lastPageUsuarios, c + 1)); setSelectedUser(null); }}
+                  disabled={pageUsuarios >= lastPageUsuarios || loadingUsers}
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </section>
+
+          <section className="admin-section" style={{ marginTop: 20 }}>
+            <h2 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 700, color: "var(--admin-text)" }}>
+              Historial de cambios de estado
+            </h2>
+            {loadingHistorialEstados ? (
+              <p className="admin-empty-text">Cargando historial…</p>
+            ) : historialEstados.length === 0 ? (
+              <p className="admin-empty-text">Aún no hay cambios de estado registrados.</p>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {historialEstados.map((evento) => (
+                  <div
+                    key={evento.id_evento}
+                    style={{ borderBottom: "1px solid rgba(148, 163, 184, 0.18)", paddingBottom: 10 }}
+                  >
+                    <strong style={{ display: "block" }}>@{evento.nombre_usuario ?? "usuario"}</strong>
+                    <span className="admin-muted" style={{ display: "block", fontSize: 12 }}>
+                      {evento.accion === "inhabilitado" ? "Inhabilitado" : "Habilitado"}
+                      {evento.admin_nombre_usuario ? ` por @${evento.admin_nombre_usuario}` : ""}
+                    </span>
+                    <span className="admin-muted" style={{ display: "block", fontSize: 12 }}>
+                      {new Date(evento.creado_en).toLocaleDateString("es", {
+                        day: "2-digit", month: "short", year: "numeric",
+                      })}
+                      {evento.reporte_id ? ` · reporte #${evento.reporte_id}` : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </main>
       )}
