@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('configuracion_privacidad', function (Blueprint $table) {
             $table->increments('id_configuracion');
             $table->unsignedInteger('usuario_id')->unique();
-            $table->boolean('mostrar_correo')->default(false);
+            $table->boolean('mostrar_correo')->default(true);
             $table->boolean('mostrar_ubicacion')->default(false);
             // seccion_* campos — varchar para compatibilidad
             $table->string('seccion_perfil', 10)->default('publico');

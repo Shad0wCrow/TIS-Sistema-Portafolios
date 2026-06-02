@@ -48,6 +48,15 @@ export default function ExperienciaRowList({
               if (showEdit) onEdit(exp);
               if (showRemove) onRemove(exp.id_experiencia);
             }}
+            tabIndex={isActionActive ? 0 : undefined}
+            role={isActionActive ? "button" : undefined}
+            onKeyDown={(e) => {
+              if (isActionActive && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                if (showEdit) onEdit(exp);
+                if (showRemove) onRemove(exp.id_experiencia);
+              }
+            }}
           >
             <div className={styles.cardTimeline}>
               <span className={styles.timelineDot} />

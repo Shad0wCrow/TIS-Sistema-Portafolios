@@ -11,7 +11,7 @@ class VisibilidadController extends Controller
     private const VALORES_VALIDOS = ['publico', 'privado'];
 
     private const DEFAULTS = [
-        'mostrar_correo'                       => false,
+        'mostrar_correo'                       => true,
         'mostrar_ubicacion'                    => false,
         'visibilidad_proyectos_por_defecto'    => 'privado',
         'visibilidad_habilidades_por_defecto'  => 'privado',

@@ -61,6 +61,15 @@ export default function LogroCard({
                 if (showEdit && onEdit) onEdit(logro);
                 if (showRemove) onRemove(logro.id_logro);
               }}
+              tabIndex={isActionActive ? 0 : undefined}
+              role={isActionActive ? "button" : undefined}
+              onKeyDown={(e) => {
+                if (isActionActive && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  if (showEdit && onEdit) onEdit(logro);
+                  if (showRemove) onRemove(logro.id_logro);
+                }
+              }}
             >
               <div className={styles.itemIcon}>🏅</div>
 

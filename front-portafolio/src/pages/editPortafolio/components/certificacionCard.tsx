@@ -8,6 +8,7 @@ interface CertificacionCardProps {
   certificaciones: Certificacion[];
   onAdd: () => void;
   onRemove: (id: number) => void;
+  onEdit: (certificacion: Certificacion) => void;
   activeAction?: SectionAction;
 }
 
@@ -15,19 +16,29 @@ function formatFecha(fecha: string | null): string {
   if (!fecha) return "";
   const [y, m] = fecha.split("-");
   const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  return `${meses[parseInt(m) - 1]} ${y}`;
+  return `${meses[parseInt(m, 10) - 1]} ${y}`;
 }
 
 export default function CertificacionCard({
   certificaciones,
   onRemove,
+  onEdit,
   activeAction,
 }: CertificacionCardProps) {
   const showRemove = activeAction === "eliminar";
-
-  const isActionActive = showRemove;
-  const actionText = showRemove ? "SELECCIONA LA CERTIFICACIÓN A ELIMINAR" : "";
+  const showEdit = activeAction === "editar";
+  const isActionActive = showRemove || showEdit;
+  const actionText = showRemove
+    ? "SELECCIONA LA CERTIFICACION A ELIMINAR"
+    : showEdit
+      ? "SELECCIONA LA CERTIFICACION A EDITAR"
+      : "";
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const handleSelect = (cert: Certificacion) => {
+    if (showRemove) onRemove(cert.id_certificacion);
+    if (showEdit) onEdit(cert);
+  };
 
   return (
     <div className={styles.card}>
@@ -38,12 +49,11 @@ export default function CertificacionCard({
             {certificaciones.length} registro{certificaciones.length !== 1 ? "s" : ""}
           </span>
         </div>
-
       </div>
 
       {certificaciones.length === 0 ? (
         <div className={styles.emptyState}>
-          <span className={styles.emptyIcon}>🎓</span>
+          <span className={styles.emptyIcon}>*</span>
           <p className={styles.emptyText}>No hay certificaciones registradas.</p>
           <p className={styles.emptySubText}>Agrega tus certificaciones profesionales.</p>
         </div>
@@ -51,11 +61,18 @@ export default function CertificacionCard({
         <ul className={styles.list}>
           {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {certificaciones.map((cert) => (
-            <li 
-              key={cert.id_certificacion} 
+            <li
+              key={cert.id_certificacion}
               className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
-              onClick={() => {
-                if (showRemove) onRemove(cert.id_certificacion);
+              onClick={() => handleSelect(cert)}
+              tabIndex={isActionActive ? 0 : undefined}
+              role={isActionActive ? "button" : undefined}
+              onKeyDown={(e) => {
+                if (!isActionActive) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSelect(cert);
+                }
               }}
             >
               {cert.url_imagen ? (
@@ -71,7 +88,7 @@ export default function CertificacionCard({
                   title="Clic para ver la imagen en grande"
                 />
               ) : (
-                <div className={styles.itemIcon}>🎓</div>
+                <div className={styles.itemIcon}>*</div>
               )}
 
               <div className={styles.itemInfo}>
@@ -79,7 +96,7 @@ export default function CertificacionCard({
                 <span className={styles.itemSub}>{cert.nombre_entidad}</span>
                 <span className={styles.itemDates}>
                   {formatFecha(cert.fecha_obtencion)}
-                  {cert.fecha_expiracion && ` — ${formatFecha(cert.fecha_expiracion)}`}
+                  {cert.fecha_expiracion && ` - ${formatFecha(cert.fecha_expiracion)}`}
                 </span>
                 {cert.url_certificado && (
                   <a
@@ -87,31 +104,11 @@ export default function CertificacionCard({
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.itemLink}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    Ver certificado ↗
+                    Ver certificado
                   </a>
                 )}
-
-          {previewImage && (
-            <div 
-              onClick={() => setPreviewImage(null)}
-              style={{
-                position: "fixed", inset: 0, zIndex: 9999,
-                backgroundColor: "rgba(0,0,0,0.85)", display: "flex",
-                alignItems: "center", justifyContent: "center", padding: "20px"
-              }}
-            >
-              <div style={{ position: "relative", maxWidth: "90%", maxHeight: "90%" }} onClick={(e) => e.stopPropagation()}>
-                <button 
-                  onClick={() => setPreviewImage(null)}
-                  style={{ position: "absolute", top: "-40px", right: "-10px", background: "transparent", border: "none", color: "#fff", fontSize: "32px", cursor: "pointer" }}
-                >
-                  &times;
-                </button>
-                <img src={previewImage} alt="Certificación en grande" style={{ maxWidth: "100%", maxHeight: "85vh", objectFit: "contain", borderRadius: "8px", boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }} />
-              </div>
-            </div>
-          )}
               </div>
 
               <div className={styles.itemActions}>
@@ -120,12 +117,60 @@ export default function CertificacionCard({
                     cert.visibilidad === "publico" ? styles.badgePublic : styles.badgePrivate
                   }`}
                 >
-                  {cert.visibilidad === "publico" ? "Público" : "Privado"}
+                  {cert.visibilidad === "publico" ? "Publico" : "Privado"}
                 </span>
               </div>
             </li>
           ))}
         </ul>
+      )}
+
+      {previewImage && (
+        <div
+          onClick={() => setPreviewImage(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: "rgba(0,0,0,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{ position: "relative", maxWidth: "90%", maxHeight: "90%" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewImage(null)}
+              style={{
+                position: "absolute",
+                top: "-40px",
+                right: "-10px",
+                background: "transparent",
+                border: "none",
+                color: "#fff",
+                fontSize: "32px",
+                cursor: "pointer",
+              }}
+            >
+              &times;
+            </button>
+            <img
+              src={previewImage}
+              alt="Certificacion en grande"
+              style={{
+                maxWidth: "100%",
+                maxHeight: "85vh",
+                objectFit: "contain",
+                borderRadius: "8px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

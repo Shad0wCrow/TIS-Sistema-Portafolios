@@ -7,6 +7,7 @@ type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
 interface EducacionCardProps {
   educaciones: Educacion[];
   onAdd: () => void;
+  onEdit: (educacion: Educacion) => void;
   onRemove: (id: number) => void;
   activeAction?: SectionAction;
 }
@@ -20,13 +21,19 @@ function formatFecha(fecha: string | null): string {
 
 export default function EducacionCard({
   educaciones,
+  onEdit,
   onRemove,
   activeAction,
 }: EducacionCardProps) {
   const showRemove = activeAction === "eliminar";
+  const showEdit = activeAction === "editar";
 
-  const isActionActive = showRemove;
-  const actionText = showRemove ? "SELECCIONA LA FORMACIÓN ACADÉMICA A ELIMINAR" : "";
+  const isActionActive = showRemove || showEdit;
+  const actionText = showRemove
+    ? "SELECCIONA LA FORMACION ACADEMICA A ELIMINAR"
+    : showEdit
+      ? "SELECCIONA LA FORMACION ACADEMICA A EDITAR"
+      : "";
 
   return (
     <div className={styles.card}>
@@ -57,6 +64,7 @@ export default function EducacionCard({
               className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
               onClick={() => {
                 if (showRemove) onRemove(edu.id_educacion);
+                if (showEdit) onEdit(edu);
               }}
               tabIndex={isActionActive ? 0 : undefined}
               role={isActionActive ? "button" : undefined}
@@ -64,6 +72,7 @@ export default function EducacionCard({
                 if (isActionActive && (e.key === "Enter" || e.key === " ")) {
                   e.preventDefault();
                   if (showRemove) onRemove(edu.id_educacion);
+                  if (showEdit) onEdit(edu);
                 }
               }}
             >

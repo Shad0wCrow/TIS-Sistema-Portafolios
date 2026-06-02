@@ -154,34 +154,53 @@ public function update(Request $request, $id)
         return response()->json(['message' => 'Experiencia no encontrada'], 404);
     }
 
+    $camposBloqueados = [
+        'nombre_empresa',
+        'empresa_id',
+        'puesto',
+        'tipo',
+        'ubicacion',
+        'fecha_inicio',
+        'es_actual',
+    ];
+
+    $camposNoPermitidos = array_values(array_intersect($camposBloqueados, array_keys($request->all())));
+
+    if (!empty($camposNoPermitidos)) {
+        return response()->json([
+            'message' => 'No se pueden modificar campos bloqueados de la experiencia laboral.',
+            'errors' => collect($camposNoPermitidos)->mapWithKeys(function ($campo) {
+                return [$campo => ['Este campo no puede modificarse en la edicion.']];
+            }),
+        ], 422);
+    }
+
     $data = $request->validate([
-        'nombre_empresa' => 'required|string|max:150',
-        'puesto'         => 'required|string|max:150',
-        'tipo'           => 'nullable|string|max:50',
         'descripcion'    => 'nullable|string',
-        'fecha_inicio'   => 'required|date',
-        'fecha_fin'      => 'nullable|date|after_or_equal:fecha_inicio',
-        'es_actual'      => 'nullable|boolean',
-        'ubicacion'      => 'nullable|string|max:150',
+        'fecha_fin'      => 'nullable|date',
         'visibilidad'    => 'nullable|in:publico,privado',
     ]);
 
-    $empresa = Empresa::firstOrCreate(
-        ['nombre' => $data['nombre_empresa']],
-        ['nombre' => $data['nombre_empresa']]
-    );
+    if (
+        array_key_exists('fecha_fin', $data)
+        && $data['fecha_fin']
+        && $data['fecha_fin'] < $experiencia->fecha_inicio
+    ) {
+        return response()->json([
+            'message' => 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+            'errors' => [
+                'fecha_fin' => ['La fecha de fin no puede ser anterior a la fecha de inicio.'],
+            ],
+        ], 422);
+    }
 
-    $experiencia->update([
-        'empresa_id'   => $empresa->id_empresa,
-        'puesto'       => $data['puesto'],
-        'tipo'         => $data['tipo'] ?? null,
-        'descripcion'  => $data['descripcion'] ?? null,
-        'fecha_inicio' => $data['fecha_inicio'],
-        'fecha_fin'    => $data['fecha_fin'] ?? null,
-        'es_actual'    => $data['es_actual'] ?? false,
-        'ubicacion'    => $data['ubicacion'] ?? null,
-        'visibilidad'  => $data['visibilidad'] ?? 'privado',
-    ]);
+    $updates = $data;
+
+    if (array_key_exists('fecha_fin', $data)) {
+        $updates['es_actual'] = $data['fecha_fin'] ? false : true;
+    }
+
+    $experiencia->update($updates);
 
     return response()->json([
         'message'     => 'Experiencia actualizada correctamente',
