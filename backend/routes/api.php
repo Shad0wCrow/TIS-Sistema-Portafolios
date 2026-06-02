@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ReportePortafolioController;
 use App\Http\Controllers\Api\GithubController;
 
+use App\Http\Controllers\Api\SolicitudReactivacionController;
+
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
 });
@@ -33,9 +35,9 @@ Route::get('/public/portafolios/{slug}', [PortafolioPublicoController::class, 's
 Route::post('/public/portafolios/{slug}/contacto', [PortafolioPublicoController::class, 'registrarContacto']);
 Route::post('/public/portafolios/{slug}/visualizacion', [PortafolioPublicoController::class, 'registrarVisualizacion']);
 
-// HU-61: Reportar portafolio â accesible sin autenticación obligatoria
+// HU-61: Reportar portafolio, accesible sin autenticacion obligatoria
 Route::post('/public/portafolios/{slug}/reportar', [ReportePortafolioController::class, 'reportar']);
-
+Route::post('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'store']);
 // Rutas protegidas 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -104,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/logros',                             [LogroController::class, 'index']);
     Route::get('/logros/{id}',                        [LogroController::class, 'show']);
     Route::post('/logros',                            [LogroController::class, 'store']);
+    Route::put('/logros/{id}',                        [LogroController::class, 'update']);
     Route::delete('/logros/{id}',                     [LogroController::class, 'destroy']);
     Route::patch('/logros/{id}/visibilidad',          [LogroController::class, 'updateVisibilidad']);
 
@@ -143,6 +146,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/usuarios', [AdminController::class, 'usuarios']);
         Route::patch('/usuarios/{id}/estado', [AdminController::class, 'actualizarEstadoUsuario']);
+        Route::get('/usuarios/historial-estados', [AdminController::class, 'historialEstadosUsuario']);
         Route::get('/reportes/resumen', [AdminController::class, 'reporteResumen']);
 
         // HU-40: Estadísticas e indicadores
@@ -152,5 +156,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // HU-61: Gestión de reportes de portafolios
         Route::get('/reportes/portafolios', [ReportePortafolioController::class, 'index']);
         Route::patch('/reportes/portafolios/{id}/resolver', [ReportePortafolioController::class, 'resolver']);
+
+        // HU-98: Solicitudes de reactivación de cuenta        
+        Route::get('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'index']);
+        Route::patch('/solicitudes-reactivacion/{id}/resolver', [SolicitudReactivacionController::class, 'resolver']);
+
     });
 });

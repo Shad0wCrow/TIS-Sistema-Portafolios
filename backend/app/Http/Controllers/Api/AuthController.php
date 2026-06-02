@@ -58,14 +58,35 @@ class AuthController extends Controller
             'contrasenia' => 'required',
         ]);
 
-        $usuario = Usuario::where('correo', $request->correo)
-            ->where('eliminado', false)
-            ->first();
+        // Buscar usuario sin filtrar por estado (para poder distinguir el motivo del rechazo)
+        $usuario = Usuario::where('correo', $request->correo)->first();
 
+        // Credenciales incorrectas (usuario no existe o contraseña mal)
         if (!$usuario || !Hash::check($request->contrasenia, $usuario->contrasenia)) {
             throw ValidationException::withMessages([
                 'correo' => ['Credenciales incorrectas.'],
             ]);
+        }
+
+        // Cuenta inhabilitada (eliminado = true)
+        if ($usuario->eliminado) {
+            // Verificar si tiene una solicitud de reactivación rechazada
+            $solicitudRechazada = \App\Models\SolicitudReactivacion::where('usuario_id', $usuario->id_usuario)
+                ->where('estado', 'rechazada')
+                ->orderByDesc('creado_en')
+                ->first();
+
+            if ($solicitudRechazada) {
+                return response()->json([
+                    'message'  => 'Tu cuenta ha sido baneada permanentemente por la administración.',
+                    'estado'   => 'baneado',
+                ], 403);
+            }
+
+            return response()->json([
+                'message'  => 'Tu cuenta ha sido inhabilitada.',
+                'estado'   => 'inhabilitado',
+            ], 403);
         }
 
         $token = $usuario->createToken('auth_token')->plainTextToken;
