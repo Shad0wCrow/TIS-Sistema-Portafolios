@@ -283,3 +283,20 @@
     min-height: 90px;
   }
 }
+/* ── Pantalla: ban permanente ── */
+.login-card--baneado {
+  border-color: #7b1d1d;
+}
+
+.login-baneado-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fef1ed;
+  color: #7b1d1d;
+  margin: 0 auto 16px;
+  border: 1.5px solid #c0392b;
+}

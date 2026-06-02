@@ -61,15 +61,28 @@ class AuthController extends Controller
         // Buscar usuario sin filtrar por estado (para poder distinguir el motivo del rechazo)
         $usuario = Usuario::where('correo', $request->correo)->first();
 
-        // 1. Credenciales incorrectas (usuario no existe o contraseña mal)
+        // Credenciales incorrectas (usuario no existe o contraseña mal)
         if (!$usuario || !Hash::check($request->contrasenia, $usuario->contrasenia)) {
             throw ValidationException::withMessages([
                 'correo' => ['Credenciales incorrectas.'],
             ]);
         }
 
-        // 2. Cuenta inhabilitada (eliminado = true)
+        // Cuenta inhabilitada (eliminado = true)
         if ($usuario->eliminado) {
+            // Verificar si tiene una solicitud de reactivación rechazada
+            $solicitudRechazada = \App\Models\SolicitudReactivacion::where('usuario_id', $usuario->id_usuario)
+                ->where('estado', 'rechazada')
+                ->orderByDesc('creado_en')
+                ->first();
+
+            if ($solicitudRechazada) {
+                return response()->json([
+                    'message'  => 'Tu cuenta ha sido baneada permanentemente por la administración.',
+                    'estado'   => 'baneado',
+                ], 403);
+            }
+
             return response()->json([
                 'message'  => 'Tu cuenta ha sido inhabilitada.',
                 'estado'   => 'inhabilitado',
