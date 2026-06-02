@@ -15,10 +15,12 @@ import {
   removeCurso,
   addLogro,
   removeLogro,
+  updateLogro,
   addIdioma,
   removeIdioma,
   updateIdioma,
   addCertificacion,
+  updateCertificacion,
   removeCertificacion
 } from "../../../services/portafolioservice";
 
@@ -40,6 +42,8 @@ import { detectarDuplicado } from "../../../utils/detectarDuplicado";
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
 type ModalExperienciaState = Experiencia | null | "nueva";
+type ModalLogroState = Logro | null | "nuevo";
+type ModalCertificacionState = CertificacionApi | null | "nueva";
 
 type CertificacionApi = Certificacion & {
   entidad_emisora?: { nombre?: string | null } | null;
@@ -84,6 +88,8 @@ interface UsePortafolioHandlersParams {
   setCertificaciones: Dispatch<SetStateAction<Certificacion[]>>;
   modalProy: ModalProyectoState;
   modalExp: ModalExperienciaState;
+  modalLogro?: ModalLogroState;
+  modalCertificacion?: ModalCertificacionState;
   setModalAlert: Dispatch<SetStateAction<AlertState>>;
   setSuccessMessage: Dispatch<SetStateAction<string | null>>;
   setErrorMessage: Dispatch<SetStateAction<string | null>>;
@@ -108,6 +114,8 @@ export function usePortafolioHandlers({
   setCertificaciones,
   modalProy,
   modalExp,
+  modalLogro,
+  modalCertificacion,
   setModalAlert,
   setSuccessMessage,
   setErrorMessage,
@@ -376,18 +384,31 @@ export function usePortafolioHandlers({
     });
   };
 
-  const handleAddLogro = async (formData: Parameters<typeof addLogro>[0]) => {
-    if (detectarDuplicado(logros as any[], { titulo: formData.titulo, entidad_nombre: formData.nombre_entidad, fecha_obtencion: formData.fecha_obtencion }, ["titulo", "entidad_nombre", "fecha_obtencion"])) {
+  const handleSaveLogro = async (formData: Parameters<typeof addLogro>[0], idParam?: number) => {
+    const idToEdit = idParam ?? (modalLogro && modalLogro !== "nuevo" ? modalLogro.id_logro : undefined);
+    const logrosAComparar = idToEdit ? logros.filter(l => l.id_logro !== idToEdit) : logros;
+
+    if (detectarDuplicado(logrosAComparar as any[], { titulo: formData.titulo, entidad_nombre: formData.nombre_entidad, fecha_obtencion: formData.fecha_obtencion }, ["titulo", "entidad_nombre", "fecha_obtencion"])) {
       setWarningLogro("Ya tienes este logro registrado en tu perfil con el mismo título, fecha y entidad emisora.");
       return false;
     }
     setWarningLogro(undefined);
-    const res = await addLogro(formData);
-    const logro = {
-      ...res.logro,
-      entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
-    };
-    setData((prev) => prev ? { ...prev, logros: [logro, ...prev.logros] } : prev);
+
+    if (idToEdit) {
+      const res = await updateLogro(idToEdit, formData);
+      const logroActualizado = {
+        ...res.logro,
+        entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
+      };
+      setData((prev) => prev ? { ...prev, logros: prev.logros.map(l => l.id_logro === idToEdit ? logroActualizado : l) } : prev);
+    } else {
+      const res = await addLogro(formData);
+      const logro = {
+        ...res.logro,
+        entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
+      };
+      setData((prev) => prev ? { ...prev, logros: [logro, ...prev.logros] } : prev);
+    }
     return true;
   };
 
@@ -446,21 +467,37 @@ export function usePortafolioHandlers({
     });
   };
 
-  const handleSaveCertificacion = async (
-  formData: Parameters<typeof addCertificacion>[0]
-) => {
-    if (detectarDuplicado(certificaciones as any[], { nombre: formData.nombre, nombre_entidad: formData.nombre_entidad, url_certificado: formData.url_certificado }, ["nombre", "nombre_entidad", "url_certificado"])) {
-      setWarningCertificacion("Ya tienes esta certificación registrada en tu perfil con el mismo título, entidad emisora y URL.");
+ const handleSaveCertificacion = async (
+    formData: Parameters<typeof addCertificacion>[0],
+    arg2?: string | null | number
+  ) => {
+    const idToEdit = typeof arg2 === "number" ? arg2 : (modalCertificacion && modalCertificacion !== "nueva" ? modalCertificacion.id_certificacion : undefined);
+    const certificacionesAComparar = idToEdit ? certificaciones.filter(c => c.id_certificacion !== idToEdit) : certificaciones;
+
+    if (detectarDuplicado(certificacionesAComparar as any[], { nombre: formData.nombre, nombre_entidad: formData.nombre_entidad, url_certificado: formData.url_certificado }, ["nombre", "nombre_entidad", "url_certificado"])) {
+      setWarningCertificacion("Ya tienes esta certificación registrada en tu perfil con el mismo título, entidad emisora y URL."); 
       return false;
+
     }
     setWarningCertificacion(undefined);
-    const res = await addCertificacion(formData);
-    const certificacion = {
-      ...res.certificacion,
-      nombre_entidad: formData.nombre_entidad,
-      url_imagen: res.certificacion?.url_imagen ?? null,
-    };
-    setCertificaciones((prev) => [certificacion, ...prev]);
+    
+    if (idToEdit) {
+      const res = await updateCertificacion(idToEdit, formData);
+      const certificacionActualizada = {
+        ...res.certificacion,
+        nombre_entidad: formData.nombre_entidad,
+        url_imagen: res.certificacion?.imagen_url ?? res.certificacion?.url_imagen ?? null,
+      };
+      setCertificaciones((prev) => prev.map((c) => c.id_certificacion === idToEdit ? certificacionActualizada : c));
+    } else {
+      const res = await addCertificacion(formData);
+      const certificacion = {
+        ...res.certificacion,
+        nombre_entidad: formData.nombre_entidad,
+        url_imagen: res.certificacion?.imagen_url ?? res.certificacion?.url_imagen ?? null,
+      };
+      setCertificaciones((prev) => [certificacion, ...prev]);
+    }
     return true;
   };
 
@@ -493,14 +530,16 @@ export function usePortafolioHandlers({
     handleSaveCurso,
     handleRemoveCurso,
     handleRemoveLogro,
-    handleAddLogro,
+    handleSaveLogro,
+    handleAddLogro: handleSaveLogro, // Alias para no romper importaciones de la app mientras lo adaptas
     handleAddIdioma,
     handleEditIdioma,
     handleRemoveIdioma,
     handleSaveCertificacion,
+    handleAddCertificacion: handleSaveCertificacion,
     handleRemoveCertificacion,
   };
 }
 
 export { SECTION_LABELS, normalizarCertificaciones };
-export type { AlertState, ModalProyectoState, ModalExperienciaState, ActiveSection, CertificacionApi };
+export type { AlertState, ModalProyectoState, ModalExperienciaState, ModalLogroState, ModalCertificacionState, ActiveSection, CertificacionApi };

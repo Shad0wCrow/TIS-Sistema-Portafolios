@@ -345,6 +345,23 @@ export const addLogro = async (data: {
   return res.data;
 };
 
+export const updateLogro = async (
+  id: number,
+  data: {
+    titulo?: string;
+    nombre_entidad?: string;
+    fecha_obtencion?: string;
+    identificador?: string;
+    descripcion?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await axios.put(`${API}/logros/${id}`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
 // ── Experiencia ───────────────────────────────────────────────────────────────
 type ExperienciaPayload = {
   nombre_empresa: string;
@@ -445,6 +462,41 @@ export const addCertificacion = async (data: {
   }
 
   const res = await axios.post(`${API}/certificaciones`, data, { headers: authHeaders() });
+  return res.data;
+};
+
+export const updateCertificacion = async (
+  id: number,
+  data: {
+    nombre?: string;
+    nombre_entidad?: string;
+    fecha_obtencion?: string;
+    fecha_expiracion?: string;
+    url_certificado?: string;
+    url_imagen?: string;
+    imagen_file?: File;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  if (data.imagen_file) {
+    const formData = new FormData();
+    formData.append("_method", "PUT");
+    if (data.nombre) formData.append("nombre", data.nombre);
+    if (data.nombre_entidad) formData.append("nombre_entidad", data.nombre_entidad);
+    if (data.fecha_obtencion) formData.append("fecha_obtencion", data.fecha_obtencion);
+    if (data.fecha_expiracion) formData.append("fecha_expiracion", data.fecha_expiracion);
+    if (data.url_certificado) formData.append("url_certificado", data.url_certificado);
+    if (data.url_imagen) formData.append("url_imagen", data.url_imagen);
+    if (data.visibilidad) formData.append("visibilidad", data.visibilidad);
+    formData.append("imagen_file", data.imagen_file, data.imagen_file.name);
+
+    const res = await axios.post(`${API}/certificaciones/${id}`, formData, {
+      headers: authHeaders(),
+    });
+    return res.data;
+  }
+
+  const res = await axios.put(`${API}/certificaciones/${id}`, data, { headers: authHeaders() });
   return res.data;
 };
 
