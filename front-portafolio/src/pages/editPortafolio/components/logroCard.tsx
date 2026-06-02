@@ -7,6 +7,7 @@ interface LogroCardProps {
   logros: Logro[];
   onAdd: () => void;
   onRemove: (id: number) => void;
+  onEdit?: (logro: Logro) => void;
   activeAction?: SectionAction;
 }
 
@@ -20,12 +21,14 @@ function formatFecha(fecha: string | null): string {
 export default function LogroCard({
   logros,
   onRemove,
+  onEdit,
   activeAction,
 }: LogroCardProps) {
   const showRemove = activeAction === "eliminar";
+  const showEdit = activeAction === "editar";
 
-  const isActionActive = showRemove;
-  const actionText = showRemove ? "SELECCIONA EL LOGRO A ELIMINAR" : "";
+  const isActionActive = showRemove || showEdit;
+  const actionText = showEdit ? "SELECCIONA EL LOGRO A EDITAR" : showRemove ? "SELECCIONA EL LOGRO A ELIMINAR" : "";
 
   return (
     <div className={styles.card}>
@@ -55,6 +58,7 @@ export default function LogroCard({
               key={logro.id_logro} 
               className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
               onClick={() => {
+                if (showEdit && onEdit) onEdit(logro);
                 if (showRemove) onRemove(logro.id_logro);
               }}
             >

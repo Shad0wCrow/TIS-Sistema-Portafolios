@@ -104,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/logros',                             [LogroController::class, 'index']);
     Route::get('/logros/{id}',                        [LogroController::class, 'show']);
     Route::post('/logros',                            [LogroController::class, 'store']);
+    Route::put('/logros/{id}',                        [LogroController::class, 'update']);
     Route::delete('/logros/{id}',                     [LogroController::class, 'destroy']);
     Route::patch('/logros/{id}/visibilidad',          [LogroController::class, 'updateVisibilidad']);
 
