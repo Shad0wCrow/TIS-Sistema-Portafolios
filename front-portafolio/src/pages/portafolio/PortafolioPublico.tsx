@@ -78,9 +78,21 @@ function buildAccentStyle(color?: string | null): CSSProperties {
     ? color.trim()
     : DEFAULT_ACCENT_COLOR;
 
+  const r = parseInt(accent.slice(1, 3), 16);
+  const g = parseInt(accent.slice(3, 5), 16);
+  const b = parseInt(accent.slice(5, 7), 16);
+
+  const darken = (factor: number) =>
+    `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
+
   return {
-    ["--color-accent" as any]: accent,
-    ["--color-accent-soft" as any]: hexToRgba(accent, 0.22),
+    ["--color-accent" as any]:        accent,
+    ["--color-accent-soft" as any]:   `rgba(${r}, ${g}, ${b}, 0.20)`,
+    ["--color-accent-dark" as any]:   darken(0.7),
+    ["--color-accent-bg" as any]:     `rgba(${r}, ${g}, ${b}, 0.35)`,
+    ["--color-accent-bg2" as any]:    `rgba(${r}, ${g}, ${b}, 0.22)`,
+    ["--color-accent-border" as any]: `rgba(${r}, ${g}, ${b}, 0.50)`,
+    ["--color-accent-ring" as any]:   `rgba(${r}, ${g}, ${b}, 0.55)`,
   };
 }
 

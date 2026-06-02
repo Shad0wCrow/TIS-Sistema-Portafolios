@@ -7,14 +7,20 @@ interface IdiomaCardProps {
   idiomas: Idioma[];
   onAdd: () => void;
   onRemove?: (id: number) => void;
+  onEdit?: (idioma: Idioma) => void;
   activeAction?: SectionAction;
 }
 
-export default function IdiomaCard({ idiomas, onRemove, activeAction }: IdiomaCardProps) {
+export default function IdiomaCard({ idiomas, onRemove, onEdit, activeAction }: IdiomaCardProps) {
   const showRemove = activeAction === "eliminar";
+  const showEdit   = activeAction === "editar";
 
-  const isActionActive = showRemove;
-  const actionText = showRemove ? "SELECCIONA EL IDIOMA A ELIMINAR" : "";
+  const isActionActive = showRemove || showEdit;
+  const actionText = showRemove
+    ? "SELECCIONA EL IDIOMA A ELIMINAR"
+    : showEdit
+    ? "SELECCIONA EL IDIOMA A EDITAR"
+    : "";
 
   return (
     <div className={styles.card}>
@@ -25,7 +31,6 @@ export default function IdiomaCard({ idiomas, onRemove, activeAction }: IdiomaCa
             {idiomas.length} registro{idiomas.length !== 1 ? "s" : ""}
           </span>
         </div>
-
       </div>
 
       {idiomas.length === 0 ? (
@@ -45,14 +50,25 @@ export default function IdiomaCard({ idiomas, onRemove, activeAction }: IdiomaCa
               className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
               onClick={() => {
                 if (showRemove && onRemove) onRemove(idioma.id_usuario_idioma);
+                if (showEdit && onEdit) onEdit(idioma);
               }}
             >
               <div className={styles.itemIcon}>🌐</div>
-
               <div className={styles.itemInfo}>
                 <span className={styles.itemTitle}>{idioma.nombre}</span>
                 {idioma.nivel && <span className={styles.itemSub}>{idioma.nivel}</span>}
               </div>
+              {showEdit && (
+                <span style={{
+                  fontSize: "0.72rem",
+                  color: "var(--color-accent, #4f46e5)",
+                  fontWeight: 600,
+                  marginLeft: "auto",
+                  flexShrink: 0,
+                }}>
+                  Editar
+                </span>
+              )}
             </li>
           ))}
         </ul>

@@ -2,12 +2,14 @@
  * AdminReportes.tsx
  * Ruta: /admin/reportes
  *
- * Tres tabs:
- *  1. "Reportes"        — lista individual de reportes + resolución (HU-61)
- *  2. "Por publicación" — agrupados por portafolio, con conteo y detalle
- *  3. "Usuarios"        — habilitar / inhabilitar cuentas (HU-45, HU-46)
+ * Cuatro tabs:
+ *  1. "Usuarios reportados"     — HU-95: botón "Resolver conflictos", selección por fila,
+ *                                  modal inhabilitar/desestimar con comentario obligatorio
+ *  2. "Por publicación"         — agrupados por portafolio, con conteo y detalle
+ *  3. "Gestión de usuarios"     — habilitar / inhabilitar cuentas (HU-45, HU-46)
+ *  4. "Solicitudes reactivación"— HU-95 CAs 11–18: revisar y resolver solicitudes
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmModal from "../../../components/ui/ConfirmModal/ConfirmModal";
 import AdminUserFilters from "../components/AdminUserFilters";
@@ -18,15 +20,23 @@ import {
   resolverReporte,
   getAdminUsers,
   updateAdminUserStatus,
+  getAdminUserStateHistory,
+  getSolicitudesReactivacion,
+  resolverSolicitudReactivacion,
   type EstadoReporte,
   type ReportePortafolio,
   type ReportesDePublicacion,
   type AdminUser,
+  type AdminUserStateHistoryEvent,
+  type SolicitudReactivacion,
+  type EstadoSolicitud,
 } from "../../../services/adminService";
 import "../AdminDashboard.css";
 import "../AdminReportes.css";
 import "../UsuariosReportados.css";
 import "./Adminreportestabs.css";
+
+
 const MOTIVO_LABELS: Record<string, string> = {
   contenido_inapropiado: "Contenido inapropiado",
   spam: "Spam",
@@ -38,15 +48,15 @@ const MOTIVO_LABELS: Record<string, string> = {
 };
 
 const PER_PAGE = 10;
-type Vista = "reportes" | "por_publicacion" | "usuarios";
+type Vista = "reportes" | "por_publicacion" | "usuarios" | "reactivaciones";
 
 export default function AdminReportes() {
   const navigate = useNavigate();
 
-  // ── Tab activo ───────────────────────────────────────────────────────────
+  // ── Tab activo ────────────────────────────────────────────────────────────
   const [vista, setVista] = useState<Vista>("reportes");
 
-  // ── Toast ────────────────────────────────────────────────────────────────
+  // ── Toast ─────────────────────────────────────────────────────────────────
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +72,7 @@ export default function AdminReportes() {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TAB 1: REPORTES INDIVIDUALES
+  // TAB 1: USUARIOS REPORTADOS (HU-95)
   // ══════════════════════════════════════════════════════════════════════════
   const [reportes, setReportes] = useState<ReportePortafolio[]>([]);
   const [filtroEstado, setFiltroEstado] = useState<EstadoReporte | "todos">("pendiente");
@@ -71,12 +81,16 @@ export default function AdminReportes() {
   const [totalReportes, setTotalReportes] = useState(0);
   const [loadingReportes, setLoadingReportes] = useState(true);
 
-  const [reporteActivo, setReporteActivo] = useState<ReportePortafolio | null>(null);
-  const [reporteParaResolver, setReporteParaResolver] = useState<ReportePortafolio | null>(null);
-  const [accionCuenta, setAccionCuenta] = useState<"inhabilitar" | "habilitar" | null>(null);
-  const [nota, setNota] = useState("");
-  const [estadoFinalPendiente, setEstadoFinalPendiente] = useState<"revisado" | "desestimado" | null>(null);
+  // HU-95: reporte seleccionado (fila completa clickeable)
+  const [reporteSeleccionado, setReporteSeleccionado] = useState<ReportePortafolio | null>(null);
+
+  // HU-95: modal de resolución
+  const [modalResolucionAbierto, setModalResolucionAbierto] = useState(false);
+  const [accionResolucion, setAccionResolucion] = useState<"inhabilitar" | "desestimar" | null>(null);
+  const [comentarioDesestimar, setComentarioDesestimar] = useState("");
+  const [comentarioError, setComentarioError] = useState(false);
   const [resolviendo, setResolviendo] = useState(false);
+  const comentarioRef = useRef<HTMLTextAreaElement>(null);
 
   const cargarReportes = useCallback(async () => {
     setLoadingReportes(true);
@@ -102,44 +116,66 @@ export default function AdminReportes() {
 
   useEffect(() => { setPageReportes(1); }, [filtroEstado]);
 
-  function abrirResolucion(r: ReportePortafolio, estadoFinal: "revisado" | "desestimado") {
-    setReporteParaResolver(r);
-    setEstadoFinalPendiente(estadoFinal);
-    setAccionCuenta(null);
-    setNota("");
+  // HU-95 CA1/CA2: "Resolver conflictos" — abre flujo o muestra aviso
+  function handleResolverConflictos() {
+    if (!reporteSeleccionado) {
+      showError("Selecciona el reporte a Resolver");
+      return;
+    }
+    setAccionResolucion(null);
+    setComentarioDesestimar("");
+    setComentarioError(false);
+    setModalResolucionAbierto(true);
   }
 
-  async function confirmarResolucion() {
-    if (!reporteParaResolver || !estadoFinalPendiente) return;
+  // HU-95 CA7/CA8/CA9: confirmar resolución
+  async function confirmarResolucionHU95() {
+    if (!reporteSeleccionado || !accionResolucion) return;
+
+    // CA9: comentario obligatorio para desestimar
+    if (accionResolucion === "desestimar" && !comentarioDesestimar.trim()) {
+      setComentarioError(true);
+      comentarioRef.current?.focus();
+      return;
+    }
+
     setResolviendo(true);
     try {
-      const res = await resolverReporte(reporteParaResolver.id_reporte, {
-        estado: estadoFinalPendiente,
-        nota_moderador: nota.trim() || undefined,
+      let estadoFinal: "revisado" | "desestimado";
+      let accionCuenta: "inhabilitar" | "habilitar" | null = null;
+
+      if (accionResolucion === "inhabilitar") {
+        estadoFinal = "revisado";
+        accionCuenta = reporteSeleccionado.eliminado ? "habilitar" : "inhabilitar";
+      } else {
+        estadoFinal = "desestimado";
+        accionCuenta = null;
+      }
+
+      const res = await resolverReporte(reporteSeleccionado.id_reporte, {
+        estado: estadoFinal,
+        nota_moderador: accionResolucion === "desestimar" ? comentarioDesestimar.trim() : undefined,
         accion_cuenta: accionCuenta,
       });
-      showMessage(res.message);
 
+      showMessage(res.message);
+      setModalResolucionAbierto(false);
+      setReporteSeleccionado(null);
+
+      // CA10: reflejar nuevo estado en la lista
       if (filtroEstado === "pendiente") {
-        setReportes((prev) => prev.filter((r) => r.id_reporte !== reporteParaResolver.id_reporte));
+        setReportes((prev) => prev.filter((r) => r.id_reporte !== reporteSeleccionado.id_reporte));
         setTotalReportes((t) => Math.max(0, t - 1));
       } else {
-        setReportes((prev) => prev.map((r) =>
-          r.id_reporte === reporteParaResolver.id_reporte ? res.reporte : r
-        ));
+        setReportes((prev) =>
+          prev.map((r) => r.id_reporte === reporteSeleccionado.id_reporte ? res.reporte : r)
+        );
       }
 
-      if (reporteActivo?.id_reporte === reporteParaResolver.id_reporte) {
-        setReporteActivo(res.reporte);
-      }
-
-      // Refrescar también la vista por publicación si estaba cargada
+      // Refrescar agrupados si estaban cargados
       if (grupos.length > 0) cargarGrupos();
-
-      setReporteParaResolver(null);
     } catch (err: any) {
       showError(err?.response?.data?.message || "Error al resolver el reporte.");
-      setReporteParaResolver(null);
     } finally {
       setResolviendo(false);
     }
@@ -153,8 +189,16 @@ export default function AdminReportes() {
   const [grupos, setGrupos] = useState<ReportesDePublicacion[]>([]);
   const [loadingGrupos, setLoadingGrupos] = useState(false);
   const [filtroGrupo, setFiltroGrupo] = useState<EstadoReporte | "todos">("todos");
-  /** publicacion_id del grupo expandido (null = ninguno) */
-  const [grupoExpandido, setGrupoExpandido] = useState<number | null>(null);
+  const [grupoExpandido, setGrupoExpandido] = useState<string | null>(null);
+
+  // HU-95 CA4/CA5: reporte seleccionado en "Por publicación"
+  const [reporteSeleccionadoGrupo, setReporteSeleccionadoGrupo] = useState<ReportePortafolio | null>(null);
+  const [modalGrupoAbierto, setModalGrupoAbierto] = useState(false);
+  const [accionGrupo, setAccionGrupo] = useState<"inhabilitar" | "desestimar" | null>(null);
+  const [comentarioGrupo, setComentarioGrupo] = useState("");
+  const [comentarioGrupoError, setComentarioGrupoError] = useState(false);
+  const [resolviendoGrupo, setResolviendoGrupo] = useState(false);
+  const comentarioGrupoRef = useRef<HTMLTextAreaElement>(null);
 
   const cargarGrupos = useCallback(async () => {
     setLoadingGrupos(true);
@@ -174,12 +218,52 @@ export default function AdminReportes() {
 
   useEffect(() => { setGrupoExpandido(null); }, [filtroGrupo]);
 
-  function toggleGrupo(id: number) {
+  function toggleGrupo(id: string) {
     setGrupoExpandido((prev) => (prev === id ? null : id));
   }
 
+  function abrirResolucionGrupo(r: ReportePortafolio) {
+    setReporteSeleccionadoGrupo(r);
+    setAccionGrupo(null);
+    setComentarioGrupo("");
+    setComentarioGrupoError(false);
+    setModalGrupoAbierto(true);
+  }
+
+  async function confirmarResolucionGrupo() {
+    if (!reporteSeleccionadoGrupo || !accionGrupo) return;
+    if (accionGrupo === "desestimar" && !comentarioGrupo.trim()) {
+      setComentarioGrupoError(true);
+      comentarioGrupoRef.current?.focus();
+      return;
+    }
+    setResolviendoGrupo(true);
+    try {
+      const estadoFinal: "revisado" | "desestimado" =
+        accionGrupo === "inhabilitar" ? "revisado" : "desestimado";
+      const accionCuenta =
+        accionGrupo === "inhabilitar"
+          ? reporteSeleccionadoGrupo.eliminado ? "habilitar" : "inhabilitar"
+          : null;
+
+      const res = await resolverReporte(reporteSeleccionadoGrupo.id_reporte, {
+        estado: estadoFinal,
+        nota_moderador: accionGrupo === "desestimar" ? comentarioGrupo.trim() : undefined,
+        accion_cuenta: accionCuenta,
+      });
+      showMessage(res.message);
+      setModalGrupoAbierto(false);
+      setReporteSeleccionadoGrupo(null);
+      cargarGrupos();
+    } catch (err: any) {
+      showError(err?.response?.data?.message || "Error al resolver el reporte.");
+    } finally {
+      setResolviendoGrupo(false);
+    }
+  }
+
   // ══════════════════════════════════════════════════════════════════════════
-  // TAB 3: USUARIOS (HU-45 + HU-46)
+  // TAB 3: GESTIÓN DE USUARIOS (HU-45 + HU-46)
   // ══════════════════════════════════════════════════════════════════════════
   const currentUserId = useMemo(() => {
     try {
@@ -202,6 +286,8 @@ export default function AdminReportes() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
   const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
+  const [historialEstados, setHistorialEstados] = useState<AdminUserStateHistoryEvent[]>([]);
+  const [loadingHistorialEstados, setLoadingHistorialEstados] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoadingUsers(true);
@@ -228,6 +314,22 @@ export default function AdminReportes() {
     if (vista === "usuarios") loadUsers();
   }, [loadUsers, vista]);
 
+  const loadStateHistory = useCallback(async () => {
+    setLoadingHistorialEstados(true);
+    try {
+      const data = await getAdminUserStateHistory({ accion: "todos", per_page: 8 });
+      setHistorialEstados(data.data);
+    } catch {
+      setHistorialEstados([]);
+    } finally {
+      setLoadingHistorialEstados(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (vista === "usuarios") loadStateHistory();
+  }, [loadStateHistory, vista]);
+
   async function confirmToggle() {
     if (!userToToggle) return;
     setUpdatingUserId(userToToggle.id_usuario);
@@ -236,10 +338,69 @@ export default function AdminReportes() {
       showMessage(response.message);
       setUserToToggle(null);
       await loadUsers();
+      await loadStateHistory();
     } catch (err: any) {
       showError(err?.response?.data?.message || "No se pudo actualizar el estado.");
     } finally {
       setUpdatingUserId(null);
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TAB 4: SOLICITUDES DE REACTIVACIÓN (HU-95 CAs 11–18)
+  // ══════════════════════════════════════════════════════════════════════════
+  const [solicitudes, setSolicitudes] = useState<SolicitudReactivacion[]>([]);
+  const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
+  const [filtroSolicitud, setFiltroSolicitud] = useState<EstadoSolicitud | "todos">("pendiente");
+  const [solicitudActiva, setSolicitudActiva] = useState<SolicitudReactivacion | null>(null);
+  const [resolviendoSolicitud, setResolviendoSolicitud] = useState(false);
+  const [pageSolicitudes, setPageSolicitudes] = useState(1);
+  const [lastPageSolicitudes, setLastPageSolicitudes] = useState(1);
+  const [totalSolicitudes, setTotalSolicitudes] = useState(0);
+
+  const cargarSolicitudes = useCallback(async () => {
+    setLoadingSolicitudes(true);
+    try {
+      const res = await getSolicitudesReactivacion({
+        estado: filtroSolicitud,
+        page: pageSolicitudes,
+        per_page: PER_PAGE,
+      });
+      setSolicitudes(res.data);
+      setLastPageSolicitudes(res.last_page);
+      setTotalSolicitudes(res.total);
+    } catch {
+      setSolicitudes([]);
+      setLastPageSolicitudes(1);
+      setTotalSolicitudes(0);
+    } finally {
+      setLoadingSolicitudes(false);
+    }
+  }, [filtroSolicitud, pageSolicitudes]);
+
+  useEffect(() => {
+    if (vista === "reactivaciones") cargarSolicitudes();
+  }, [cargarSolicitudes, vista]);
+
+  useEffect(() => { setPageSolicitudes(1); }, [filtroSolicitud]);
+
+  async function resolverSolicitud(accion: "aceptar" | "rechazar") {
+    if (!solicitudActiva) return;
+    setResolviendoSolicitud(true);
+    try {
+      const res = await resolverSolicitudReactivacion(solicitudActiva.id_solicitud, accion);
+      showMessage(res.message);
+      // CA17: actualizar estado en lista
+      setSolicitudes((prev) =>
+        prev.map((s) =>
+          s.id_solicitud === solicitudActiva.id_solicitud ? res.solicitud : s
+        )
+      );
+      setSolicitudActiva(res.solicitud);
+    } catch (err: any) {
+      showError(err?.response?.data?.message || "No se pudo resolver la solicitud.");
+    } finally {
+      setResolviendoSolicitud(false);
     }
   }
 
@@ -282,63 +443,102 @@ export default function AdminReportes() {
 
       {/* ── Toast ── */}
       {(message || error) && (
-        <div className={`ar-toast${error ? " ar-toast--error" : ""}`} role="alert">
+        <div className={`ar-toast${error ? " ar-toast--error" : ""}`} role="alert" aria-live="assertive">
           {error || message}
         </div>
       )}
 
       {/* ── Tabs ── */}
-      <div className="ar-tabs">
+      <div className="ar-tabs" role="tablist">
         <button
           type="button"
+          role="tab"
+          aria-selected={vista === "reportes"}
           className={`ar-tab${vista === "reportes" ? " ar-tab--active" : ""}`}
           onClick={() => setVista("reportes")}
+          tabIndex={vista === "reportes" ? 0 : -1}
         >
-          📋 Reportes individuales
+          Usuarios reportados
           {pendientesCount !== undefined && pendientesCount > 0 && (
             <span className="ar-nav-badge">{pendientesCount}</span>
           )}
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={vista === "por_publicacion"}
           className={`ar-tab${vista === "por_publicacion" ? " ar-tab--active" : ""}`}
           onClick={() => setVista("por_publicacion")}
+          tabIndex={vista === "por_publicacion" ? 0 : -1}
         >
-          📊 Por publicación
+          Por publicación
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={vista === "usuarios"}
           className={`ar-tab${vista === "usuarios" ? " ar-tab--active" : ""}`}
           onClick={() => setVista("usuarios")}
+          tabIndex={vista === "usuarios" ? 0 : -1}
         >
-          👥 Gestión de usuarios
+          Gestión de usuarios
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={vista === "reactivaciones"}
+          className={`ar-tab${vista === "reactivaciones" ? " ar-tab--active" : ""}`}
+          onClick={() => setVista("reactivaciones")}
+          tabIndex={vista === "reactivaciones" ? 0 : -1}
+        >
+          Solicitudes de reactivación
         </button>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════
-          TAB 1: REPORTES INDIVIDUALES
+          TAB 1: USUARIOS REPORTADOS (HU-95)
       ════════════════════════════════════════════════════════════════════ */}
       {vista === "reportes" && (
-        <div className="ar-layout">
+        <div className="ar-layout" role="tabpanel">
           <main className="ar-main">
             <div className="ar-section-head">
               <div>
                 <h2 className="ar-section-title">Portafolios reportados</h2>
                 <p className="ar-section-subtitle">
                   {totalReportes} reporte{totalReportes !== 1 ? "s" : ""} encontrado{totalReportes !== 1 ? "s" : ""}
+                  {reporteSeleccionado && (
+                    <span className="ar-selected-hint">
+                      {" "}· Reporte #{reporteSeleccionado.id_reporte} seleccionado
+                    </span>
+                  )}
                 </p>
               </div>
-              <div className="ar-filters">
-                {(["todos", "pendiente", "revisado", "desestimado"] as const).map((e) => (
-                  <button
-                    key={e}
-                    type="button"
-                    onClick={() => setFiltroEstado(e)}
-                    className={`ar-filter-btn${filtroEstado === e ? " ar-filter-btn--active" : ""}`}
-                  >
-                    {e === "todos" ? "Todos" : capitalize(e)}
-                  </button>
-                ))}
+              <div className="ar-section-head-actions">
+                <div className="ar-filters">
+                  {(["todos", "pendiente", "revisado", "desestimado"] as const).map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => setFiltroEstado(e)}
+                      className={`ar-filter-btn${filtroEstado === e ? " ar-filter-btn--active" : ""}`}
+                    >
+                      {e === "todos" ? "Todos" : capitalize(e)}
+                    </button>
+                  ))}
+                </div>
+                {/* CA1: único botón "Resolver conflictos" */}
+                <button
+                  type="button"
+                  className={`ar-resolve-main-btn${reporteSeleccionado ? " ar-resolve-main-btn--ready" : ""}`}
+                  onClick={handleResolverConflictos}
+                  aria-label="Resolver conflicto del reporte seleccionado"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Resolver conflictos
+                </button>
               </div>
             </div>
 
@@ -350,74 +550,77 @@ export default function AdminReportes() {
                   No hay reportes{filtroEstado !== "todos" ? ` con estado "${filtroEstado}"` : ""}.
                 </div>
               ) : (
-                <table className="admin-users-table ar-table">
+                <table className="admin-users-table ar-table" aria-label="Lista de usuarios reportados">
                   <thead>
                     <tr>
-                      <th>Usuario reportado</th>
-                      <th>Motivo</th>
-                      <th>Reportado por</th>
-                      <th>Fecha</th>
-                      <th>Cuenta</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
+                      <th scope="col">Selección</th>
+                      <th scope="col">Usuario reportado</th>
+                      <th scope="col">Motivo</th>
+                      <th scope="col">Reportado por</th>
+                      <th scope="col">Fecha</th>
+                      <th scope="col">Cuenta</th>
+                      <th scope="col">Estado</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {reportes.map((r) => (
-                      <tr
-                        key={r.id_reporte}
-                        className={`ar-row${reporteActivo?.id_reporte === r.id_reporte ? " ar-row--active" : ""}`}
-                        onClick={() => setReporteActivo(r)}
-                      >
-                        <td>
-                          <div className="ar-user-cell">
-                            <div className="ar-user-initials">
-                              {r.nombre_reportado.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <strong>{r.nombre_reportado}</strong>
-                              <span>@{r.nombre_usuario_reportado}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="ar-motivo-chip">{MOTIVO_LABELS[r.motivo] ?? r.motivo}</span>
-                          {r.comentario && (
-                            <span className="ar-comentario-hint" title={r.comentario}>💬</span>
-                          )}
-                        </td>
-                        <td className="admin-muted">
-                          {r.reportado_por_nombre ? `@${r.reportado_por_nombre}` : "Visitante"}
-                        </td>
-                        <td className="ar-fecha">
-                          {new Date(r.creado_en).toLocaleDateString("es", {
-                            day: "2-digit", month: "short", year: "numeric",
-                          })}
-                        </td>
-                        <td>
-                          <span className={`admin-badge${r.eliminado ? " admin-badge-disabled" : " admin-badge-active"}`}>
-                            {r.eliminado ? "Inhabilitado" : "Activo"}
-                          </span>
-                        </td>
-                        <td><EstadoBadge estado={r.estado} /></td>
-                        <td onClick={(e) => e.stopPropagation()}>
-                          {r.estado === "pendiente" ? (
-                            <div className="ar-actions">
-                              <button type="button" className="ar-btn ar-btn--resolve"
-                                onClick={() => abrirResolucion(r, "revisado")}>Resolver</button>
-                              <button type="button" className="ar-btn ar-btn--dismiss"
-                                onClick={() => abrirResolucion(r, "desestimado")}>Desestimar</button>
-                            </div>
-                          ) : (
-                            <span className="admin-muted" style={{ fontSize: 12 }}>
-                              {r.nota_moderador
-                                ? <span title={r.nota_moderador} style={{ cursor: "help" }}>📝 Con nota</span>
-                                : "Procesado"}
+                    {reportes.map((r) => {
+                      const selected = reporteSeleccionado?.id_reporte === r.id_reporte;
+                      return (
+                        // CA3: fila completa clickeable como botón
+                        <tr
+                          key={r.id_reporte}
+                          role="button"
+                          aria-pressed={selected}
+                          tabIndex={0}
+                          className={`ar-row ar-row--selectable${selected ? " ar-row--selected" : ""}`}
+                          onClick={() => setReporteSeleccionado(selected ? null : r)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setReporteSeleccionado(selected ? null : r);
+                            }
+                          }}
+                          title={selected ? "Haz clic para deseleccionar" : "Haz clic para seleccionar este reporte"}
+                        >
+                          <td>
+                            <span className={`ar-row-check${selected ? " ar-row-check--on" : ""}`} aria-hidden="true">
+                              {selected ? "✓" : "○"}
                             </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td>
+                            <div className="ar-user-cell">
+                              <div className="ar-user-initials">
+                                {r.nombre_reportado.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <strong>{r.nombre_reportado}</strong>
+                                <span>@{r.nombre_usuario_reportado}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="ar-motivo-chip">{MOTIVO_LABELS[r.motivo] ?? r.motivo}</span>
+                            {r.comentario && (
+                              <span className="ar-comentario-hint" title={r.comentario}>💬</span>
+                            )}
+                          </td>
+                          <td className="admin-muted">
+                            {r.reportado_por_nombre ? `@${r.reportado_por_nombre}` : "Visitante"}
+                          </td>
+                          <td className="ar-fecha">
+                            {new Date(r.creado_en).toLocaleDateString("es", {
+                              day: "2-digit", month: "short", year: "numeric",
+                            })}
+                          </td>
+                          <td>
+                            <span className={`admin-badge${r.eliminado ? " admin-badge-disabled" : " admin-badge-active"}`}>
+                              {r.eliminado ? "Inhabilitado" : "Activo"}
+                            </span>
+                          </td>
+                          <td><EstadoBadge estado={r.estado} /></td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
@@ -434,24 +637,25 @@ export default function AdminReportes() {
             )}
           </main>
 
-          {/* Panel de detalle */}
-          <aside className="ar-preview">
-            {!reporteActivo ? (
+          {/* Panel de instrucciones / reporte seleccionado */}
+          <aside className="ar-preview" aria-label="Detalle del reporte seleccionado">
+            {!reporteSeleccionado ? (
               <div className="ar-preview-empty">
                 <div className="ar-preview-empty-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
                     fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                 </div>
-                <p>Selecciona un reporte<br />para ver los detalles</p>
+                <p>Selecciona un reporte de la lista<br />y luego haz clic en <strong>"Resolver conflictos"</strong></p>
               </div>
             ) : (
-              <PreviewReporte
-                reporte={reporteActivo}
-                onClose={() => setReporteActivo(null)}
-                onResolver={(ef) => abrirResolucion(reporteActivo, ef)}
+              <PreviewReporteHU95
+                reporte={reporteSeleccionado}
+                onClose={() => setReporteSeleccionado(null)}
+                onResolver={handleResolverConflictos}
               />
             )}
           </aside>
@@ -459,10 +663,10 @@ export default function AdminReportes() {
       )}
 
       {/* ════════════════════════════════════════════════════════════════════
-          TAB 2: POR PUBLICACIÓN
+          TAB 2: POR PUBLICACIÓN (HU-95 CA4/CA5)
       ════════════════════════════════════════════════════════════════════ */}
       {vista === "por_publicacion" && (
-        <div className="ar-layout ar-layout--single">
+        <div className="ar-layout ar-layout--single" role="tabpanel">
           <main className="ar-main" style={{ maxWidth: "100%" }}>
             <div className="ar-section-head">
               <div>
@@ -484,9 +688,7 @@ export default function AdminReportes() {
                   ))}
                 </div>
                 <button type="button" className="admin-refresh-btn"
-                  onClick={cargarGrupos} disabled={loadingGrupos}>
-                  ↺
-                </button>
+                  onClick={cargarGrupos} disabled={loadingGrupos}>↺</button>
               </div>
             </div>
 
@@ -498,11 +700,11 @@ export default function AdminReportes() {
               <div className="ar-grupos">
                 {grupos.map((g) => (
                   <GrupoPublicacion
-                    key={g.publicacion_id}
+                    key={g.grupo_key}
                     grupo={g}
-                    expandido={grupoExpandido === g.publicacion_id}
-                    onToggle={() => toggleGrupo(g.publicacion_id)}
-                    onResolver={(r, ef) => abrirResolucion(r, ef)}
+                    expandido={grupoExpandido === g.grupo_key}
+                    onToggle={() => toggleGrupo(g.grupo_key)}
+                    onResolver={abrirResolucionGrupo}
                   />
                 ))}
               </div>
@@ -515,7 +717,7 @@ export default function AdminReportes() {
           TAB 3: GESTIÓN DE USUARIOS (HU-45 + HU-46)
       ════════════════════════════════════════════════════════════════════ */}
       {vista === "usuarios" && (
-        <main className="admin-main">
+        <main className="admin-main" role="tabpanel">
           <section className="admin-section admin-users-shell">
             <div className="admin-section-header">
               <div>
@@ -563,78 +765,357 @@ export default function AdminReportes() {
                     se mostrará antes de aplicar cualquier cambio.
                   </p>
                 </article>
+                <article className="admin-report-card admin-users-note">
+                  <h2>Historial de estados</h2>
+                  {loadingHistorialEstados ? (
+                    <p className="admin-empty-text">Cargando historial...</p>
+                  ) : historialEstados.length === 0 ? (
+                    <p className="admin-empty-text">Aún no hay cambios de estado registrados.</p>
+                  ) : (
+                    <div style={{ display: "grid", gap: 10 }}>
+                      {historialEstados.map((evento) => (
+                        <div key={evento.id_evento} style={{ borderBottom: "1px solid rgba(148, 163, 184, 0.25)", paddingBottom: 10 }}>
+                          <strong style={{ display: "block" }}>@{evento.nombre_usuario ?? "usuario"}</strong>
+                          <span className="admin-muted" style={{ display: "block", fontSize: 12 }}>
+                            {evento.accion === "inhabilitado" ? "Inhabilitado" : "Habilitado"}
+                            {evento.admin_nombre_usuario ? ` por @${evento.admin_nombre_usuario}` : ""}
+                          </span>
+                          <span className="admin-muted" style={{ display: "block", fontSize: 12 }}>
+                            {new Date(evento.creado_en).toLocaleDateString("es", {
+                              day: "2-digit", month: "short", year: "numeric",
+                            })}
+                            {evento.reporte_id ? ` · reporte #${evento.reporte_id}` : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </article>
               </aside>
             </div>
           </section>
         </main>
       )}
 
-      {/* ── Modal: Resolución de reporte ── */}
-      {reporteParaResolver && estadoFinalPendiente && (
-        <div className="ar-modal-overlay"
-          onClick={(e) => { if (e.target === e.currentTarget && !resolviendo) setReporteParaResolver(null); }}>
+      {/* ════════════════════════════════════════════════════════════════════
+          TAB 4: SOLICITUDES DE REACTIVACIÓN (HU-95 CAs 11–18)
+      ════════════════════════════════════════════════════════════════════ */}
+      {vista === "reactivaciones" && (
+        <div className="ar-layout" role="tabpanel">
+          <main className="ar-main">
+            <div className="ar-section-head">
+              <div>
+                <h2 className="ar-section-title">Solicitudes de reactivación</h2>
+                <p className="ar-section-subtitle">
+                  {/* CA18: si no hay solicitudes, se muestra en panel derecho */}
+                  {totalSolicitudes} solicitud{totalSolicitudes !== 1 ? "es" : ""} encontrada{totalSolicitudes !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <div className="ar-filters">
+                {(["pendiente", "aceptada", "rechazada", "todos"] as const).map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => setFiltroSolicitud(e)}
+                    className={`ar-filter-btn${filtroSolicitud === e ? " ar-filter-btn--active" : ""}`}
+                  >
+                    {e === "todos" ? "Todos" : capitalize(e)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* CA12: lista de solicitudes */}
+            <div className="admin-table-wrap">
+              {loadingSolicitudes ? (
+                <div className="admin-table-state">Cargando solicitudes…</div>
+              ) : solicitudes.length === 0 ? (
+                /* CA18: sin solicitudes pendientes */
+                <div className="admin-table-state ar-empty-reactivacion">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <p>No hay mensajes por revisar{filtroSolicitud !== "todos" ? ` con estado "${filtroSolicitud}"` : ""}.</p>
+                </div>
+              ) : (
+                <table className="admin-users-table ar-table" aria-label="Lista de solicitudes de reactivación">
+                  <thead>
+                    <tr>
+                      <th scope="col">Usuario</th>
+                      <th scope="col">Correo</th>
+                      <th scope="col">Mensaje (resumen)</th>
+                      <th scope="col">Fecha</th>
+                      <th scope="col">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {solicitudes.map((s) => {
+                      const activa = solicitudActiva?.id_solicitud === s.id_solicitud;
+                      return (
+                        <tr
+                          key={s.id_solicitud}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={activa}
+                          className={`ar-row ar-row--selectable${activa ? " ar-row--selected" : ""}`}
+                          onClick={() => setSolicitudActiva(activa ? null : s)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSolicitudActiva(activa ? null : s);
+                            }
+                          }}
+                        >
+                          <td>
+                            <div className="ar-user-cell">
+                              <div className="ar-user-initials">
+                                {(s.nombre_completo ?? s.nombre_usuario).charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <strong>{s.nombre_completo ?? s.nombre_usuario}</strong>
+                                <span>@{s.nombre_usuario}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="admin-muted" style={{ fontSize: 12 }}>{s.correo}</td>
+                          <td>
+                            <span style={{ color: "var(--admin-text-muted)", fontSize: 13 }}>
+                              {s.mensaje.length > 60 ? `${s.mensaje.slice(0, 60)}…` : s.mensaje}
+                            </span>
+                          </td>
+                          <td className="ar-fecha">
+                            {new Date(s.creado_en).toLocaleDateString("es", {
+                              day: "2-digit", month: "short", year: "numeric",
+                            })}
+                          </td>
+                          <td><SolicitudBadge estado={s.estado} /></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {lastPageSolicitudes > 1 && (
+              <div className="admin-pagination">
+                <button type="button" onClick={() => setPageSolicitudes((p) => Math.max(1, p - 1))}
+                  disabled={pageSolicitudes <= 1 || loadingSolicitudes}>← Anterior</button>
+                <span>Página {pageSolicitudes} de {lastPageSolicitudes}</span>
+                <button type="button" onClick={() => setPageSolicitudes((p) => Math.min(lastPageSolicitudes, p + 1))}
+                  disabled={pageSolicitudes >= lastPageSolicitudes || loadingSolicitudes}>Siguiente →</button>
+              </div>
+            )}
+          </main>
+
+          {/* Panel de detalle: CA13/CA14 */}
+          <aside className="ar-preview" aria-label="Detalle de solicitud de reactivación">
+            {!solicitudActiva ? (
+              <div className="ar-preview-empty">
+                <div className="ar-preview-empty-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <p>Selecciona una solicitud<br />para ver la explicación del usuario</p>
+              </div>
+            ) : (
+              <DetalleSolicitud
+                solicitud={solicitudActiva}
+                onClose={() => setSolicitudActiva(null)}
+                onResolver={resolverSolicitud}
+                resolviendo={resolviendoSolicitud}
+              />
+            )}
+          </aside>
+        </div>
+      )}
+
+      {/* ── Modal: Resolver conflicto (Tab 1 — HU-95) ── */}
+      {modalResolucionAbierto && reporteSeleccionado && (
+        <div
+          className="ar-modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget && !resolviendo) setModalResolucionAbierto(false); }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-resolver-title"
+        >
           <div className="ar-modal">
             <div className="ar-modal-header">
-              <h3 className="ar-modal-title">
-                {estadoFinalPendiente === "revisado" ? "Resolver reporte" : "Desestimar reporte"}
-              </h3>
+              <h3 className="ar-modal-title" id="modal-resolver-title">Resolver conflicto</h3>
               <button type="button" className="ar-preview-close"
-                onClick={() => setReporteParaResolver(null)} disabled={resolviendo} aria-label="Cerrar">✕</button>
+                onClick={() => setModalResolucionAbierto(false)} disabled={resolviendo} aria-label="Cerrar">✕</button>
             </div>
             <div className="ar-modal-body">
-              <p className="ar-modal-desc">
-                {estadoFinalPendiente === "revisado"
-                  ? `Marcando como revisado el reporte sobre @${reporteParaResolver.nombre_usuario_reportado}.`
-                  : `Descartando el reporte sobre @${reporteParaResolver.nombre_usuario_reportado}.`}
-              </p>
+              <div className="ar-modal-reporte-info">
+                <div className="ar-user-initials">{reporteSeleccionado.nombre_reportado.charAt(0).toUpperCase()}</div>
+                <div>
+                  <strong>{reporteSeleccionado.nombre_reportado}</strong>
+                  <span className="admin-muted"> @{reporteSeleccionado.nombre_usuario_reportado}</span>
+                  <span className="ar-motivo-chip" style={{ marginLeft: 8 }}>
+                    {MOTIVO_LABELS[reporteSeleccionado.motivo] ?? reporteSeleccionado.motivo}
+                  </span>
+                </div>
+              </div>
 
-              {estadoFinalPendiente === "revisado" && (
+              {/* CA6: opciones inhabilitar / desestimar */}
+              <div className="ar-modal-field">
+                <label className="ar-modal-label">Acción a tomar</label>
+                <div className="ar-modal-radio-group">
+                  <button
+                    type="button"
+                    className={`ar-modal-choice${accionResolucion === "inhabilitar" ? " ar-modal-choice--danger" : ""}`}
+                    onClick={() => setAccionResolucion("inhabilitar")}
+                    aria-pressed={accionResolucion === "inhabilitar"}
+                  >
+                    {reporteSeleccionado.eliminado ? "🔓 Habilitar cuenta" : "🚫 Inhabilitar cuenta"}
+                  </button>
+                  <button
+                    type="button"
+                    className={`ar-modal-choice${accionResolucion === "desestimar" ? " ar-modal-choice--accent" : ""}`}
+                    onClick={() => setAccionResolucion("desestimar")}
+                    aria-pressed={accionResolucion === "desestimar"}
+                  >
+                    ✕ Desestimar reporte
+                  </button>
+                </div>
+              </div>
+
+              {/* CA8/CA9: comentario obligatorio para desestimar */}
+              {accionResolucion === "desestimar" && (
                 <div className="ar-modal-field">
-                  <label className="ar-modal-label">Acción sobre la cuenta</label>
-                  <div className="ar-modal-radio-group">
-                    {[
-                      { val: null, label: "Sin cambios en la cuenta", danger: false },
-                      {
-                        val: reporteParaResolver.eliminado ? "habilitar" : "inhabilitar",
-                        label: reporteParaResolver.eliminado ? "Habilitar cuenta" : "Inhabilitar cuenta",
-                        danger: !reporteParaResolver.eliminado,
-                      },
-                    ].map(({ val, label, danger }) => (
-                      <button key={String(val)} type="button"
-                        onClick={() => setAccionCuenta(val as "inhabilitar" | "habilitar" | null)}
-                        className={["ar-modal-choice",
-                          accionCuenta === val ? (danger ? "ar-modal-choice--danger" : "ar-modal-choice--accent") : ""
-                        ].filter(Boolean).join(" ")}
-                      >{label}</button>
-                    ))}
-                  </div>
+                  <label className="ar-modal-label" htmlFor="comentario-desestimar">
+                    Comentario <span className="ar-modal-required">*obligatorio</span>
+                  </label>
+                  <textarea
+                    id="comentario-desestimar"
+                    ref={comentarioRef}
+                    className={`ar-modal-textarea${comentarioError ? " ar-modal-textarea--error" : ""}`}
+                    value={comentarioDesestimar}
+                    onChange={(e) => {
+                      setComentarioDesestimar(e.target.value);
+                      if (e.target.value.trim()) setComentarioError(false);
+                    }}
+                    disabled={resolviendo}
+                    placeholder="Describe el motivo por el que se desestima este reporte…"
+                    rows={3}
+                    aria-required="true"
+                    aria-invalid={comentarioError}
+                    aria-describedby={comentarioError ? "comentario-error" : undefined}
+                  />
+                  {comentarioError && (
+                    <p id="comentario-error" className="ar-field-error" role="alert">
+                      El comentario es obligatorio para desestimar un reporte.
+                    </p>
+                  )}
                 </div>
               )}
 
-              <div className="ar-modal-field">
-                <label className="ar-modal-label" htmlFor="nota-mod">
-                  Nota interna <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(opcional)</span>
-                </label>
-                <textarea id="nota-mod" className="ar-modal-textarea"
-                  value={nota} onChange={(e) => setNota(e.target.value)}
-                  disabled={resolviendo} placeholder="Describe brevemente la decisión tomada…" rows={3} />
-              </div>
+              {accionResolucion === "inhabilitar" && (
+                <div className="ar-modal-field">
+                  <p className="ar-modal-desc" style={{ margin: 0 }}>
+                    Se {reporteSeleccionado.eliminado ? "habilitará" : "inhabilitará"} la cuenta de{" "}
+                    <strong>@{reporteSeleccionado.nombre_usuario_reportado}</strong> y el reporte quedará marcado
+                    como revisado.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="ar-modal-footer">
               <button type="button" className="ar-btn ar-btn--cancel"
-                onClick={() => setReporteParaResolver(null)} disabled={resolviendo}>Cancelar</button>
-              <button type="button"
-                className={`ar-btn${estadoFinalPendiente === "revisado" ? " ar-btn--resolve" : " ar-btn--dismiss"}`}
-                onClick={confirmarResolucion} disabled={resolviendo}>
-                {resolviendo ? "Guardando…"
-                  : estadoFinalPendiente === "revisado" ? "Confirmar resolución" : "Confirmar desestimación"}
+                onClick={() => setModalResolucionAbierto(false)} disabled={resolviendo}>Cancelar</button>
+              <button
+                type="button"
+                className={`ar-btn${accionResolucion === "inhabilitar" ? " ar-btn--resolve" : " ar-btn--dismiss"}`}
+                onClick={confirmarResolucionHU95}
+                disabled={resolviendo || !accionResolucion}
+              >
+                {resolviendo ? "Guardando…" : "Confirmar resolución"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Modal: Confirmar habilitar/inhabilitar usuario ── */}
+      {/* ── Modal: Resolver desde "Por publicación" (Tab 2) ── */}
+      {modalGrupoAbierto && reporteSeleccionadoGrupo && (
+        <div
+          className="ar-modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget && !resolviendoGrupo) setModalGrupoAbierto(false); }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-grupo-title"
+        >
+          <div className="ar-modal">
+            <div className="ar-modal-header">
+              <h3 className="ar-modal-title" id="modal-grupo-title">Resolver conflicto</h3>
+              <button type="button" className="ar-preview-close"
+                onClick={() => setModalGrupoAbierto(false)} disabled={resolviendoGrupo} aria-label="Cerrar">✕</button>
+            </div>
+            <div className="ar-modal-body">
+              <div className="ar-modal-reporte-info">
+                <div className="ar-user-initials">{reporteSeleccionadoGrupo.nombre_reportado.charAt(0).toUpperCase()}</div>
+                <div>
+                  <strong>{reporteSeleccionadoGrupo.nombre_reportado}</strong>
+                  <span className="admin-muted"> @{reporteSeleccionadoGrupo.nombre_usuario_reportado}</span>
+                </div>
+              </div>
+              <div className="ar-modal-field">
+                <label className="ar-modal-label">Acción</label>
+                <div className="ar-modal-radio-group">
+                  <button type="button"
+                    className={`ar-modal-choice${accionGrupo === "inhabilitar" ? " ar-modal-choice--danger" : ""}`}
+                    onClick={() => setAccionGrupo("inhabilitar")}
+                    aria-pressed={accionGrupo === "inhabilitar"}>
+                    {reporteSeleccionadoGrupo.eliminado ? "🔓 Habilitar cuenta" : "🚫 Inhabilitar cuenta"}
+                  </button>
+                  <button type="button"
+                    className={`ar-modal-choice${accionGrupo === "desestimar" ? " ar-modal-choice--accent" : ""}`}
+                    onClick={() => setAccionGrupo("desestimar")}
+                    aria-pressed={accionGrupo === "desestimar"}>
+                    ✕ Desestimar reporte
+                  </button>
+                </div>
+              </div>
+              {accionGrupo === "desestimar" && (
+                <div className="ar-modal-field">
+                  <label className="ar-modal-label" htmlFor="comentario-grupo">
+                    Comentario <span className="ar-modal-required">*obligatorio</span>
+                  </label>
+                  <textarea id="comentario-grupo" ref={comentarioGrupoRef}
+                    className={`ar-modal-textarea${comentarioGrupoError ? " ar-modal-textarea--error" : ""}`}
+                    value={comentarioGrupo}
+                    onChange={(e) => { setComentarioGrupo(e.target.value); if (e.target.value.trim()) setComentarioGrupoError(false); }}
+                    disabled={resolviendoGrupo}
+                    placeholder="Describe el motivo para desestimar este reporte…"
+                    rows={3}
+                    aria-required="true"
+                    aria-invalid={comentarioGrupoError}
+                  />
+                  {comentarioGrupoError && (
+                    <p className="ar-field-error" role="alert">El comentario es obligatorio.</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="ar-modal-footer">
+              <button type="button" className="ar-btn ar-btn--cancel"
+                onClick={() => setModalGrupoAbierto(false)} disabled={resolviendoGrupo}>Cancelar</button>
+              <button type="button"
+                className={`ar-btn${accionGrupo === "inhabilitar" ? " ar-btn--resolve" : " ar-btn--dismiss"}`}
+                onClick={confirmarResolucionGrupo}
+                disabled={resolviendoGrupo || !accionGrupo}>
+                {resolviendoGrupo ? "Guardando…" : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Confirmar habilitar/inhabilitar usuario (Tab 3) ── */}
       <ConfirmModal
         open={userToToggle !== null}
         title={userToToggle?.eliminado ? "Habilitar usuario" : "Inhabilitar usuario"}
@@ -655,21 +1136,21 @@ export default function AdminReportes() {
 // Sub-componentes
 // ══════════════════════════════════════════════════════════════════════════
 
-/** Panel derecho de detalle de un reporte individual */
-function PreviewReporte({
+/** Panel derecho de detalle de un reporte (HU-95 Tab 1) */
+function PreviewReporteHU95({
   reporte: r,
   onClose,
   onResolver,
 }: {
   reporte: ReportePortafolio;
   onClose: () => void;
-  onResolver: (ef: "revisado" | "desestimado") => void;
+  onResolver: () => void;
 }) {
   return (
     <div className="ar-preview-content">
       <div className="ar-preview-header">
-        <h3 className="ar-preview-title">Detalle del reporte</h3>
-        <button type="button" className="ar-preview-close" onClick={onClose} aria-label="Cerrar">✕</button>
+        <h3 className="ar-preview-title">Reporte seleccionado</h3>
+        <button type="button" className="ar-preview-close" onClick={onClose} aria-label="Deseleccionar">✕</button>
       </div>
 
       <div className="ar-preview-section">
@@ -690,25 +1171,10 @@ function PreviewReporte({
         <p className="ar-preview-value">{MOTIVO_LABELS[r.motivo] ?? r.motivo}</p>
         {r.comentario && (
           <>
-            <p className="ar-preview-label" style={{ marginTop: 10 }}>Comentario</p>
+            <p className="ar-preview-label" style={{ marginTop: 10 }}>Comentario del reportante</p>
             <p className="ar-preview-comment">"{r.comentario}"</p>
           </>
         )}
-      </div>
-
-      <div className="ar-preview-section ar-preview-meta">
-        <div>
-          <p className="ar-preview-label">Reportado por</p>
-          <p className="ar-preview-value">
-            {r.reportado_por_nombre ? `@${r.reportado_por_nombre}` : "Visitante anónimo"}
-          </p>
-        </div>
-        <div>
-          <p className="ar-preview-label">Fecha</p>
-          <p className="ar-preview-value">
-            {new Date(r.creado_en).toLocaleDateString("es", { day: "2-digit", month: "long", year: "numeric" })}
-          </p>
-        </div>
       </div>
 
       <div className="ar-preview-section ar-preview-meta">
@@ -733,7 +1199,6 @@ function PreviewReporte({
 
       {r.slug_publico && (
         <div className="ar-preview-section">
-          <p className="ar-preview-label">Portafolio</p>
           <a href={`/portafolio/publico/${r.slug_publico}`} target="_blank" rel="noreferrer"
             className="ar-view-portfolio-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
@@ -747,10 +1212,99 @@ function PreviewReporte({
 
       {r.estado === "pendiente" && (
         <div className="ar-preview-section ar-preview-actions">
+          <button type="button" className="ar-preview-btn ar-btn--resolve" onClick={onResolver}>
+            Resolver conflictos
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Panel de detalle de una solicitud de reactivación (HU-95 CAs 13–16) */
+function DetalleSolicitud({
+  solicitud: s,
+  onClose,
+  onResolver,
+  resolviendo,
+}: {
+  solicitud: SolicitudReactivacion;
+  onClose: () => void;
+  onResolver: (accion: "aceptar" | "rechazar") => void;
+  resolviendo: boolean;
+}) {
+  return (
+    <div className="ar-preview-content">
+      <div className="ar-preview-header">
+        <h3 className="ar-preview-title">Solicitud de reactivación</h3>
+        <button type="button" className="ar-preview-close" onClick={onClose} aria-label="Cerrar">✕</button>
+      </div>
+
+      <div className="ar-preview-section">
+        <p className="ar-preview-label">Usuario</p>
+        <div className="ar-preview-user">
+          <div className="ar-user-initials ar-user-initials--lg">
+            {(s.nombre_completo ?? s.nombre_usuario).charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="ar-preview-name">{s.nombre_completo ?? s.nombre_usuario}</p>
+            <p className="ar-preview-username">@{s.nombre_usuario}</p>
+            <p className="ar-preview-username">{s.correo}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* CA13: explicación, queja o solución propuesta por el usuario */}
+      <div className="ar-preview-section">
+        <p className="ar-preview-label">Mensaje del usuario</p>
+        <p className="ar-preview-comment" style={{ whiteSpace: "pre-wrap" }}>{s.mensaje}</p>
+      </div>
+
+      <div className="ar-preview-section ar-preview-meta">
+        <div>
+          <p className="ar-preview-label">Fecha</p>
+          <p className="ar-preview-value">
+            {new Date(s.creado_en).toLocaleDateString("es", { day: "2-digit", month: "long", year: "numeric" })}
+          </p>
+        </div>
+        <div>
+          <p className="ar-preview-label">Estado</p>
+          <SolicitudBadge estado={s.estado} />
+        </div>
+      </div>
+
+      {s.admin_nombre_usuario && (
+        <div className="ar-preview-section">
+          <p className="ar-preview-label">Revisado por</p>
+          <p className="ar-preview-value">@{s.admin_nombre_usuario}</p>
+        </div>
+      )}
+
+      {/* CA14: aceptar o mantener inhabilitado */}
+      {s.estado === "pendiente" && (
+        <div className="ar-preview-section ar-preview-actions">
+          {/* CA15: aceptar reactivación */}
           <button type="button" className="ar-preview-btn ar-btn--resolve"
-            onClick={() => onResolver("revisado")}>Marcar como revisado</button>
+            onClick={() => onResolver("aceptar")} disabled={resolviendo}>
+            {resolviendo ? "Procesando…" : "✓ Aceptar reactivación"}
+          </button>
+          {/* CA16: rechazar solicitud */}
           <button type="button" className="ar-preview-btn ar-btn--dismiss"
-            onClick={() => onResolver("desestimado")}>Desestimar reporte</button>
+            onClick={() => onResolver("rechazar")} disabled={resolviendo}>
+            ✕ Mantener inhabilitado
+          </button>
+        </div>
+      )}
+
+      {s.estado !== "pendiente" && (
+        <div className="ar-preview-section">
+          <p className="ar-preview-label">Resolución</p>
+          <p className="ar-preview-value">
+            {s.estado === "aceptada" ? "✅ Cuenta reactivada" : "❌ Solicitud rechazada"}
+            {s.revisado_en
+              ? ` el ${new Date(s.revisado_en).toLocaleDateString("es", { day: "2-digit", month: "short", year: "numeric" })}`
+              : ""}
+          </p>
         </div>
       )}
     </div>
@@ -767,12 +1321,13 @@ function GrupoPublicacion({
   grupo: ReportesDePublicacion;
   expandido: boolean;
   onToggle: () => void;
-  onResolver: (r: ReportePortafolio, ef: "revisado" | "desestimado") => void;
+  onResolver: (r: ReportePortafolio) => void;
 }) {
   return (
     <article className={`ar-grupo${expandido ? " ar-grupo--open" : ""}`}>
-      {/* Cabecera del grupo */}
-      <button type="button" className="ar-grupo-header" onClick={onToggle}>
+      {/* CA4: cabecera completa clickeable como botón */}
+      <button type="button" className="ar-grupo-header" onClick={onToggle}
+        aria-expanded={expandido}>
         <div className="ar-user-cell">
           <div className="ar-user-initials">{g.nombre_reportado.charAt(0).toUpperCase()}</div>
           <div>
@@ -780,12 +1335,8 @@ function GrupoPublicacion({
             <span>@{g.nombre_usuario_reportado}</span>
           </div>
         </div>
-
-        {/* Contadores */}
         <div className="ar-grupo-counts">
-          <span className="ar-grupo-total" title="Total de reportes">
-            🚩 {g.total_reportes} reporte{g.total_reportes !== 1 ? "s" : ""}
-          </span>
+          <span className="ar-grupo-total">🚩 {g.total_reportes} reporte{g.total_reportes !== 1 ? "s" : ""}</span>
           {g.pendientes > 0 && (
             <span className="ar-badge ar-badge--pending">{g.pendientes} pendiente{g.pendientes !== 1 ? "s" : ""}</span>
           )}
@@ -796,7 +1347,6 @@ function GrupoPublicacion({
             <span className="ar-badge ar-badge--dismissed">{g.desestimados} desestimado{g.desestimados !== 1 ? "s" : ""}</span>
           )}
         </div>
-
         <div className="ar-grupo-meta">
           <span className={`admin-badge${g.eliminado ? " admin-badge-disabled" : " admin-badge-active"}`}>
             {g.eliminado ? "Inhabilitado" : "Activo"}
@@ -811,7 +1361,6 @@ function GrupoPublicacion({
         </div>
       </button>
 
-      {/* Detalle expandido: lista de todos los reportes */}
       {expandido && (
         <div className="ar-grupo-body">
           <table className="admin-users-table ar-table ar-grupo-table">
@@ -828,6 +1377,7 @@ function GrupoPublicacion({
             </thead>
             <tbody>
               {g.reportes.map((r, idx) => (
+                // CA4: cada fila del grupo también seleccionable como botón
                 <tr key={r.id_reporte} className="ar-row">
                   <td className="admin-muted" style={{ fontFamily: "var(--admin-font-mono)", fontSize: 12 }}>
                     {idx + 1}
@@ -840,7 +1390,9 @@ function GrupoPublicacion({
                   </td>
                   <td>
                     {r.comentario
-                      ? <span className="ar-comentario-hint" title={r.comentario} style={{ cursor: "help" }}>💬 {r.comentario.slice(0, 40)}{r.comentario.length > 40 ? "…" : ""}</span>
+                      ? <span className="ar-comentario-hint" title={r.comentario} style={{ cursor: "help" }}>
+                          💬 {r.comentario.slice(0, 40)}{r.comentario.length > 40 ? "…" : ""}
+                        </span>
                       : <span className="admin-muted">—</span>}
                   </td>
                   <td className="ar-fecha">
@@ -851,12 +1403,9 @@ function GrupoPublicacion({
                   <td><EstadoBadge estado={r.estado} /></td>
                   <td>
                     {r.estado === "pendiente" ? (
-                      <div className="ar-actions">
-                        <button type="button" className="ar-btn ar-btn--resolve"
-                          onClick={() => onResolver(r, "revisado")}>Resolver</button>
-                        <button type="button" className="ar-btn ar-btn--dismiss"
-                          onClick={() => onResolver(r, "desestimado")}>Desestimar</button>
-                      </div>
+                      // CA5: botón en cada fila del grupo para resolver
+                      <button type="button" className="ar-btn ar-btn--resolve"
+                        onClick={() => onResolver(r)}>Resolver</button>
                     ) : (
                       <span className="admin-muted" style={{ fontSize: 12 }}>
                         {r.nota_moderador
@@ -875,13 +1424,23 @@ function GrupoPublicacion({
   );
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────
 
 function EstadoBadge({ estado }: { estado: EstadoReporte }) {
   const cfg: Record<EstadoReporte, { cls: string; label: string }> = {
     pendiente:   { cls: "ar-badge--pending",   label: "Pendiente"   },
     revisado:    { cls: "ar-badge--resolved",  label: "Revisado"    },
     desestimado: { cls: "ar-badge--dismissed", label: "Desestimado" },
+  };
+  const { cls, label } = cfg[estado] ?? { cls: "", label: estado };
+  return <span className={`ar-badge ${cls}`}>{label}</span>;
+}
+
+function SolicitudBadge({ estado }: { estado: EstadoSolicitud }) {
+  const cfg: Record<EstadoSolicitud, { cls: string; label: string }> = {
+    pendiente: { cls: "ar-badge--pending",   label: "Pendiente" },
+    aceptada:  { cls: "ar-badge--resolved",  label: "Aceptada"  },
+    rechazada: { cls: "ar-badge--dismissed", label: "Rechazada" },
   };
   const { cls, label } = cfg[estado] ?? { cls: "", label: estado };
   return <span className={`ar-badge ${cls}`}>{label}</span>;

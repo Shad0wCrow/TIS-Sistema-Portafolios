@@ -33,7 +33,7 @@ Route::get('/public/portafolios/{slug}', [PortafolioPublicoController::class, 's
 Route::post('/public/portafolios/{slug}/contacto', [PortafolioPublicoController::class, 'registrarContacto']);
 Route::post('/public/portafolios/{slug}/visualizacion', [PortafolioPublicoController::class, 'registrarVisualizacion']);
 
-// HU-61: Reportar portafolio â accesible sin autenticación obligatoria
+// HU-61: Reportar portafolio, accesible sin autenticacion obligatoria
 Route::post('/public/portafolios/{slug}/reportar', [ReportePortafolioController::class, 'reportar']);
 
 // Rutas protegidas 
@@ -129,7 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/idiomas',                           [IdiomaController::class, 'store']);
     Route::delete('/idiomas/{id}',                    [IdiomaController::class, 'destroy']);
     Route::patch('/idiomas/{id}/visibilidad',         [IdiomaController::class, 'updateVisibilidad']);
-
+    Route::put('/idiomas/{id}',                       [IdiomaController::class, 'update']);
     // HU-23: Configuración de visibilidad de secciones del portafolio
     Route::get('/visibilidad/secciones',  [VisibilidadController::class, 'show']);
     Route::put('/visibilidad/secciones',  [VisibilidadController::class, 'update']);
@@ -140,11 +140,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/portafolio/enlace/generar',  [PortafolioPublicacionController::class, 'generarEnlace']);
     Route::post('/portafolio/enlace/revocar',  [PortafolioPublicacionController::class, 'revocarEnlace']);
 
-    Route::patch('/portafolio/color', [PortafolioController::class, 'updateColor']);
-
+    Route::patch('/portafolio/color', [PortafolioPublicacionController::class, 'guardarColor']);
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/usuarios', [AdminController::class, 'usuarios']);
         Route::patch('/usuarios/{id}/estado', [AdminController::class, 'actualizarEstadoUsuario']);
+        Route::get('/usuarios/historial-estados', [AdminController::class, 'historialEstadosUsuario']);
         Route::get('/reportes/resumen', [AdminController::class, 'reporteResumen']);
 
         // HU-40: Estadísticas e indicadores

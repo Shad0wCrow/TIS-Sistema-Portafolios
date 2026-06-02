@@ -124,4 +124,25 @@ class IdiomaController extends Controller
  
     return response()->json(['visibilidad' => $item->visibilidad]);
 }
+public function update(Request $request, $id)
+{
+    $user = $request->user();
+
+    $usuarioIdioma = UsuarioIdioma::where('id_usuario_idioma', $id)
+        ->where('usuario_id', $user->id_usuario)
+        ->where('eliminado', false)
+        ->firstOrFail();
+
+    $data = $request->validate([
+        'nivel'       => 'required|in:a1,a2,b1,b2,c1,c2,nativo',
+        'visibilidad' => 'nullable|in:publico,privado',
+    ]);
+
+    $usuarioIdioma->update($data);
+
+    return response()->json([
+        'message' => 'Idioma actualizado correctamente',
+        'idioma'  => $usuarioIdioma->load('idioma'),
+    ]);
+}
 }

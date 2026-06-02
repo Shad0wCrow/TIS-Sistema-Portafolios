@@ -103,6 +103,44 @@ export const updateAdminUserStatus = async (
   return res.data;
 };
 
+export interface AdminUserStateHistoryEvent {
+  id_evento: number;
+  usuario_id: number | null;
+  nombre_usuario: string | null;
+  nombre_usuario_completo: string | null;
+  admin_id: number | null;
+  admin_nombre_usuario: string | null;
+  reporte_id: number | null;
+  reporte_motivo: string | null;
+  accion: "habilitado" | "inhabilitado";
+  estado_anterior: "activo" | "inhabilitado";
+  estado_nuevo: "activo" | "inhabilitado";
+  origen: "gestion_usuarios" | "resolucion_reporte" | string;
+  motivo: string | null;
+  detalle: string | null;
+  creado_en: string;
+}
+
+export interface AdminUserStateHistoryResponse {
+  data: AdminUserStateHistoryEvent[];
+  current_page: number;
+  last_page: number;
+  total: number;
+}
+
+export const getAdminUserStateHistory = async (params?: {
+  usuario_id?: number;
+  accion?: "todos" | "habilitado" | "inhabilitado";
+  page?: number;
+  per_page?: number;
+}): Promise<AdminUserStateHistoryResponse> => {
+  const res = await axios.get(`${API}/admin/usuarios/historial-estados`, {
+    headers: authHeaders(),
+    params,
+  });
+  return res.data;
+};
+
 export const getAdminReportSummary = async (): Promise<AdminReportSummary> => {
   const res = await axios.get(`${API}/admin/reportes/resumen`, {
     headers: authHeaders(),
@@ -116,17 +154,20 @@ export type EstadoReporte = "pendiente" | "revisado" | "desestimado";
 
 export interface ReportePortafolio {
   id_reporte: number;
-  publicacion_id: number;
+  publicacion_id: number | null;
   slug_publico: string | null;
   nombre_reportado: string;
   nombre_usuario_reportado: string;
-  usuario_id_reportado: number;
+  usuario_id_reportado: number | null;
   estado_cuenta: "activo" | "inhabilitado";
   eliminado: boolean;
   motivo: string;
   comentario: string | null;
+  ip_reportante: string | null;
+  user_agent_reportante: string | null;
   estado: EstadoReporte;
   nota_moderador: string | null;
+  usuario_reportante_id: number | null;
   reportado_por_nombre: string | null;
   creado_en: string;
   revisado_en: string | null;
@@ -170,11 +211,12 @@ export const resolverReporte = async (
 
 /** Un grupo: una publicación + todos sus reportes + conteo total */
 export interface ReportesDePublicacion {
-  publicacion_id: number;
+  grupo_key: string;
+  publicacion_id: number | null;
   slug_publico: string | null;
   nombre_reportado: string;
   nombre_usuario_reportado: string;
-  usuario_id_reportado: number;
+  usuario_id_reportado: number | null;
   eliminado: boolean;
   total_reportes: number;
   pendientes: number;
@@ -217,13 +259,17 @@ export const getReportesPorPublicacion = async (params?: {
   } while (page <= lastPage && page <= 10); // tope: 1 000 reportes
 
   // Agrupar por publicacion_id
-  const mapa = new Map<number, ReportesDePublicacion>();
+  const mapa = new Map<string, ReportesDePublicacion>();
 
   for (const r of todos) {
-    const key = r.publicacion_id;
+    const key = r.publicacion_id !== null
+      ? `publicacion-${r.publicacion_id}`
+      : `reporte-${r.id_reporte}`;
+
     if (!mapa.has(key)) {
       mapa.set(key, {
-        publicacion_id: key,
+        grupo_key: key,
+        publicacion_id: r.publicacion_id,
         slug_publico: r.slug_publico,
         nombre_reportado: r.nombre_reportado,
         nombre_usuario_reportado: r.nombre_usuario_reportado,
@@ -265,6 +311,66 @@ export const getReportesPorPublicacion = async (params?: {
     });
 
   return { data, current_page: 1, last_page: 1, total: data.length };
+};
+
+// ── Solicitudes de reactivación (HU-95) ──────────────────────────────────
+
+export type EstadoSolicitud = "pendiente" | "aceptada" | "rechazada";
+
+export interface SolicitudReactivacion {
+  id_solicitud: number;
+  usuario_id: number;
+  nombre_usuario: string;
+  nombre_completo: string | null;
+  correo: string;
+  mensaje: string;
+  estado: EstadoSolicitud;
+  creado_en: string;
+  revisado_en: string | null;
+  admin_id: number | null;
+  admin_nombre_usuario: string | null;
+}
+
+export interface SolicitudesReactivacionResponse {
+  data: SolicitudReactivacion[];
+  current_page: number;
+  last_page: number;
+  total: number;
+}
+
+export const getSolicitudesReactivacion = async (params?: {
+  estado?: EstadoSolicitud | "todos";
+  page?: number;
+  per_page?: number;
+}): Promise<SolicitudesReactivacionResponse> => {
+  const res = await axios.get(`${API}/admin/solicitudes-reactivacion`, {
+    headers: authHeaders(),
+    params,
+  });
+  return res.data;
+};
+
+export const resolverSolicitudReactivacion = async (
+  idSolicitud: number,
+  accion: "aceptar" | "rechazar"
+): Promise<{ message: string; solicitud: SolicitudReactivacion }> => {
+  const res = await axios.patch(
+    `${API}/admin/solicitudes-reactivacion/${idSolicitud}/resolver`,
+    { accion },
+    { headers: authHeaders() }
+  );
+  return res.data;
+};
+
+export const enviarSolicitudReactivacion = async (
+  mensaje: string
+): Promise<{ message: string }> => {
+  const res = await axios.post(
+    `${API}/solicitudes-reactivacion`,
+    { mensaje },
+    { headers: authHeaders() }
+  );
+  return res.data;
 };
 
 // ── Estadísticas e Indicadores (HU-40) ───────────────────────────────────
