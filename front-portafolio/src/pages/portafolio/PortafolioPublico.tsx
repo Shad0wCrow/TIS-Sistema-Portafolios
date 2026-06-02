@@ -37,6 +37,7 @@ import {
   SECTION_LABELS,
 } from "./components/portafolioUtils";
 import type { SectionId } from "./components/portafolioUtils";
+import { formatPhoneWithPrefix } from "../../utils/countryPhoneOptions";
 
 const emptyData: Required<Pick<
   PortafolioData,
@@ -62,16 +63,6 @@ const emptyData: Required<Pick<
 };
 
 const DEFAULT_ACCENT_COLOR = "#1a6644";
-
-function hexToRgba(hexColor: string, alpha: number): string {
-  const hex = hexColor.trim();
-  const normalized = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : DEFAULT_ACCENT_COLOR;
-  const r = parseInt(normalized.slice(1, 3), 16);
-  const g = parseInt(normalized.slice(3, 5), 16);
-  const b = parseInt(normalized.slice(5, 7), 16);
-
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
 
 function buildAccentStyle(color?: string | null): CSSProperties {
   const accent = color && /^#[0-9a-fA-F]{6}$/.test(color.trim())
@@ -186,7 +177,8 @@ export default function PortafolioPublico() {
   }, [certificaciones]);
   const experiencias = (data?.experiencias ?? emptyData.experiencias) as Experiencia[];
   const contactoDirecto = data?.contacto_directo;
-  const telefonoContacto = contactoDirecto?.telefono || perfil?.celular || null;
+  const telefonoPerfil = formatPhoneWithPrefix(perfil?.prefijo_celular, perfil?.celular);
+  const telefonoContacto = contactoDirecto?.telefono || telefonoPerfil || null;
   const correoContacto   = contactoDirecto?.correo  || perfil?.correo_contacto || null;
   const tieneTelefonoContacto = Boolean(telefonoContacto);
   const tieneCorreoContacto = Boolean(correoContacto);
@@ -311,7 +303,7 @@ export default function PortafolioPublico() {
               </div>
               <div className={styles.profileInfoCard}>
                 <p className={styles.fieldLabel}>Teléfono</p>
-                <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
+                <p className={styles.fieldValue}>{telefonoPerfil || "Sin información"}</p>
               </div>
               <div className={styles.profileInfoCard}>
                 <p className={styles.fieldLabel}>Ubicación</p>

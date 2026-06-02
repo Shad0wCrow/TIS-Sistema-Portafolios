@@ -72,6 +72,7 @@ export const updatePerfil = async (data: {
   foto_url?: string;
   ciudad?: string | null;
   pais?: string | null;
+  prefijo_celular?: string | null;
   correo_contacto?: string | null;
   enlaces_personalizados?: { titulo: string; url: string }[];
 }) => {
@@ -87,6 +88,7 @@ export const updatePerfil = async (data: {
     if (data.descripcion !== undefined) formData.append("descripcion", data.descripcion);
     if (data.ciudad !== undefined) formData.append("ciudad", data.ciudad ?? "");
     if (data.pais !== undefined) formData.append("pais", data.pais ?? "");
+    if (data.prefijo_celular !== undefined) formData.append("prefijo_celular", data.prefijo_celular ?? "");
     if (data.correo_contacto !== undefined) formData.append("correo_contacto", data.correo_contacto ?? "");
     if (data.enlaces_personalizados !== undefined) {
       formData.append("enlaces_personalizados_json", JSON.stringify(data.enlaces_personalizados));
@@ -236,6 +238,20 @@ export const addCurso = async (data: {
   return res.data;
 };
 
+export const updateCurso = async (
+  id: number,
+  data: {
+    fecha_fin?: string | null;
+    descripcion?: string;
+    visibilidad?: "publico" | "privado";
+  }
+) => {
+  const res = await axios.put(`${API}/cursos/${id}`, data, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
 export const removeCurso = async (id: number) => {
   const res = await axios.delete(`${API}/cursos/${id}`, {
     headers: authHeaders(),
@@ -288,16 +304,10 @@ export const addEducacion = async (data: {
   return res.data;
 };
 
-// HU-8: update también requiere grado.
 export const updateEducacion = async (
   id: number,
   data: {
-    institucion?: string;
-    titulo?: string;
-    area_estudio?: string;
-    grado?: GradoEducacion;
-    fecha_inicio?: string;
-    fecha_fin?: string;
+    fecha_fin?: string | null;
     descripcion?: string;
     visibilidad?: "publico" | "privado";
   }
@@ -348,10 +358,6 @@ export const addLogro = async (data: {
 export const updateLogro = async (
   id: number,
   data: {
-    titulo?: string;
-    nombre_entidad?: string;
-    fecha_obtencion?: string;
-    identificador?: string;
     descripcion?: string;
     visibilidad?: "publico" | "privado";
   }
@@ -373,6 +379,12 @@ type ExperienciaPayload = {
   es_actual?: boolean;
   ubicacion?: string | null;
   visibilidad?: string;
+};
+
+type ExperienciaUpdatePayload = {
+  descripcion?: string | null;
+  fecha_fin?: string | null;
+  visibilidad?: "publico" | "privado";
 };
 
 export const addExperiencia = async (data: ExperienciaPayload) => {
@@ -468,12 +480,9 @@ export const addCertificacion = async (data: {
 export const updateCertificacion = async (
   id: number,
   data: {
-    nombre?: string;
-    nombre_entidad?: string;
-    fecha_obtencion?: string;
-    fecha_expiracion?: string;
-    url_certificado?: string;
-    url_imagen?: string;
+    fecha_expiracion?: string | null;
+    url_certificado?: string | null;
+    url_imagen?: string | null;
     imagen_file?: File;
     visibilidad?: "publico" | "privado";
   }
@@ -481,12 +490,9 @@ export const updateCertificacion = async (
   if (data.imagen_file) {
     const formData = new FormData();
     formData.append("_method", "PUT");
-    if (data.nombre) formData.append("nombre", data.nombre);
-    if (data.nombre_entidad) formData.append("nombre_entidad", data.nombre_entidad);
-    if (data.fecha_obtencion) formData.append("fecha_obtencion", data.fecha_obtencion);
-    if (data.fecha_expiracion) formData.append("fecha_expiracion", data.fecha_expiracion);
-    if (data.url_certificado) formData.append("url_certificado", data.url_certificado);
-    if (data.url_imagen) formData.append("url_imagen", data.url_imagen);
+    if (data.fecha_expiracion !== undefined) formData.append("fecha_expiracion", data.fecha_expiracion ?? "");
+    if (data.url_certificado !== undefined) formData.append("url_certificado", data.url_certificado ?? "");
+    if (data.url_imagen !== undefined) formData.append("url_imagen", data.url_imagen ?? "");
     if (data.visibilidad) formData.append("visibilidad", data.visibilidad);
     formData.append("imagen_file", data.imagen_file, data.imagen_file.name);
 
@@ -514,7 +520,7 @@ export const getSugerenciasEntidadEmisora = async (q: string): Promise<string[]>
   return res.data.sugerencias ?? [];
 };
 
-export const updateExperiencia = async (id: number, data: ExperienciaPayload) => {
+export const updateExperiencia = async (id: number, data: ExperienciaUpdatePayload) => {
   const res = await axios.put(`${API}/experiencias/${id}`, data, { headers: authHeaders() });
   return res.data;
 };

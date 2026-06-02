@@ -133,8 +133,20 @@ public function update(Request $request, $id)
         ->where('eliminado', false)
         ->firstOrFail();
 
+    $camposPermitidos = ['nivel', 'visibilidad'];
+    $camposNoPermitidos = array_values(array_diff(array_keys($request->all()), $camposPermitidos));
+
+    if (!empty($camposNoPermitidos)) {
+        return response()->json([
+            'message' => 'No se pueden modificar campos bloqueados del idioma.',
+            'errors' => collect($camposNoPermitidos)->mapWithKeys(function ($campo) {
+                return [$campo => ['Este campo no puede modificarse en la edicion.']];
+            }),
+        ], 422);
+    }
+
     $data = $request->validate([
-        'nivel'       => 'required|in:a1,a2,b1,b2,c1,c2,nativo',
+        'nivel'       => 'sometimes|required|in:a1,a2,b1,b2,c1,c2,nativo',
         'visibilidad' => 'nullable|in:publico,privado',
     ]);
 

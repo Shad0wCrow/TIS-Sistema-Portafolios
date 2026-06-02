@@ -142,20 +142,43 @@ class CursoController extends Controller
             return response()->json(['message' => 'Curso no encontrado'], 404);
         }
 
+        $camposBloqueados = [
+            'nombre_curso',
+            'titulo',
+            'institucion',
+            'rol_curso',
+            'fecha_inicio',
+            'es_actual',
+        ];
+
+        $camposNoPermitidos = array_values(array_intersect($camposBloqueados, array_keys($request->all())));
+
+        if (!empty($camposNoPermitidos)) {
+            return response()->json([
+                'message' => 'No se pueden modificar campos bloqueados del curso.',
+                'errors' => collect($camposNoPermitidos)->mapWithKeys(function ($campo) {
+                    return [$campo => ['Este campo no puede modificarse en la edicion.']];
+                }),
+            ], 422);
+        }
+
         $data = $request->validate([
-            'nombre_curso' => 'sometimes|required|string|max:150',
-            'institucion'  => 'sometimes|required|string|max:150',
-            'rol_curso'    => 'sometimes|required|in:' . implode(',', self::ROLES_VALIDOS),
-            'fecha_inicio' => 'sometimes|required|date',
-            'fecha_fin'    => 'nullable|date|after_or_equal:fecha_inicio',
-            'es_actual'    => 'nullable|boolean',
+            'fecha_fin'    => 'nullable|date',
             'descripcion'  => 'nullable|string',
             'visibilidad'  => 'nullable|in:publico,privado',
         ]);
 
-        if (isset($data['nombre_curso'])) {
-            $data['titulo'] = $data['nombre_curso'];
-            unset($data['nombre_curso']);
+        if (
+            array_key_exists('fecha_fin', $data)
+            && $data['fecha_fin']
+            && $data['fecha_fin'] < $curso->fecha_inicio
+        ) {
+            return response()->json([
+                'message' => 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+                'errors' => [
+                    'fecha_fin' => ['La fecha de fin no puede ser anterior a la fecha de inicio.'],
+                ],
+            ], 422);
         }
 
         $curso->update($data);

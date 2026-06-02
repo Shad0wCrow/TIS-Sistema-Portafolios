@@ -10,8 +10,10 @@ import {
   removeExperiencia,
   updateExperiencia,
   addEducacion,
+  updateEducacion,
   removeEducacion,
   addCurso,
+  updateCurso,
   removeCurso,
   addLogro,
   removeLogro,
@@ -87,7 +89,6 @@ interface UsePortafolioHandlersParams {
   certificaciones: Certificacion[];
   setCertificaciones: Dispatch<SetStateAction<Certificacion[]>>;
   modalProy: ModalProyectoState;
-  modalExp: ModalExperienciaState;
   modalLogro?: ModalLogroState;
   modalCertificacion?: ModalCertificacionState;
   setModalAlert: Dispatch<SetStateAction<AlertState>>;
@@ -101,7 +102,6 @@ interface UsePortafolioHandlersParams {
   setWarningLogro: Dispatch<SetStateAction<string | undefined>>;
   setWarningIdioma: Dispatch<SetStateAction<string | undefined>>;
   setWarningCertificacion: Dispatch<SetStateAction<string | undefined>>;
-  refreshData: () => Promise<void>;
 }
 
 export function usePortafolioHandlers({
@@ -113,7 +113,6 @@ export function usePortafolioHandlers({
   certificaciones,
   setCertificaciones,
   modalProy,
-  modalExp,
   modalLogro,
   modalCertificacion,
   setModalAlert,
@@ -127,7 +126,6 @@ export function usePortafolioHandlers({
   setWarningLogro,
   setWarningIdioma,
   setWarningCertificacion,
-  refreshData,
 }: UsePortafolioHandlersParams) {
 
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
@@ -258,12 +256,7 @@ export function usePortafolioHandlers({
   };
 
   const handleSaveExperiencia = async (formData: Parameters<typeof addExperiencia>[0]) => {
-    const experienciasAComparar =
-      modalExp && modalExp !== "nueva"
-        ? experiencias.filter((experiencia) => experiencia.id_experiencia !== modalExp.id_experiencia)
-        : experiencias;
-
-    if (detectarDuplicado(experienciasAComparar, {
+    if (detectarDuplicado(experiencias, {
       nombre_empresa: formData.nombre_empresa,
       puesto: formData.puesto,
       tipo: formData.tipo,
@@ -275,17 +268,12 @@ export function usePortafolioHandlers({
     }
 
     setWarningExperiencia(undefined);
-    if (modalExp && modalExp !== "nueva") {
-      await updateExperiencia(modalExp.id_experiencia, formData);
-      await refreshData();
-    } else {
-      const res = await addExperiencia(formData);
-      const experiencia = {
-        ...res.experiencia,
-        nombre_empresa: formData.nombre_empresa,
-      };
-      setExperiencias((prev) => [experiencia, ...prev]);
-    }
+    const res = await addExperiencia(formData);
+    const experiencia = {
+      ...res.experiencia,
+      nombre_empresa: formData.nombre_empresa,
+    };
+    setExperiencias((prev) => [experiencia, ...prev]);
     return true;
   };
 
@@ -316,6 +304,38 @@ export function usePortafolioHandlers({
     return true;
   };
 
+  const handleEditExperiencia = async (
+    id: number,
+    formData: Parameters<typeof updateExperiencia>[1]
+  ) => {
+    const res = await updateExperiencia(id, formData);
+    const experiencia = {
+      ...res.experiencia,
+      nombre_empresa: res.experiencia.empresa?.nombre ?? res.experiencia.nombre_empresa ?? "",
+    };
+    setExperiencias((prev) =>
+      prev.map((item) => item.id_experiencia === id ? experiencia : item)
+    );
+    setSuccessMessage("La experiencia laboral ha sido actualizada correctamente.");
+  };
+
+  const handleEditEducacion = async (
+    id: number,
+    formData: Parameters<typeof updateEducacion>[1]
+  ) => {
+    const res = await updateEducacion(id, formData);
+    setData((prev) => prev
+      ? {
+          ...prev,
+          educaciones: prev.educaciones.map((educacion) =>
+            educacion.id_educacion === id ? res.educacion : educacion
+          ),
+        }
+      : prev
+    );
+    setSuccessMessage("El grado de formacion ha sido actualizado correctamente.");
+  };
+
   const handleRemoveEducacion = async (id: number) => {
     setModalAlert({
       mensaje: "Este registro de educación será eliminado permanentemente.",
@@ -344,6 +364,23 @@ export function usePortafolioHandlers({
     const res = await addCurso(formData);
     setData((prev) => prev ? { ...prev, cursos: [res.curso, ...prev.cursos] } : prev);
     return true;
+  };
+
+  const handleEditCurso = async (
+    id: number,
+    formData: Parameters<typeof updateCurso>[1]
+  ) => {
+    const res = await updateCurso(id, formData);
+    setData((prev) => prev
+      ? {
+          ...prev,
+          cursos: prev.cursos.map((curso) =>
+            curso.id_educacion === id ? res.curso : curso
+          ),
+        }
+      : prev
+    );
+    setSuccessMessage("El curso ha sido actualizado correctamente.");
   };
 
   const handleRemoveCurso = async (id: number) => {
@@ -410,6 +447,27 @@ export function usePortafolioHandlers({
       setData((prev) => prev ? { ...prev, logros: [logro, ...prev.logros] } : prev);
     }
     return true;
+  };
+
+  const handleEditLogro = async (
+    id: number,
+    formData: Parameters<typeof updateLogro>[1]
+  ) => {
+    const res = await updateLogro(id, formData);
+    const logroActualizado = {
+      ...res.logro,
+      entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
+    };
+    setData((prev) => prev
+      ? {
+          ...prev,
+          logros: prev.logros.map((logro) =>
+            logro.id_logro === id ? logroActualizado : logro
+          ),
+        }
+      : prev
+    );
+    setSuccessMessage("El logro ha sido actualizado correctamente.");
   };
 
   const handleAddIdioma = async (formData: Parameters<typeof addIdioma>[0]) => {
@@ -501,6 +559,23 @@ export function usePortafolioHandlers({
     return true;
   };
 
+  const handleEditCertificacion = async (
+    id: number,
+    formData: Parameters<typeof updateCertificacion>[1]
+  ) => {
+    const res = await updateCertificacion(id, formData);
+    const certificacionActualizada = normalizarCertificaciones([
+      res.certificacion as CertificacionApi,
+    ])[0];
+
+    setCertificaciones((prev) =>
+      prev.map((certificacion) =>
+        certificacion.id_certificacion === id ? certificacionActualizada : certificacion
+      )
+    );
+    setSuccessMessage("La certificacion ha sido actualizada correctamente.");
+  };
+
   const handleRemoveCertificacion = async (id: number) => {
     setModalAlert({
       mensaje: "Esta certificación será eliminada permanentemente.",
@@ -524,19 +599,24 @@ export function usePortafolioHandlers({
     handleSaveProyecto,
     handleRemoveProyecto,
     handleSaveExperiencia,
+    handleEditExperiencia,
     handleRemoveExperiencia,
     handleSaveEducacion,
+    handleEditEducacion,
     handleRemoveEducacion,
     handleSaveCurso,
+    handleEditCurso,
     handleRemoveCurso,
     handleRemoveLogro,
     handleSaveLogro,
     handleAddLogro: handleSaveLogro, // Alias para no romper importaciones de la app mientras lo adaptas
+    handleEditLogro,
     handleAddIdioma,
     handleEditIdioma,
     handleRemoveIdioma,
     handleSaveCertificacion,
     handleAddCertificacion: handleSaveCertificacion,
+    handleEditCertificacion,
     handleRemoveCertificacion,
   };
 }

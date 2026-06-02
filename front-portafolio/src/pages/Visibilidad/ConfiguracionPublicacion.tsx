@@ -83,7 +83,7 @@ const SECCIONES: SeccionKey[] = [
 ];
 
 const DEFAULTS: ConfiguracionSecciones = {
-  mostrar_correo:          false,
+  mostrar_correo:          true,
   seccion_perfil:          'publico',
   seccion_habilidades:     'publico',
   seccion_proyectos:       'publico',
@@ -418,10 +418,10 @@ export default function ConfiguracionPublicacion() {
   };
 
   const publicasCount = SECCIONES.filter((k) => esPublico(config[k])).length;
-  const hasCorreo = Boolean(perfil?.correo_contacto);
+  const tieneMedioContacto = Boolean(perfil?.correo_contacto || perfil?.celular);
 
   const handleToggleContacto = () => {
-    if (!hasCorreo) return;
+    if (!tieneMedioContacto) return;
     setValidationErr('');
     setSavedOk(false);
     setConfig((prev) => ({ ...prev, mostrar_correo: !prev.mostrar_correo }));
@@ -492,9 +492,9 @@ export default function ConfiguracionPublicacion() {
             <label htmlFor="toggle-contacto-directo" className={styles.sectionLabel}>
               <span className={`${styles.sectionName} ${config.mostrar_correo ? styles.sectionNameActive : ''}`}>
                 Contacto directo
-                {!hasCorreo && (
+                {!tieneMedioContacto && (
                   <span style={{ display: 'block', fontSize: '0.8em', color: 'var(--red, #e53e3e)', fontWeight: 'normal', marginTop: '2px' }}>
-                    Requiere un correo en tu perfil
+                    Requiere un correo o telefono en tu perfil
                   </span>
                 )}
               </span>
@@ -507,8 +507,8 @@ export default function ConfiguracionPublicacion() {
               id="toggle-contacto-directo"
               className={`${styles.toggle} ${config.mostrar_correo ? styles.toggleOn : styles.toggleOff}`}
               onClick={handleToggleContacto}
-              disabled={!hasCorreo}
-              style={{ opacity: !hasCorreo ? 0.5 : 1, cursor: !hasCorreo ? 'not-allowed' : 'pointer' }}
+              disabled={!tieneMedioContacto}
+              style={{ opacity: !tieneMedioContacto ? 0.5 : 1, cursor: !tieneMedioContacto ? 'not-allowed' : 'pointer' }}
             >
               <span className={styles.toggleThumb} />
             </button>

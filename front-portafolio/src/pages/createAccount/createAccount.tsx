@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom"
 import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput"
 import SuccessModal from "../../components/ui/SuccessModal/SuccessModal"
 import ProfilePhotoField from "../SoloPerfil/components/ProfilePhotoField"
+import { COUNTRY_PHONE_OPTIONS, getDepartmentsByCountry, getPhonePrefixByCountry } from "../../utils/countryPhoneOptions"
 
 const PROFESIONES = [
     "Ingeniero de Software",
@@ -37,6 +38,7 @@ interface FormValues {
     descripcion: string
     ciudad: string
     pais: string
+    prefijo_celular: string
     correo_contacto: string
 }
 
@@ -48,6 +50,7 @@ interface FormErrors {
     descripcion?: string
     ciudad?: string
     pais?: string
+    prefijo_celular?: string
     correo_contacto?: string
     foto?: string
     enlaces?: string
@@ -89,20 +92,34 @@ function validate(values: FormValues, enlaces: ProfileLinkForm[]): FormErrors {
         errors.descripcion = "Máximo 300 caracteres"
     }
 
-    if (values.ciudad.trim()) {
-        if (/[<>"'`;{}()]/.test(values.ciudad)) {
-            errors.ciudad = "Caracteres no permitidos"
-        } else if (values.ciudad.trim().length > 100) {
-            errors.ciudad = "Máximo 100 caracteres"
-        }
-    }
-
     if (values.pais.trim()) {
         if (/[<>"'`;{}()]/.test(values.pais)) {
             errors.pais = "Caracteres no permitidos"
         } else if (values.pais.trim().length > 100) {
             errors.pais = "Máximo 100 caracteres"
         }
+    }
+
+    if (!values.pais.trim()) {
+        errors.pais = "El pais es requerido"
+    } else if (!getPhonePrefixByCountry(values.pais)) {
+        errors.pais = "Seleccione un pais de la lista"
+    }
+
+    if (!values.ciudad.trim()) {
+        errors.ciudad = "Seleccione una ciudad"
+    } else if (!getDepartmentsByCountry(values.pais).includes(values.ciudad)) {
+        errors.ciudad = "Seleccione una ciudad de la lista"
+    }
+
+    if (!values.prefijo_celular.trim()) {
+        errors.prefijo_celular = "Seleccione un pais para asignar el prefijo"
+    }
+
+    if (!values.celular.trim()) {
+        errors.celular = "El celular es requerido"
+    } else if (!/^[0-9]{7,14}$/.test(values.celular.trim())) {
+        errors.celular = "Ingrese solo numeros, entre 7 y 14 digitos"
     }
 
     if (values.correo_contacto.trim()) {
@@ -169,6 +186,7 @@ export default function CreateAccount({ embedded = false, onSaved, onCancel }: C
         descripcion: "",
         ciudad: "",
         pais: "",
+        prefijo_celular: "",
         correo_contacto: "",
     })
 
@@ -203,8 +221,10 @@ export default function CreateAccount({ embedded = false, onSaved, onCancel }: C
         setFotoError(validarFotoUrl(next))
     }
 
-    function handleAdvancedFieldChange(field: "ciudad" | "pais" | "correo_contacto", value: string) {
-        const updated = { ...values, [field]: value }
+    function handleAdvancedFieldChange(field: "ciudad" | "pais" | "prefijo_celular" | "correo_contacto", value: string) {
+        const updated = field === "pais"
+            ? { ...values, pais: value, ciudad: "", prefijo_celular: getPhonePrefixByCountry(value) }
+            : { ...values, [field]: value }
         setValues(updated)
         setErrors(validate(updated, enlaces))
     }
@@ -271,8 +291,9 @@ export default function CreateAccount({ embedded = false, onSaved, onCancel }: C
                     profesion: values.profesion,
                     celular: values.celular,
                     descripcion: values.descripcion,
-                    ciudad: values.ciudad.trim() || undefined,
-                    pais: values.pais.trim() || undefined,
+                    ciudad: values.ciudad.trim(),
+                    pais: values.pais.trim(),
+                    prefijo_celular: values.prefijo_celular.trim(),
                     correo_contacto: values.correo_contacto.trim() || undefined,
                     enlaces_personalizados: cleanLinks.length > 0 ? cleanLinks : undefined,
                     foto_url: fotoUrl.trim() || undefined,
@@ -378,7 +399,7 @@ export default function CreateAccount({ embedded = false, onSaved, onCancel }: C
                             Estás registrando tu perfil por primera vez.
                         </p>
                         <p style={{ margin: "0", fontSize: "12px", color: "var(--text2)" }}>
-                            Advertencia: Los campos Nombre, Apellido, Profesión y País son definitivos y no se podrán cambiar después de guardar el registro.
+                            Advertencia: Los campos Nombre, Apellido y Profesión son definitivos y no se podrán cambiar después de guardar el registro.
                         </p>
                     </div>
 
@@ -486,20 +507,6 @@ export default function CreateAccount({ embedded = false, onSaved, onCancel }: C
                                     <ErrorMessage message={touched.profesion ? errors.profesion : undefined} />
                                 </div>
 
-                                <div className={styles.fieldGroup}>
-                                    <label className={styles.label}>Celular</label>
-                                    <Input
-                                        type="tel"
-                                        placeholder=""
-                                        classname={styles.input}
-                                        value={values.celular}
-                                        onChange={handleChange("celular")}
-                                        onBlur={handleBlur("celular")}
-                                        error={!!errors.celular && touched.celular}
-                                    />
-                                    <ErrorMessage message={touched.celular ? errors.celular : undefined} />
-                                </div>
-
                                 <div className={`${styles.fieldGroup} ${styles.textareaWrapper}`}>
                                     <label className={styles.label}>Descripción</label>
                                     <textarea
@@ -529,29 +536,57 @@ export default function CreateAccount({ embedded = false, onSaved, onCancel }: C
                         <div className={styles.sectionCard}>
                             <div className={styles.grid}>
                                 <div className={styles.fieldGroup}>
+                                    <label className={styles.label}>País</label>
+                                    <select
+                                        className={`${styles.input} ${errors.pais ? styles.inputError : ""}`}
+                                        value={values.pais}
+                                        onChange={(e) => handleAdvancedFieldChange("pais", e.target.value)}
+                                    >
+                                        <option value="">Seleccione un pais</option>
+                                        {COUNTRY_PHONE_OPTIONS.map((option) => (
+                                            <option key={option.country} value={option.country}>
+                                                {option.country}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <ErrorMessage message={errors.pais} />
+                                </div>
+
+                                <div className={styles.fieldGroup} style={{ display: "none" }}>
                                     <label className={styles.label}>Ciudad</label>
-                                    <Input
-                                        type="text"
-                                        placeholder="Ej: Cochabamba"
-                                        classname={styles.input}
+                                    <select
+                                        className={`${styles.input} ${errors.ciudad ? styles.inputError : ""}`}
                                         value={values.ciudad}
                                         onChange={(e) => handleAdvancedFieldChange("ciudad", e.target.value)}
-                                        error={!!errors.ciudad}
-                                    />
+                                        disabled={!values.pais}
+                                    >
+                                        <option value="">
+                                            {values.pais ? "Seleccione una ciudad" : "Primero seleccione un pais"}
+                                        </option>
+                                        {getDepartmentsByCountry(values.pais).map((department) => (
+                                            <option key={department} value={department}>
+                                                {department}
+                                            </option>
+                                        ))}
+                                    </select>
                                     <ErrorMessage message={errors.ciudad} />
                                 </div>
 
                                 <div className={styles.fieldGroup}>
-                                    <label className={styles.label}>País</label>
-                                    <Input
-                                        type="text"
-                                        placeholder="Ej: Bolivia"
-                                        classname={styles.input}
-                                        value={values.pais}
-                                        onChange={(e) => handleAdvancedFieldChange("pais", e.target.value)}
-                                        error={!!errors.pais}
-                                    />
-                                    <ErrorMessage message={errors.pais} />
+                                    <label className={styles.label}>Celular</label>
+                                    <div className={styles.phoneRow}>
+                                        <span className={styles.phonePrefix}>{values.prefijo_celular}</span>
+                                        <Input
+                                            type="tel"
+                                            placeholder="78937439"
+                                            classname={styles.input}
+                                            value={values.celular}
+                                            onChange={handleChange("celular")}
+                                            onBlur={handleBlur("celular")}
+                                            error={!!errors.celular && touched.celular}
+                                        />
+                                    </div>
+                                    <ErrorMessage message={errors.prefijo_celular || (touched.celular ? errors.celular : undefined)} />
                                 </div>
 
                                 <div className={`${styles.fieldGroup} ${styles.textareaWrapper}`}>

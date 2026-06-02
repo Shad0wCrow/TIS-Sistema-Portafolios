@@ -37,12 +37,13 @@ class PerfilController extends Controller
             'nombre_perfil'   => 'required|string|max:255',
             'apellido_perfil' => 'required|string|max:255',
             'profesion'       => 'required|string|max:150',
-            'celular'         => 'required|string|max:20',
+            'celular'         => ['required', 'string', 'regex:/^[0-9]{7,14}$/', 'max:20'],
             'descripcion'     => 'required|string|max:1000',
             'foto_url'        => 'nullable|string|max:500',
             'foto_file'       => 'nullable|image|max:5120',
-            'ciudad'          => 'nullable|string|max:100',
-            'pais'            => 'nullable|string|max:100',
+            'ciudad'          => 'required|string|max:100',
+            'pais'            => 'required|string|max:100',
+            'prefijo_celular' => ['required', 'string', 'regex:/^\+[0-9]{1,4}$/', 'max:10'],
             'correo_contacto' => 'nullable|email|max:255',
             'enlaces_personalizados' => 'sometimes|array|max:8',
             'enlaces_personalizados.*.titulo' => 'required_with:enlaces_personalizados|string|max:80',
@@ -71,8 +72,9 @@ class PerfilController extends Controller
                     'celular'         => $data['celular'],
                     'descripcion'     => $data['descripcion'],
                     'foto_url'        => $fotoUrl,
-                    'ciudad'          => $data['ciudad'] ?? null,
-                    'pais'            => $data['pais'] ?? null,
+                    'ciudad'          => $data['ciudad'],
+                    'pais'            => $data['pais'],
+                    'prefijo_celular' => $data['prefijo_celular'],
                     'correo_contacto' => $data['correo_contacto'] ?? null,
                     'eliminado'       => false,
                     'visibilidad'     => 'privado',
@@ -119,12 +121,13 @@ class PerfilController extends Controller
             'nombre_perfil'   => 'sometimes|string|max:255',
             'apellido_perfil' => 'sometimes|string|max:255',
             'profesion'       => 'sometimes|string|max:150',
-            'celular'         => 'sometimes|string|max:20',
+            'celular'         => ['sometimes', 'string', 'regex:/^[0-9]{7,14}$/', 'max:20'],
             'descripcion'     => 'sometimes|string|max:1000',
             'foto_url'        => 'nullable|string|max:500',
             'foto_file'       => 'nullable|image|max:5120',
             'ciudad'          => 'sometimes|nullable|string|max:100',
             'pais'            => 'sometimes|nullable|string|max:100',
+            'prefijo_celular' => ['sometimes', 'nullable', 'string', 'regex:/^\+[0-9]{1,4}$/', 'max:10'],
             'correo_contacto' => 'sometimes|nullable|email|max:255',
         ]);
 
@@ -138,7 +141,7 @@ class PerfilController extends Controller
         unset($data['foto_file']);
 
         // Prevent modifying restricted fields if they are already set
-        foreach (['nombre_perfil', 'apellido_perfil', 'profesion', 'pais'] as $restrictedField) {
+        foreach (['nombre_perfil', 'apellido_perfil', 'profesion'] as $restrictedField) {
             if (isset($data[$restrictedField]) && !empty($perfil->$restrictedField)) {
                 unset($data[$restrictedField]);
             }

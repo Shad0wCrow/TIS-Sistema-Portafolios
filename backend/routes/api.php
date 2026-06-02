@@ -92,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/educacion',                          [EducacionController::class, 'index']);
     Route::get('/educacion/{id}',                     [EducacionController::class, 'show']);
     Route::post('/educacion',                         [EducacionController::class, 'store']);
+    Route::put('/educacion/{id}',                     [EducacionController::class, 'update']);
     Route::delete('/educacion/{id}',                  [EducacionController::class, 'destroy']);
     Route::patch('/educacion/{id}/visibilidad',       [EducacionController::class, 'updateVisibilidad']);
 
@@ -99,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cursos',                             [CursoController::class, 'index']);
     Route::get('/cursos/{id}',                        [CursoController::class, 'show']);
     Route::post('/cursos',                            [CursoController::class, 'store']);
+    Route::put('/cursos/{id}',                        [CursoController::class, 'update']);
     Route::delete('/cursos/{id}',                     [CursoController::class, 'destroy']);
     Route::patch('/cursos/{id}/visibilidad',          [CursoController::class, 'updateVisibilidad']);
 
@@ -122,6 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/certificaciones',                          [CertificacionController::class, 'index']);
     Route::get('/certificaciones/{id}',                     [CertificacionController::class, 'show']);
     Route::post('/certificaciones',                         [CertificacionController::class, 'store']);
+    Route::put('/certificaciones/{id}',                     [CertificacionController::class, 'update']);
     Route::delete('/certificaciones/{id}',                  [CertificacionController::class, 'destroy']);
     Route::patch('/certificaciones/{id}/visibilidad',       [CertificacionController::class, 'updateVisibilidad']);
 

@@ -52,6 +52,15 @@ export default function IdiomaCard({ idiomas, onRemove, onEdit, activeAction }: 
                 if (showRemove && onRemove) onRemove(idioma.id_usuario_idioma);
                 if (showEdit && onEdit) onEdit(idioma);
               }}
+              tabIndex={isActionActive ? 0 : undefined}
+              role={isActionActive ? "button" : undefined}
+              onKeyDown={(e) => {
+                if (isActionActive && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  if (showRemove && onRemove) onRemove(idioma.id_usuario_idioma);
+                  if (showEdit && onEdit) onEdit(idioma);
+                }
+              }}
             >
               <div className={styles.itemIcon}>🌐</div>
               <div className={styles.itemInfo}>

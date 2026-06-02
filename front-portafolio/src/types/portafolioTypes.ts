@@ -8,6 +8,7 @@ export interface Perfil {
   foto_url: string | null;
   ciudad?: string | null;
   pais?: string | null;
+  prefijo_celular?: string | null;
   correo_contacto?: string | null;
   enlaces_personalizados?: PerfilEnlace[];
   enlacesPersonalizados?: PerfilEnlace[];

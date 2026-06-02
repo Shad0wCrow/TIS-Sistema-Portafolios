@@ -1,4 +1,5 @@
 import styles from "../editarperfil.module.css";
+import { COUNTRY_PHONE_OPTIONS, getDepartmentsByCountry } from "../../../utils/countryPhoneOptions";
 
 export interface ProfileLinkForm {
     titulo: string;
@@ -8,10 +9,12 @@ export interface ProfileLinkForm {
 interface AdvancedProfileSectionProps {
     ciudad: string;
     pais: string;
+    prefijoCelular: string;
+    celular: string;
     correoContacto: string;
     enlaces: ProfileLinkForm[];
     errors: Record<string, string | undefined>;
-    onFieldChange: (field: "ciudad" | "pais" | "correo_contacto", value: string) => void;
+    onFieldChange: (field: "ciudad" | "pais" | "prefijo_celular" | "celular" | "correo_contacto", value: string) => void;
     onLinkChange: (index: number, field: keyof ProfileLinkForm, value: string) => void;
     onAddLink: () => void;
     onRemoveLink: (index: number) => void;
@@ -21,6 +24,8 @@ interface AdvancedProfileSectionProps {
 export default function AdvancedProfileSection({
     ciudad,
     pais,
+    prefijoCelular,
+    celular,
     correoContacto,
     enlaces,
     errors,
@@ -38,28 +43,59 @@ export default function AdvancedProfileSection({
             <div className={styles.formCard}>
                 <div className={styles.grid}>
                     <div className={styles.fieldGroup}>
+                        <label className={styles.label}>País</label>
+                        <select
+                            className={`${styles.input} ${errors.pais ? styles.inputError : ""}`}
+                            value={pais}
+                            onChange={(event) => onFieldChange("pais", event.target.value)}
+                            disabled={disabledPais}
+                        >
+                            <option value="">Seleccione un pais</option>
+                            {COUNTRY_PHONE_OPTIONS.map((option) => (
+                                <option key={option.country} value={option.country}>
+                                    {option.country}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.pais && <span className={styles.fieldError}>{errors.pais}</span>}
+                    </div>
+
+                    <div className={styles.fieldGroup}>
                         <label className={styles.label}>Ciudad</label>
-                        <input
+                        <select
                             className={`${styles.input} ${errors.ciudad ? styles.inputError : ""}`}
                             value={ciudad}
                             onChange={(event) => onFieldChange("ciudad", event.target.value)}
-                            placeholder="Ej: Cochabamba"
-                            maxLength={100}
-                        />
+                            disabled={!pais}
+                        >
+                            <option value="">
+                                {pais ? "Seleccione una ciudad" : "Primero seleccione un pais"}
+                            </option>
+                            {getDepartmentsByCountry(pais).map((department) => (
+                                <option key={department} value={department}>
+                                    {department}
+                                </option>
+                            ))}
+                        </select>
                         {errors.ciudad && <span className={styles.fieldError}>{errors.ciudad}</span>}
                     </div>
 
                     <div className={styles.fieldGroup}>
-                        <label className={styles.label}>País</label>
-                        <input
-                            className={`${styles.input} ${errors.pais ? styles.inputError : ""}`}
-                            value={pais}
-                            onChange={(event) => onFieldChange("pais", event.target.value)}
-                            placeholder="Ej: Bolivia"
-                            maxLength={100}
-                            disabled={disabledPais}
-                        />
-                        {errors.pais && <span className={styles.fieldError}>{errors.pais}</span>}
+                        <label className={styles.label}>Celular</label>
+                        <div className={styles.phoneRow}>
+                            <span className={styles.phonePrefix}>{prefijoCelular}</span>
+                            <input
+                                className={`${styles.input} ${errors.celular || errors.prefijo_celular ? styles.inputError : ""}`}
+                                value={celular}
+                                onChange={(event) => onFieldChange("celular", event.target.value)}
+                                placeholder="78937439"
+                                inputMode="numeric"
+                                maxLength={14}
+                            />
+                        </div>
+                        {(errors.prefijo_celular || errors.celular) && (
+                            <span className={styles.fieldError}>{errors.prefijo_celular || errors.celular}</span>
+                        )}
                     </div>
 
                     <div className={`${styles.fieldGroup} ${styles.fieldFull}`}>
