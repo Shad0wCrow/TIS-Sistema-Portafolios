@@ -129,112 +129,112 @@ export default function ModalEditarCertificacion({
           </button>
         </div>
 
-        <div className={styles.modalGrid}>
-          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-            <label htmlFor="edit-cert-nombre">Titulo</label>
-            <input id="edit-cert-nombre" value={certificacion.nombre} disabled />
-          </div>
+            <div className={styles.modalGrid}>
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edit-cert-nombre">Titulo</label>
+                <input id="edit-cert-nombre" value={certificacion.nombre} disabled />
+              </div>
 
-          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-            <label htmlFor="edit-cert-entidad">Entidad emisora</label>
-            <input id="edit-cert-entidad" value={certificacion.nombre_entidad} disabled />
-          </div>
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edit-cert-entidad">Entidad emisora</label>
+                <input id="edit-cert-entidad" value={certificacion.nombre_entidad} disabled />
+              </div>
 
-          <div className={styles.modalField}>
-            <label htmlFor="edit-cert-expedicion">Fecha de expedicion</label>
-            <input
-              id="edit-cert-expedicion"
-              type="date"
-              value={certificacion.fecha_obtencion}
-              disabled
-            />
-          </div>
+              <div className={styles.modalField}>
+                <label htmlFor="edit-cert-expedicion">Fecha de expedicion</label>
+                <input
+                  id="edit-cert-expedicion"
+                  type="date"
+                  value={certificacion.fecha_obtencion}
+                  disabled
+                />
+              </div>
 
-          <div className={styles.modalField}>
-            <label htmlFor="edit-cert-expiracion">Fecha de expiracion</label>
-            <input
-              id="edit-cert-expiracion"
-              type="date"
-              name="fecha_expiracion"
-              value={form.fecha_expiracion}
-              min={certificacion.fecha_obtencion}
-              onChange={handleChange}
-            />
-          </div>
+              <div className={styles.modalField}>
+                <label htmlFor="edit-cert-expiracion">Fecha de expiracion</label>
+                <input
+                  id="edit-cert-expiracion"
+                  type="date"
+                  name="fecha_expiracion"
+                  value={form.fecha_expiracion}
+                  min={certificacion.fecha_obtencion}
+                  onChange={handleChange}
+                />
+              </div>
 
-          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-            <label htmlFor="edit-cert-url">URL del certificado</label>
-            <input
-              id="edit-cert-url"
-              name="url_certificado"
-              value={form.url_certificado}
-              onChange={handleChange}
-              placeholder="https://..."
-            />
-          </div>
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edit-cert-url">URL del certificado</label>
+                <input
+                  id="edit-cert-url"
+                  name="url_certificado"
+                  value={form.url_certificado}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                />
+              </div>
 
-          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-            <label htmlFor="edit-cert-img">Imagen del certificado</label>
-            <input
-              id="edit-cert-img"
-              ref={fileRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFile}
-              style={{ display: "none" }}
-            />
-            <button
-              type="button"
-              className={styles.btnCancel}
-              onClick={() => fileRef.current?.click()}
-            >
-              Seleccionar imagen
-            </button>
-            {(imagenPreview || currentImage) && (
-              <img
-                src={imagenPreview ?? currentImage ?? ""}
-                alt="Vista previa de certificacion"
-                style={{
-                  marginTop: 10,
-                  width: 160,
-                  maxWidth: "100%",
-                  height: 100,
-                  objectFit: "cover",
-                  borderRadius: 7,
-                  border: "1px solid var(--border2)",
-                }}
-              />
-            )}
-          </div>
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edit-cert-img">Imagen del certificado</label>
+                <input
+                  id="edit-cert-img"
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleFile}
+                  style={{ display: "none" }}
+                />
+                <button
+                  type="button"
+                  className={styles.btnCancel}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  Seleccionar imagen
+                </button>
+                {(imagenPreview || currentImage) && (
+                  <img
+                    src={imagenPreview ?? currentImage ?? ""}
+                    alt="Vista previa de certificacion"
+                    style={{
+                      marginTop: 10,
+                      width: 160,
+                      maxWidth: "100%",
+                      height: 100,
+                      objectFit: "cover",
+                      borderRadius: 7,
+                      border: "1px solid var(--border2)",
+                    }}
+                  />
+                )}
+              </div>
 
-          <div className={styles.modalField}>
-            <label htmlFor="edit-cert-vis">Visibilidad</label>
-            <select
-              id="edit-cert-vis"
-              name="visibilidad"
-              value={form.visibilidad}
-              onChange={handleChange}
-            >
-              <option value="publico">Publico</option>
-              <option value="privado">Privado</option>
-            </select>
-          </div>
+              <div className={styles.modalField}>
+                <label htmlFor="edit-cert-vis">Visibilidad</label>
+                <select
+                  id="edit-cert-vis"
+                  name="visibilidad"
+                  value={form.visibilidad}
+                  onChange={handleChange}
+                >
+                  <option value="publico">Publico</option>
+                  <option value="privado">Privado</option>
+                </select>
+              </div>
 
-          {error && (
-            <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`} role="alert">
-              {error}
+              {error && (
+                <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`} role="alert">
+                  {error}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className={styles.modalActions}>
-          <button className={styles.btnCancel} onClick={onClose} disabled={loading}>
-            Cancelar
-          </button>
-          <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
-            {loading ? "Guardando..." : "Guardar cambios"}
-          </button>
-        </div>
+            <div className={styles.modalActions}>
+              <button className={styles.btnCancel} onClick={onClose} disabled={loading}>
+                Cancelar
+              </button>
+              <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
+                {loading ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
       </div>
     </div>
   );

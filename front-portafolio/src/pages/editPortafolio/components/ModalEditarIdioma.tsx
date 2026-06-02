@@ -14,7 +14,6 @@ export default function ModalEditarIdioma({ idioma, onClose, onSave }: ModalEdit
     visibilidad: (idioma.visibilidad ?? "publico") as "publico" | "privado",
   });
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
   const [error, setError] = useState("");
 
   const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -36,8 +35,7 @@ export default function ModalEditarIdioma({ idioma, onClose, onSave }: ModalEdit
         nivel: form.nivel,
         visibilidad: form.visibilidad,
       });
-      setSuccessMsg("Idioma actualizado correctamente.");
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch (err) {
       let message = "Error al guardar. Intenta de nuevo.";
 
@@ -67,10 +65,6 @@ export default function ModalEditarIdioma({ idioma, onClose, onSave }: ModalEdit
           </button>
         </div>
 
-        {successMsg ? (
-          <div style={{ textAlign: "center", padding: 30 }}>{successMsg}</div>
-        ) : (
-          <>
             <div className={styles.modalGrid}>
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label htmlFor="edit-idioma-nombre">Idioma registrado</label>
@@ -124,8 +118,6 @@ export default function ModalEditarIdioma({ idioma, onClose, onSave }: ModalEdit
                 ) : "Guardar"}
               </button>
             </div>
-          </>
-        )}
       </div>
     </div>
   );

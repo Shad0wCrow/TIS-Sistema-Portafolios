@@ -45,7 +45,6 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
   });
   const [errors, setErrors]       = useState<FormErrors>({});
   const [loading, setLoading]     = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
     if (form.es_actual) {
@@ -106,8 +105,7 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
       });
       if (guardado === false) return;
 
-      setSuccessMsg("¡Grado de formación registrado correctamente!");
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch {
       setErrors({ institucion: "Error al guardar. Intenta de nuevo." });
     } finally {
@@ -131,19 +129,6 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
           </button>
         </div>
 
-        {successMsg ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "32px 0",
-              color: "var(--accent)",
-              fontWeight: 700,
-              fontSize: 15,
-            }}
-          >
-            ✓ {successMsg}
-          </div>
-        ) : (
           <>
             <div className={styles.modalGrid}>
               {duplicadoWarning && (
@@ -318,7 +303,6 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
               </button>
             </div>
           </>
-        )}
       </div>
     </div>
   );

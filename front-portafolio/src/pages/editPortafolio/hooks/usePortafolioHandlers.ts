@@ -159,6 +159,7 @@ export function usePortafolioHandlers({
       const key = habilidad.habilidad?.tipo === "tecnica" ? "habilidades_tecnicas" : "habilidades_blandas";
       return { ...prev, [key]: [...prev[key], item] };
     });
+    setSuccessMessage("La habilidad ha sido agregada correctamente.");
     return true;
   };
 
@@ -226,12 +227,14 @@ export function usePortafolioHandlers({
           }
         : prev
       );
+      setSuccessMessage("El proyecto ha sido actualizado correctamente.");
     } else {
       const res = await addProyecto(formData);
       setData((prev) => prev
         ? { ...prev, proyectos: [res.proyecto, ...prev.proyectos] }
         : prev
       );
+      setSuccessMessage("El proyecto ha sido agregado correctamente.");
     }
     return true;
   };
@@ -274,6 +277,7 @@ export function usePortafolioHandlers({
       nombre_empresa: formData.nombre_empresa,
     };
     setExperiencias((prev) => [experiencia, ...prev]);
+    setSuccessMessage("La experiencia laboral ha sido agregada correctamente.");
     return true;
   };
 
@@ -301,6 +305,7 @@ export function usePortafolioHandlers({
     setWarningEducacion(undefined);
     const res = await addEducacion(formData);
     setData((prev) => prev ? { ...prev, educaciones: [res.educacion, ...prev.educaciones] } : prev);
+    setSuccessMessage("El grado de formacion ha sido agregado correctamente.");
     return true;
   };
 
@@ -363,6 +368,7 @@ export function usePortafolioHandlers({
     setWarningCurso(undefined);
     const res = await addCurso(formData);
     setData((prev) => prev ? { ...prev, cursos: [res.curso, ...prev.cursos] } : prev);
+    setSuccessMessage("El curso ha sido agregado correctamente.");
     return true;
   };
 
@@ -438,6 +444,7 @@ export function usePortafolioHandlers({
         entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
       };
       setData((prev) => prev ? { ...prev, logros: prev.logros.map(l => l.id_logro === idToEdit ? logroActualizado : l) } : prev);
+      setSuccessMessage("El logro ha sido actualizado correctamente.");
     } else {
       const res = await addLogro(formData);
       const logro = {
@@ -445,6 +452,7 @@ export function usePortafolioHandlers({
         entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
       };
       setData((prev) => prev ? { ...prev, logros: [logro, ...prev.logros] } : prev);
+      setSuccessMessage("El logro ha sido agregado correctamente.");
     }
     return true;
   };
@@ -484,6 +492,7 @@ export function usePortafolioHandlers({
       visibilidad: res.idioma.visibilidad,
     };
     setData((prev) => prev ? { ...prev, idiomas: [...prev.idiomas, idioma] } : prev);
+    setSuccessMessage("El idioma ha sido agregado correctamente.");
     return true;
   };
 
@@ -517,9 +526,9 @@ export function usePortafolioHandlers({
             ? { ...prev, idiomas: prev.idiomas.filter((idioma) => idioma.id_usuario_idioma !== id) }
             : prev
           );
-          setSuccessMessage("El idioma ha sido actualizado correctamente.");
+          setSuccessMessage("El idioma ha sido eliminado correctamente.");
         } catch (error) {
-          setErrorMessage("Error al actualizar el idioma. Intenta de nuevo.");
+          setErrorMessage("Error al eliminar el idioma. Intenta de nuevo.");
         }
       },
     });
@@ -547,6 +556,7 @@ export function usePortafolioHandlers({
         url_imagen: res.certificacion?.imagen_url ?? res.certificacion?.url_imagen ?? null,
       };
       setCertificaciones((prev) => prev.map((c) => c.id_certificacion === idToEdit ? certificacionActualizada : c));
+      setSuccessMessage("La certificacion ha sido actualizada correctamente.");
     } else {
       const res = await addCertificacion(formData);
       const certificacion = {
@@ -555,6 +565,7 @@ export function usePortafolioHandlers({
         url_imagen: res.certificacion?.imagen_url ?? res.certificacion?.url_imagen ?? null,
       };
       setCertificaciones((prev) => [certificacion, ...prev]);
+      setSuccessMessage("La certificacion ha sido agregada correctamente.");
     }
     return true;
   };
