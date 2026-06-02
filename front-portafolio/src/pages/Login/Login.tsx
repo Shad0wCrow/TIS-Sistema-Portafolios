@@ -8,33 +8,35 @@ import AuthLayout from "../../components/layout/AuthLayout";
 
 const DASHBOARD_CACHE_KEY = "dashboardPortafoliosCache";
 
-/**
- * Detecta si el error del backend corresponde a una cuenta inhabilitada.
- * Los mensajes típicos del backend son:
- *   - "Tu cuenta está inhabilitada"
- *   - "cuenta inhabilitada"
- *   - "account disabled" / "disabled"
- *   - HTTP 403 con mensaje de inhabilitación
- */
+
 function esCuentaInhabilitada(err: any): boolean {
+  const status  = err?.response?.status;
+  const data    = err?.response?.data;
+
+  // Campo explícito que ahora devuelve el backend
+  if (data?.estado === "inhabilitado") return true;
+
+  // Fallback por palabras clave en cualquier campo del mensaje
   const msg: string = (
-    err?.response?.data?.message ??
-    err?.response?.data?.error ??
-    err?.message ??
+    data?.message ??
+    data?.error   ??
+    data?.errors?.correo?.[0] ??
+    err?.message  ??
     ""
   ).toLowerCase();
 
-  return (
+  const porPalabra =
     msg.includes("inhabilitad") ||
-    msg.includes("desactivad") ||
-    msg.includes("disabled") ||
-    msg.includes("suspendid") ||
-    msg.includes("bloqueado") ||
-    (err?.response?.status === 403 && msg.length > 0)
-  );
+    msg.includes("desactivad")  ||
+    msg.includes("disabled")    ||
+    msg.includes("suspendid")   ||
+    msg.includes("bloqueado");
+
+  // Status 403 siempre es cuenta inhabilitada en este sistema
+  return porPalabra || status === 403;
 }
 
-type Pantalla = "login" | "inhabilitado" | "solicitud-enviada";
+type Pantalla = "login" | "inhabilitado" | "solicitud-enviada" | "baneado" ;
 
 function Login() {
   const navigate = useNavigate();
@@ -76,17 +78,24 @@ function Login() {
       }
       navigate(data.user?.rol === "admin" ? "/admin" : "/dashboard");
     } catch (err: any) {
-      // HU-95 CA-11: si la cuenta está inhabilitada, derivar al flujo de reactivación
       if (esCuentaInhabilitada(err)) {
-        // Guardar token parcial si el backend lo devuelve en el 403
-        // (para poder llamar a enviarSolicitudReactivacion autenticado)
         const tokenParcial = err?.response?.data?.token;
         if (tokenParcial) {
           localStorage.setItem("token", tokenParcial);
         }
-        setPantalla("inhabilitado");
+        // Guardar correo para enviarlo con la solicitud (no hay token en el 403)
+        localStorage.setItem("correo_inhabilitado", correo);
+        if (err?.response?.data?.estado === "baneado") {
+          setPantalla("baneado");
+        } else {
+          setPantalla("inhabilitado");
+        }
       } else {
-        setError(err?.response?.data?.message || "Error al iniciar sesión");
+        setError(
+          err?.response?.data?.errors?.correo?.[0] ||
+          err?.response?.data?.message             ||
+          "Error al iniciar sesión"
+        );
       }
     } finally {
       setLoading(false);
@@ -114,12 +123,12 @@ function Login() {
     }
   }
 
-  function volverALogin() {
+function volverALogin() {
     setPantalla("login");
     setMensajeReactivacion("");
     setMensajeError("");
-    // Limpiar token parcial si se guardó
     localStorage.removeItem("token");
+    localStorage.removeItem("correo_inhabilitado");
   }
 
   // ══════════════════════════════════════════════════════════════════════
@@ -197,7 +206,7 @@ function Login() {
           <p className="login-inhabilitado-desc">
             Tu cuenta ha sido inhabilitada por el equipo de administración. Si
             crees que esto es un error, puedes enviarnos un mensaje solicitando
-            la reactivación.
+            la reactivación. Si tu solicitud es rechazada, tu cuenta podría ser permanentemente restringida.
           </p>
 
           <form
@@ -265,9 +274,50 @@ function Login() {
             ← Volver al inicio de sesión
           </button>
         </div>
-      )}
+      )}  
+      {/* ── PANTALLA 3: Ban permanente — solicitud rechazada por admin ── */}
+      {pantalla === "baneado" && (
+        <div className="login-card login-card--baneado">
+          <div className="login-baneado-icon" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+            </svg>
+          </div>
 
-      {/* ── PANTALLA 3: Solicitud enviada correctamente (HU-95 CA-11) ── */}
+          <h1 className="login-title login-title--sm">Acceso permanentemente restringido</h1>
+
+          <p className="login-inhabilitado-desc">
+            Tu cuenta ha sido <strong>baneada permanentemente</strong> por el equipo de
+            administración. Tu solicitud de reactivación fue revisada y rechazada.
+            No es posible recuperar el acceso a esta cuenta.
+          </p>
+
+          <p className="login-inhabilitado-desc" style={{ marginTop: 0 }}>
+            Si crees que existe un error, contacta al soporte directamente por
+            fuera de la plataforma en <strong>enigmasoftsrl@gmail.com</strong> .
+          </p>
+
+          <button
+            type="button"
+            className="login-button"
+            onClick={volverALogin}
+          >
+            Volver al inicio de sesión
+          </button>
+        </div>
+      )}
+      {/* ── PANTALLA 4: Solicitud enviada correctamente */}
       {pantalla === "solicitud-enviada" && (
         <div className="login-card login-card--success">
           <div className="login-success-icon" aria-hidden="true">

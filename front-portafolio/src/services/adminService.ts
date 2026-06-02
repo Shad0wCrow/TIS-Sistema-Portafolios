@@ -365,10 +365,19 @@ export const resolverSolicitudReactivacion = async (
 export const enviarSolicitudReactivacion = async (
   mensaje: string
 ): Promise<{ message: string }> => {
+  const token  = localStorage.getItem("token");
+  const correo = localStorage.getItem("correo_inhabilitado");
+
+  // El 403 no devuelve token, así que no usamos authHeaders() que lanzaría error
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
   const res = await axios.post(
     `${API}/solicitudes-reactivacion`,
-    { mensaje },
-    { headers: authHeaders() }
+    { mensaje, ...(correo ? { correo } : {}) },
+    { headers }
   );
   return res.data;
 };
