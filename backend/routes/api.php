@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ReportePortafolioController;
 use App\Http\Controllers\Api\GithubController;
 
+use App\Http\Controllers\Api\SolicitudReactivacionController;
+
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
 });
@@ -35,7 +37,7 @@ Route::post('/public/portafolios/{slug}/visualizacion', [PortafolioPublicoContro
 
 // HU-61: Reportar portafolio, accesible sin autenticacion obligatoria
 Route::post('/public/portafolios/{slug}/reportar', [ReportePortafolioController::class, 'reportar']);
-
+Route::post('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'store']);
 // Rutas protegidas 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -153,5 +155,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // HU-61: Gestión de reportes de portafolios
         Route::get('/reportes/portafolios', [ReportePortafolioController::class, 'index']);
         Route::patch('/reportes/portafolios/{id}/resolver', [ReportePortafolioController::class, 'resolver']);
+
+        // HU-98: Solicitudes de reactivación de cuenta        
+        Route::get('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'index']);
+        Route::patch('/solicitudes-reactivacion/{id}/resolver', [SolicitudReactivacionController::class, 'resolver']);
+
     });
 });

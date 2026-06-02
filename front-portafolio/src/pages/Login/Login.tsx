@@ -17,21 +17,30 @@ const DASHBOARD_CACHE_KEY = "dashboardPortafoliosCache";
  *   - HTTP 403 con mensaje de inhabilitación
  */
 function esCuentaInhabilitada(err: any): boolean {
+  const status  = err?.response?.status;
+  const data    = err?.response?.data;
+
+  // Campo explícito que ahora devuelve el backend
+  if (data?.estado === "inhabilitado") return true;
+
+  // Fallback por palabras clave en cualquier campo del mensaje
   const msg: string = (
-    err?.response?.data?.message ??
-    err?.response?.data?.error ??
-    err?.message ??
+    data?.message ??
+    data?.error   ??
+    data?.errors?.correo?.[0] ??
+    err?.message  ??
     ""
   ).toLowerCase();
 
-  return (
+  const porPalabra =
     msg.includes("inhabilitad") ||
-    msg.includes("desactivad") ||
-    msg.includes("disabled") ||
-    msg.includes("suspendid") ||
-    msg.includes("bloqueado") ||
-    (err?.response?.status === 403 && msg.length > 0)
-  );
+    msg.includes("desactivad")  ||
+    msg.includes("disabled")    ||
+    msg.includes("suspendid")   ||
+    msg.includes("bloqueado");
+
+  // Status 403 siempre es cuenta inhabilitada en este sistema
+  return porPalabra || status === 403;
 }
 
 type Pantalla = "login" | "inhabilitado" | "solicitud-enviada";
@@ -76,17 +85,20 @@ function Login() {
       }
       navigate(data.user?.rol === "admin" ? "/admin" : "/dashboard");
     } catch (err: any) {
-      // HU-95 CA-11: si la cuenta está inhabilitada, derivar al flujo de reactivación
       if (esCuentaInhabilitada(err)) {
-        // Guardar token parcial si el backend lo devuelve en el 403
-        // (para poder llamar a enviarSolicitudReactivacion autenticado)
         const tokenParcial = err?.response?.data?.token;
         if (tokenParcial) {
           localStorage.setItem("token", tokenParcial);
         }
+        // Guardar correo para enviarlo con la solicitud (no hay token en el 403)
+        localStorage.setItem("correo_inhabilitado", correo);
         setPantalla("inhabilitado");
       } else {
-        setError(err?.response?.data?.message || "Error al iniciar sesión");
+        setError(
+          err?.response?.data?.errors?.correo?.[0] ||
+          err?.response?.data?.message             ||
+          "Error al iniciar sesión"
+        );
       }
     } finally {
       setLoading(false);
@@ -114,12 +126,12 @@ function Login() {
     }
   }
 
-  function volverALogin() {
+function volverALogin() {
     setPantalla("login");
     setMensajeReactivacion("");
     setMensajeError("");
-    // Limpiar token parcial si se guardó
     localStorage.removeItem("token");
+    localStorage.removeItem("correo_inhabilitado");
   }
 
   // ══════════════════════════════════════════════════════════════════════

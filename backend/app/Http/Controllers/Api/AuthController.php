@@ -58,14 +58,22 @@ class AuthController extends Controller
             'contrasenia' => 'required',
         ]);
 
-        $usuario = Usuario::where('correo', $request->correo)
-            ->where('eliminado', false)
-            ->first();
+        // Buscar usuario sin filtrar por estado (para poder distinguir el motivo del rechazo)
+        $usuario = Usuario::where('correo', $request->correo)->first();
 
+        // 1. Credenciales incorrectas (usuario no existe o contraseña mal)
         if (!$usuario || !Hash::check($request->contrasenia, $usuario->contrasenia)) {
             throw ValidationException::withMessages([
                 'correo' => ['Credenciales incorrectas.'],
             ]);
+        }
+
+        // 2. Cuenta inhabilitada (eliminado = true)
+        if ($usuario->eliminado) {
+            return response()->json([
+                'message'  => 'Tu cuenta ha sido inhabilitada.',
+                'estado'   => 'inhabilitado',
+            ], 403);
         }
 
         $token = $usuario->createToken('auth_token')->plainTextToken;
