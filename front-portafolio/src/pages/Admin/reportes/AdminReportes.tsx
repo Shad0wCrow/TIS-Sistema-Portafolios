@@ -830,14 +830,15 @@ export default function AdminReportes() {
               ) : (
                 <table
                   className="admin-users-table"
+                  style={{ tableLayout: "fixed" }}
                   aria-label="Listado de usuarios registrados"
                 >
                   <colgroup>
-                    <col style={{ width: "52px" }} />
-                    <col style={{ width: "28%" }} />
+                    <col style={{ width: "48px" }} />
+                    <col style={{ width: "26%" }} />
                     <col style={{ width: "12%" }} />
-                    <col style={{ width: "12%" }} />
-                    <col style={{ width: "12%" }} />
+                    <col style={{ width: "13%" }} />
+                    <col style={{ width: "11%" }} />
                     <col style={{ width: "14%" }} />
                     <col style={{ width: "14%" }} />
                   </colgroup>
@@ -887,19 +888,25 @@ export default function AdminReportes() {
                                   ? u.perfil.nombre.charAt(0).toUpperCase()
                                   : u.nombre_usuario.charAt(0).toUpperCase()}
                               </div>
-                              <div>
-                                <strong>{u.perfil?.nombre ?? u.nombre_usuario}</strong>
-                                <span>@{u.nombre_usuario}</span>
-                                <span>{u.correo}</span>
+                              <div style={{ minWidth: 0 }}>
+                                <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {u.perfil?.nombre ?? u.nombre_usuario}
+                                </strong>
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  @{u.nombre_usuario}
+                                </span>
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {u.correo}
+                                </span>
                               </div>
                             </div>
                           </td>
-                          <td>
+                          <td style={{ whiteSpace: "nowrap" }}>
                             <span className="ar-motivo-chip">
                               {u.rol === "admin" ? "Administrador" : "Usuario"}
                             </span>
                           </td>
-                          <td>
+                          <td style={{ whiteSpace: "nowrap" }}>
                             <span className={`admin-badge${u.eliminado ? " admin-badge-disabled" : " admin-badge-active"}`}>
                               {u.eliminado ? "Inhabilitado" : "Activo"}
                             </span>
@@ -909,19 +916,19 @@ export default function AdminReportes() {
                               </span>
                             )}
                           </td>
-                          <td>
+                          <td style={{ whiteSpace: "nowrap" }}>
                             {u.perfil !== null
                               ? <span className="admin-badge admin-badge-active">Con perfil</span>
                               : <span className="admin-muted">Sin perfil</span>}
                           </td>
-                          <td>
+                          <td style={{ whiteSpace: "nowrap" }}>
                             {u.portafolio !== null
                               ? u.portafolio.publicado
                                 ? <span className="admin-badge admin-badge-active">Publicado</span>
                                 : <span className="ar-badge ar-badge--pending">No publicado</span>
                               : <span className="admin-muted">Sin portafolio</span>}
                           </td>
-                          <td className="admin-muted">
+                          <td className="admin-muted" style={{ whiteSpace: "nowrap" }}>
                             {u.creado_en
                               ? new Date(u.creado_en).toLocaleDateString("es", {
                                   day: "2-digit", month: "short", year: "numeric",
