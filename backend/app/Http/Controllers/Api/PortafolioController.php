@@ -150,10 +150,11 @@ class PortafolioController extends Controller
             'nombre_perfil'   => 'sometimes|string|max:255',
             'apellido_perfil' => 'sometimes|string|max:255',
             'profesion'       => 'sometimes|string|max:150',
-            'celular'         => 'sometimes|string|max:20',
+            'celular'         => ['sometimes', 'string', 'regex:/^[0-9]{7,14}$/', 'max:20'],
             'descripcion'     => 'sometimes|string|max:300',
             'ciudad'          => 'sometimes|nullable|string|max:100',
             'pais'            => 'sometimes|nullable|string|max:100',
+            'prefijo_celular' => ['sometimes', 'nullable', 'string', 'regex:/^\+[0-9]{1,4}$/', 'max:10'],
             'correo_contacto' => 'sometimes|nullable|email|max:255',
             'foto_url'        => 'sometimes|nullable|string|max:500',
             'foto_file'       => 'sometimes|nullable|image|max:5120',
@@ -174,7 +175,7 @@ class PortafolioController extends Controller
         unset($data['foto_file'], $data['enlaces_personalizados']);
 
         // Prevent modifying restricted fields if they are already set
-        foreach (['nombre_perfil', 'apellido_perfil', 'profesion', 'pais'] as $restrictedField) {
+        foreach (['nombre_perfil', 'apellido_perfil', 'profesion'] as $restrictedField) {
             if (isset($data[$restrictedField]) && !empty($perfil->$restrictedField)) {
                 unset($data[$restrictedField]);
             }

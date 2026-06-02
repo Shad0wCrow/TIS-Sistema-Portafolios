@@ -7,6 +7,7 @@ import {
   getCertificaciones,
 } from "../../services/portafolioservice";
 import { normalizarCertificaciones } from "./hooks/usePortafolioHandlers";
+import { formatPhoneWithPrefix } from "../../utils/countryPhoneOptions";
 
 import type {
   PortafolioData,
@@ -101,6 +102,7 @@ export default function CvGenerator() {
   const perfil = data.perfil;
   const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
   const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
+  const telefonoPerfil = formatPhoneWithPrefix(perfil?.prefijo_celular, perfil?.celular);
   const educaciones = (data.educaciones || []) as Educacion[];
   const proyectos = (data.proyectos || []) as Proyecto[];
   const habilidadesTecnicas = data.habilidades_tecnicas || [];
@@ -123,7 +125,7 @@ export default function CvGenerator() {
         
         <div className={styles.cascadeContact}>
           <h3 className={styles.cascadeSectionTitleLeft}>Contacto</h3>
-          {perfil?.celular && <p className={styles.cascadeText}>{perfil.celular}</p>}
+          {telefonoPerfil && <p className={styles.cascadeText}>{telefonoPerfil}</p>}
           {perfil?.correo_contacto && <p className={styles.cascadeText}>{perfil.correo_contacto}</p>}
           {ubicacionPerfil && <p className={styles.cascadeText}>{ubicacionPerfil}</p>}
         </div>
@@ -243,7 +245,7 @@ export default function CvGenerator() {
         <div className={styles.classicHeaderInfo}>
           <h1 className={styles.classicName}>{perfil?.nombre_perfil} {perfil?.apellido_perfil}</h1>
           <p className={styles.classicContact}>
-            {[perfil?.celular, perfil?.correo_contacto, ubicacionPerfil].filter(Boolean).join(" | ")}
+            {[telefonoPerfil, perfil?.correo_contacto, ubicacionPerfil].filter(Boolean).join(" | ")}
           </p>
         </div>
         {perfil?.foto_url && <img src={perfil.foto_url} alt="Perfil" className={styles.classicPhoto} />}
@@ -369,7 +371,7 @@ export default function CvGenerator() {
         <div className={styles.influxHeaderInfo}>
           <h1 className={styles.influxName}>{perfil?.nombre_perfil} {perfil?.apellido_perfil}</h1>
           <p className={styles.influxContact}>
-            {[perfil?.celular, perfil?.correo_contacto, ubicacionPerfil].filter(Boolean).join(" | ")}
+            {[telefonoPerfil, perfil?.correo_contacto, ubicacionPerfil].filter(Boolean).join(" | ")}
           </p>
         </div>
         {perfil?.foto_url && <img src={perfil.foto_url} alt="Perfil" className={styles.influxPhoto} />}

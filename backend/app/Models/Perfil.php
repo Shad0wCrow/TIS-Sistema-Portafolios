@@ -20,6 +20,7 @@ class Perfil extends Model
         'foto_url',
         'ciudad',
         'pais',
+        'prefijo_celular',
         'correo_contacto',
         'linkedin_url',
         'visibilidad',

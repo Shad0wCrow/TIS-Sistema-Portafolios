@@ -72,6 +72,7 @@ export const updatePerfil = async (data: {
   foto_url?: string;
   ciudad?: string | null;
   pais?: string | null;
+  prefijo_celular?: string | null;
   correo_contacto?: string | null;
   enlaces_personalizados?: { titulo: string; url: string }[];
 }) => {
@@ -87,6 +88,7 @@ export const updatePerfil = async (data: {
     if (data.descripcion !== undefined) formData.append("descripcion", data.descripcion);
     if (data.ciudad !== undefined) formData.append("ciudad", data.ciudad ?? "");
     if (data.pais !== undefined) formData.append("pais", data.pais ?? "");
+    if (data.prefijo_celular !== undefined) formData.append("prefijo_celular", data.prefijo_celular ?? "");
     if (data.correo_contacto !== undefined) formData.append("correo_contacto", data.correo_contacto ?? "");
     if (data.enlaces_personalizados !== undefined) {
       formData.append("enlaces_personalizados_json", JSON.stringify(data.enlaces_personalizados));

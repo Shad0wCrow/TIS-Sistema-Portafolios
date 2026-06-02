@@ -38,6 +38,7 @@ import {
   readPreviewCache,
 } from "./components/portafolioUtils";
 import type { SectionId } from "./components/portafolioUtils";
+import { formatPhoneWithPrefix } from "../../utils/countryPhoneOptions";
 
 // ── Colores de acento disponibles ────────────────────────────────────────────
 const COLOR_STORAGE_KEY = "portafolio_accent_color";
@@ -281,6 +282,7 @@ const canvas = await html2canvas(element, {
   const perfil = data?.perfil ?? null;
   const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
   const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
+  const telefonoPerfil = formatPhoneWithPrefix(perfil?.prefijo_celular, perfil?.celular);
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
   const habilidadesBlandas = data?.habilidades_blandas ?? [];
   const proyectos = data?.proyectos ?? [];
@@ -339,7 +341,7 @@ const canvas = await html2canvas(element, {
 
               <div className={styles.profileInfoCard}>
                 <p className={styles.fieldLabel}>Teléfono</p>
-                <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
+                <p className={styles.fieldValue}>{telefonoPerfil || "Sin información"}</p>
               </div>
 
               <div className={styles.profileInfoCard}>

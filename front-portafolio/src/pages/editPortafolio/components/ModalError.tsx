@@ -32,7 +32,7 @@ export default function ModalError({ message, onClose }: ModalErrorProps) {
           </svg>
         </div>
         <p style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", margin: "0 0 6px" }}>
-          Error al eliminar
+          Error en la operación
         </p>
         <p style={{ fontSize: 13, color: "var(--text2)", margin: "0 0 22px", lineHeight: 1.6 }}>
           {message}

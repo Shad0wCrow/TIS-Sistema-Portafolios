@@ -12,6 +12,7 @@ export const createProfile = async (data: {
   foto_url?: string;
   ciudad?: string;
   pais?: string;
+  prefijo_celular?: string;
   correo_contacto?: string;
   enlaces_personalizados?: Array<{ titulo: string; url: string }>;
 }) => {
@@ -27,6 +28,7 @@ export const createProfile = async (data: {
     formData.append("descripcion", data.descripcion);
     if (data.ciudad) formData.append("ciudad", data.ciudad);
     if (data.pais) formData.append("pais", data.pais);
+    if (data.prefijo_celular) formData.append("prefijo_celular", data.prefijo_celular);
     if (data.correo_contacto) formData.append("correo_contacto", data.correo_contacto);
     if (data.enlaces_personalizados) {
       formData.append("enlaces_personalizados_json", JSON.stringify(data.enlaces_personalizados));

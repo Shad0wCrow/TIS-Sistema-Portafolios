@@ -10,6 +10,7 @@ import AdvancedProfileSection, { type ProfileLinkForm } from "./components/Advan
 import ModalSuccess from "../editPortafolio/components/modalSuccess";
 import ModalError from "../editPortafolio/components/ModalError";
 import ProfilePhotoField from "./components/ProfilePhotoField";
+import { DEFAULT_COUNTRY_PHONE, getDepartmentsByCountry, getPhonePrefixByCountry, normalizeDepartmentByCountry } from "../../utils/countryPhoneOptions";
 
 const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
 const SOLO_NUMEROS = /^\+?[0-9\s\-()]{7,20}$/;
@@ -26,6 +27,7 @@ interface FormState {
     descripcion: string;
     ciudad: string;
     pais: string;
+    prefijo_celular: string;
     correo_contacto: string;
 }
 
@@ -37,6 +39,7 @@ interface FormErrors {
     descripcion?: string;
     ciudad?: string;
     pais?: string;
+    prefijo_celular?: string;
     correo_contacto?: string;
     foto?: string;
     [key: string]: string | undefined;
@@ -57,7 +60,8 @@ const EMPTY_FORM: FormState = {
     celular: "",
     descripcion: "",
     ciudad: "",
-    pais: "",
+    pais: DEFAULT_COUNTRY_PHONE.country,
+    prefijo_celular: DEFAULT_COUNTRY_PHONE.prefix,
     correo_contacto: "",
 };
 
@@ -80,6 +84,7 @@ function normalizeSnapshot(form: FormState, fotoUrl: string, enlaces: ProfileLin
             descripcion: form.descripcion.trim(),
             ciudad: form.ciudad.trim(),
             pais: form.pais.trim(),
+            prefijo_celular: form.prefijo_celular.trim(),
             correo_contacto: form.correo_contacto.trim(),
         },
         fotoUrl: fotoUrl.trim(),
@@ -113,11 +118,30 @@ function validar(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): 
     if (limpiaFoto && !URL_VALIDA.test(limpiaFoto)) errs.foto = "La URL de foto debe comenzar con http:// o https://.";
     /*else if (limpiaFoto.length > 100000) errs.foto = "La URL de foto no puede superar 100000 caracteres.";
 */
-    if (form.ciudad.trim() && CARACTERES_PELIGROSOS.test(form.ciudad)) errs.ciudad = "Caracteres no permitidos.";
-    else if (form.ciudad.trim().length > 100) errs.ciudad = "Máximo 100 caracteres.";
-
     if (form.pais.trim() && CARACTERES_PELIGROSOS.test(form.pais)) errs.pais = "Caracteres no permitidos.";
     else if (form.pais.trim().length > 100) errs.pais = "Máximo 100 caracteres.";
+
+    if (!form.pais.trim()) {
+        errs.pais = "El pais es obligatorio.";
+    } else if (!getPhonePrefixByCountry(form.pais)) {
+        errs.pais = "Seleccione un pais de la lista.";
+    }
+
+    if (!form.ciudad.trim()) {
+        errs.ciudad = "Seleccione una ciudad.";
+    } else if (!getDepartmentsByCountry(form.pais).includes(form.ciudad)) {
+        errs.ciudad = "Seleccione una ciudad de la lista.";
+    }
+
+    if (!form.prefijo_celular.trim()) {
+        errs.prefijo_celular = "Seleccione un pais para asignar el prefijo.";
+    }
+
+    if (!form.celular.trim()) {
+        errs.celular = "El telefono es obligatorio.";
+    } else if (!/^[0-9]{7,14}$/.test(form.celular.trim())) {
+        errs.celular = "Ingrese solo numeros, entre 7 y 14 digitos.";
+    }
 
     if (form.correo_contacto.trim()) {
         if (!EMAIL_VALIDO.test(form.correo_contacto.trim())) {
@@ -164,7 +188,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [activeProfileTab, setActiveProfileTab] = useState<"basic" | "advanced">("basic");
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
     useEffect(() => {
@@ -172,14 +195,16 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
             .then((res) => {
                 const p = res.perfil;
                 if (p) {
+                    const loadedPais = p.pais ?? DEFAULT_COUNTRY_PHONE.country;
                     const loadedForm = {
                         nombre_perfil: p.nombre_perfil ?? "",
                         apellido_perfil: p.apellido_perfil ?? "",
                         profesion: p.profesion ?? "",
                         celular: p.celular ?? "",
                         descripcion: p.descripcion ?? "",
-                        ciudad: p.ciudad ?? "",
-                        pais: p.pais ?? "",
+                        ciudad: normalizeDepartmentByCountry(loadedPais, p.ciudad),
+                        pais: loadedPais,
+                        prefijo_celular: p.prefijo_celular ?? (getPhonePrefixByCountry(loadedPais) || DEFAULT_COUNTRY_PHONE.prefix),
                         correo_contacto: p.correo_contacto ?? "",
                     };
                     const loadedFoto = p.foto_url ?? "";
@@ -224,8 +249,10 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
         };
     }
 
-    function handleAdvancedFieldChange(field: "ciudad" | "pais" | "correo_contacto", value: string) {
-        const updated = { ...form, [field]: value };
+    function handleAdvancedFieldChange(field: "ciudad" | "pais" | "prefijo_celular" | "celular" | "correo_contacto", value: string) {
+        const updated = field === "pais"
+            ? { ...form, pais: value, ciudad: "", prefijo_celular: getPhonePrefixByCountry(value) }
+            : { ...form, [field]: value };
         setForm(updated);
         setErrors(validar(updated, fotoUrl, enlaces));
     }
@@ -296,6 +323,7 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                 descripcion: form.descripcion.trim(),
                 ciudad: form.ciudad.trim() || null,
                 pais: form.pais.trim() || null,
+                prefijo_celular: form.prefijo_celular.trim() || null,
                 correo_contacto: form.correo_contacto.trim() || null,
                 foto_url: fotoUrl.trim() || undefined,
                 enlaces_personalizados: cleanLinks,
@@ -381,7 +409,7 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                                 Estás editando tu perfil.
                             </p>
                             <p style={{ margin: "0", fontSize: "12px", color: "var(--text2, #4a5e54)" }}>
-                                Los campos Nombre, Apellido, Profesión y País no se pueden editar porque ya fueron registrados.
+                                Los campos Nombre, Apellido y Profesión no se pueden editar porque ya fueron registrados.
                             </p>
                         </div>
 
@@ -457,20 +485,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                                             <span className={styles.fieldError}>{errors.profesion}</span>
                                         )}
                                     </div>
-                                    <div className={styles.fieldGroup}>
-                                        <label className={styles.label}>Teléfono</label>
-                                        <input
-                                            className={`${styles.input} ${errors.celular && touched.celular ? styles.inputError : ""}`}
-                                            value={form.celular}
-                                            onChange={handleChange("celular")}
-                                            onBlur={handleBlur("celular")}
-                                            placeholder="+591 7XXXXXXX"
-                                            maxLength={20}
-                                        />
-                                        {touched.celular && errors.celular && (
-                                            <span className={styles.fieldError}>{errors.celular}</span>
-                                        )}
-                                    </div>
                                     <div className={`${styles.fieldGroup} ${styles.fieldFull}`}>
                                         <label className={styles.label}>Descripción</label>
                                         <textarea
@@ -494,6 +508,8 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                         <AdvancedProfileSection
                             ciudad={form.ciudad}
                             pais={form.pais}
+                            prefijoCelular={form.prefijo_celular}
+                            celular={form.celular}
                             correoContacto={form.correo_contacto}
                             enlaces={enlaces}
                             errors={errors}
@@ -501,7 +517,6 @@ export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilP
                             onLinkChange={handleLinkChange}
                             onAddLink={handleAddLink}
                             onRemoveLink={handleRemoveLink}
-                            disabledPais={true}
                         />
                     </div>
 
