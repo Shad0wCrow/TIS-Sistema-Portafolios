@@ -31,7 +31,6 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
   const [sugerencias, setSugerencias] = useState<string[]>([]);
   const [imagenFile, setImagenFile] = useState<File | null>(null);
   const [imagenPreview, setImagenPreview] = useState<string | null>(null);
@@ -116,8 +115,7 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
         }
       );
       if (guardado === false) return;
-      setSuccessMsg("¡Certificación registrada correctamente!");
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch (error: any) {
       setErrors({ nombre: "Error al guardar. Revisa los datos." });
     } finally {
@@ -137,9 +135,6 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
           <button className={styles.modalClose} onClick={onClose}>×</button>
         </div>
 
-        {successMsg ? (
-          <div style={{ textAlign: "center", padding: 30 }}>✓ {successMsg}</div>
-        ) : (
           <>
             <div className={styles.modalGrid}>
               {duplicadoWarning && (
@@ -250,7 +245,6 @@ export default function ModalCertificacion({ onClose, onSave, duplicadoWarning }
               </button>
             </div>
           </>
-        )}
 
         {verImagenGrande && imagenPreview && (
           <div 

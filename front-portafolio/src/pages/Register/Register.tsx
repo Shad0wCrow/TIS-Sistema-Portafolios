@@ -40,7 +40,7 @@ function Register() {
     }
 
     if (!acceptTerms) {
-      setErrorTerms("Debes aceptar los términos y condiciones para continuar");
+      setErrorTerms("DebacceptTermses aceptar los términos y condiciones para continuar");
       hasError = true;
     }
 
@@ -171,7 +171,7 @@ function Register() {
               <p>El sistema cuenta con administradores encargados de velar por la integridad de la comunidad. Los administradores tienen la facultad de:</p>
               <ul style={{ paddingLeft: "20px" }}>
                 <li>Revisar y gestionar reportes realizados por otros usuarios o visitantes.</li>
-                <li><strong>Inhabilitar o suspender cuentas</strong> de manera temporal o permanente si se detectan violaciones a estas normas (ej. perfiles falsos o información maliciosa).</li>
+                <li><strong>Inhabilitar o suspender cuentas</strong> de manera temporal o permanente si se detectan violaciones a estas normas (contenido inapropiado,Spa o publicidad no deseada , perfil falso , suplantacion de identidad , informacion falsa o engañosa , violancion de derechos de autor ,acoso o comportamiento abusio entre otros).</li>
               </ul>
               
               <h3 style={{ fontSize: "1.1rem", marginTop: "20px", color: "#111827" }}>3. Privacidad de Datos</h3>

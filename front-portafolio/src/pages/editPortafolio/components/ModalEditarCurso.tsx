@@ -88,87 +88,87 @@ export default function ModalEditarCurso({
           </button>
         </div>
 
-        <div className={styles.modalGrid}>
-          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-            <label htmlFor="edit-curso-nombre">Nombre del curso</label>
-            <input id="edit-curso-nombre" value={curso.titulo} disabled />
-          </div>
+            <div className={styles.modalGrid}>
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edit-curso-nombre">Nombre del curso</label>
+                <input id="edit-curso-nombre" value={curso.titulo} disabled />
+              </div>
 
-          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-            <label htmlFor="edit-curso-institucion">Institucion</label>
-            <input id="edit-curso-institucion" value={curso.institucion} disabled />
-          </div>
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edit-curso-institucion">Institucion</label>
+                <input id="edit-curso-institucion" value={curso.institucion} disabled />
+              </div>
 
-          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-            <label htmlFor="edit-curso-rol">Rol en el curso</label>
-            <input
-              id="edit-curso-rol"
-              value={curso.rol_curso ? ROL_CURSO_LABELS[curso.rol_curso] : "Sin rol"}
-              disabled
-            />
-          </div>
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edit-curso-rol">Rol en el curso</label>
+                <input
+                  id="edit-curso-rol"
+                  value={curso.rol_curso ? ROL_CURSO_LABELS[curso.rol_curso] : "Sin rol"}
+                  disabled
+                />
+              </div>
 
-          <div className={styles.modalField}>
-            <label htmlFor="edit-curso-inicio">Fecha de inicio</label>
-            <input
-              id="edit-curso-inicio"
-              type="date"
-              value={curso.fecha_inicio}
-              disabled
-            />
-          </div>
+              <div className={styles.modalField}>
+                <label htmlFor="edit-curso-inicio">Fecha de inicio</label>
+                <input
+                  id="edit-curso-inicio"
+                  type="date"
+                  value={curso.fecha_inicio}
+                  disabled
+                />
+              </div>
 
-          <div className={styles.modalField}>
-            <label htmlFor="edit-curso-fin">Fecha de fin</label>
-            <input
-              id="edit-curso-fin"
-              type="date"
-              name="fecha_fin"
-              value={form.fecha_fin}
-              min={curso.fecha_inicio}
-              onChange={handleChange}
-            />
-          </div>
+              <div className={styles.modalField}>
+                <label htmlFor="edit-curso-fin">Fecha de fin</label>
+                <input
+                  id="edit-curso-fin"
+                  type="date"
+                  name="fecha_fin"
+                  value={form.fecha_fin}
+                  min={curso.fecha_inicio}
+                  onChange={handleChange}
+                />
+              </div>
 
-          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
-            <label htmlFor="edit-curso-desc">Descripcion</label>
-            <textarea
-              id="edit-curso-desc"
-              name="descripcion"
-              value={form.descripcion}
-              onChange={handleChange}
-              placeholder="Actualiza la descripcion del curso..."
-            />
-          </div>
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edit-curso-desc">Descripcion</label>
+                <textarea
+                  id="edit-curso-desc"
+                  name="descripcion"
+                  value={form.descripcion}
+                  onChange={handleChange}
+                  placeholder="Actualiza la descripcion del curso..."
+                />
+              </div>
 
-          <div className={styles.modalField}>
-            <label htmlFor="edit-curso-vis">Visibilidad</label>
-            <select
-              id="edit-curso-vis"
-              name="visibilidad"
-              value={form.visibilidad}
-              onChange={handleChange}
-            >
-              <option value="publico">Publico</option>
-              <option value="privado">Privado</option>
-            </select>
-          </div>
+              <div className={styles.modalField}>
+                <label htmlFor="edit-curso-vis">Visibilidad</label>
+                <select
+                  id="edit-curso-vis"
+                  name="visibilidad"
+                  value={form.visibilidad}
+                  onChange={handleChange}
+                >
+                  <option value="publico">Publico</option>
+                  <option value="privado">Privado</option>
+                </select>
+              </div>
 
-          {error && (
-            <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`} role="alert">
-              {error}
+              {error && (
+                <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`} role="alert">
+                  {error}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className={styles.modalActions}>
-          <button className={styles.btnCancel} onClick={onClose} disabled={loading}>
-            Cancelar
-          </button>
-          <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
-            {loading ? "Guardando..." : "Guardar cambios"}
-          </button>
-        </div>
+            <div className={styles.modalActions}>
+              <button className={styles.btnCancel} onClick={onClose} disabled={loading}>
+                Cancelar
+              </button>
+              <button className={styles.btnSave} onClick={handleSubmit} disabled={loading}>
+                {loading ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
       </div>
     </div>
   );

@@ -40,7 +40,6 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
   });
   const [errors, setErrors]         = useState<FormErrors>({});
   const [loading, setLoading]       = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
     if (form.es_actual) {
@@ -102,8 +101,7 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
       });
       if (guardado === false) return;
 
-      setSuccessMsg("¡Curso registrado correctamente!");
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch {
       setErrors({ nombre_curso: "Error al guardar. Intenta de nuevo." });
     } finally {
@@ -123,11 +121,6 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
           <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar">×</button>
         </div>
 
-        {successMsg ? (
-          <div style={{ textAlign: "center", padding: "32px 0", color: "var(--accent)", fontWeight: 700, fontSize: 15 }}>
-            ✓ {successMsg}
-          </div>
-        ) : (
           <>
             <div className={styles.modalGrid}>
               {duplicadoWarning && (
@@ -268,7 +261,6 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
               </button>
             </div>
           </>
-        )}
       </div>
     </div>
   );

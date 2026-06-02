@@ -32,7 +32,6 @@ export default function ModalLogro({ onClose, onSave, logro, logrosExistentes = 
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -100,8 +99,7 @@ export default function ModalLogro({ onClose, onSave, logro, logrosExistentes = 
       });
       if (guardado === false) return;
 
-      setSuccessMsg(`¡Logro ${logro ? "actualizado" : "registrado"} correctamente!`);
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch (error: any) {
       console.error(error?.response?.data || error);
       const backErrors = error?.response?.data?.errors;
@@ -134,11 +132,6 @@ export default function ModalLogro({ onClose, onSave, logro, logrosExistentes = 
           <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar formulario de logro">×</button>
         </div>
 
-        {successMsg ? (
-          <div style={{ textAlign: "center", padding: 30 }}>
-            ✓ {successMsg}
-          </div>
-        ) : (
           <>
             <div className={styles.modalGrid}>
               {duplicadoWarning && (
@@ -253,7 +246,6 @@ export default function ModalLogro({ onClose, onSave, logro, logrosExistentes = 
               </button>
             </div>
           </>
-        )}
       </div>
     </div>
   );
