@@ -313,6 +313,66 @@ export const getReportesPorPublicacion = async (params?: {
   return { data, current_page: 1, last_page: 1, total: data.length };
 };
 
+// ── Solicitudes de reactivación (HU-95) ──────────────────────────────────
+
+export type EstadoSolicitud = "pendiente" | "aceptada" | "rechazada";
+
+export interface SolicitudReactivacion {
+  id_solicitud: number;
+  usuario_id: number;
+  nombre_usuario: string;
+  nombre_completo: string | null;
+  correo: string;
+  mensaje: string;
+  estado: EstadoSolicitud;
+  creado_en: string;
+  revisado_en: string | null;
+  admin_id: number | null;
+  admin_nombre_usuario: string | null;
+}
+
+export interface SolicitudesReactivacionResponse {
+  data: SolicitudReactivacion[];
+  current_page: number;
+  last_page: number;
+  total: number;
+}
+
+export const getSolicitudesReactivacion = async (params?: {
+  estado?: EstadoSolicitud | "todos";
+  page?: number;
+  per_page?: number;
+}): Promise<SolicitudesReactivacionResponse> => {
+  const res = await axios.get(`${API}/admin/solicitudes-reactivacion`, {
+    headers: authHeaders(),
+    params,
+  });
+  return res.data;
+};
+
+export const resolverSolicitudReactivacion = async (
+  idSolicitud: number,
+  accion: "aceptar" | "rechazar"
+): Promise<{ message: string; solicitud: SolicitudReactivacion }> => {
+  const res = await axios.patch(
+    `${API}/admin/solicitudes-reactivacion/${idSolicitud}/resolver`,
+    { accion },
+    { headers: authHeaders() }
+  );
+  return res.data;
+};
+
+export const enviarSolicitudReactivacion = async (
+  mensaje: string
+): Promise<{ message: string }> => {
+  const res = await axios.post(
+    `${API}/solicitudes-reactivacion`,
+    { mensaje },
+    { headers: authHeaders() }
+  );
+  return res.data;
+};
+
 // ── Estadísticas e Indicadores (HU-40) ───────────────────────────────────
 
 export interface UserStatsResponse {
