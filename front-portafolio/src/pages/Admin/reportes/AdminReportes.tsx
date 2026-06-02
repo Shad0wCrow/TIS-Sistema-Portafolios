@@ -385,24 +385,30 @@ export default function AdminReportes() {
   useEffect(() => { setPageSolicitudes(1); }, [filtroSolicitud]);
 
   async function resolverSolicitud(accion: "aceptar" | "rechazar") {
-    if (!solicitudActiva) return;
-    setResolviendoSolicitud(true);
-    try {
-      const res = await resolverSolicitudReactivacion(solicitudActiva.id_solicitud, accion);
-      showMessage(res.message);
-      // CA17: actualizar estado en lista
-      setSolicitudes((prev) =>
-        prev.map((s) =>
-          s.id_solicitud === solicitudActiva.id_solicitud ? res.solicitud : s
-        )
-      );
-      setSolicitudActiva(res.solicitud);
-    } catch (err: any) {
-      showError(err?.response?.data?.message || "No se pudo resolver la solicitud.");
-    } finally {
-      setResolviendoSolicitud(false);
+      if (!solicitudActiva) return;
+      setResolviendoSolicitud(true);
+      try {
+        const res = await resolverSolicitudReactivacion(solicitudActiva.id_solicitud, accion);
+        showMessage(res.message);
+
+        const solicitudActualizada: SolicitudReactivacion = {
+          ...solicitudActiva,
+          estado:      res.solicitud.estado,
+          revisado_en: res.solicitud.revisado_en,
+        };
+        
+        setSolicitudes((prev) =>
+          prev.map((s) =>
+            s.id_solicitud === solicitudActiva.id_solicitud ? solicitudActualizada : s
+          )
+        );
+        setSolicitudActiva(solicitudActualizada);
+      } catch (err: any) {
+        showError(err?.response?.data?.message || "No se pudo resolver la solicitud.");
+      } finally {
+        setResolviendoSolicitud(false);
+      }
     }
-  }
 
   // ── Logout ────────────────────────────────────────────────────────────────
   function handleLogout() {

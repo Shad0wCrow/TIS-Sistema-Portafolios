@@ -135,14 +135,28 @@ class SolicitudReactivacionController extends Controller
                 ->update(['eliminado' => false]);
         }
 
+        $solicitud->load(['usuario:id_usuario,nombre_usuario,correo', 'admin:id_usuario,nombre_usuario']);
+
+        $nombreUsuario = $solicitud->usuario ? $solicitud->usuario->nombre_usuario : null;
+        $correo        = $solicitud->usuario ? $solicitud->usuario->correo : null;
+        $adminNombre   = $solicitud->admin   ? $solicitud->admin->nombre_usuario   : null;
+
         return response()->json([
             'message'   => $data['accion'] === 'aceptar'
                 ? 'Cuenta reactivada correctamente.'
                 : 'Solicitud rechazada.',
             'solicitud' => [
-                'id_solicitud' => $solicitud->id_solicitud,
-                'estado'       => $solicitud->estado,
-                'revisado_en'  => $solicitud->revisado_en,
+                'id_solicitud'         => $solicitud->id_solicitud,
+                'usuario_id'           => $solicitud->usuario_id,
+                'nombre_usuario'       => $nombreUsuario,
+                'nombre_completo'      => null,
+                'correo'               => $correo,
+                'mensaje'              => $solicitud->mensaje,
+                'estado'               => $solicitud->estado,
+                'creado_en'            => $solicitud->creado_en,
+                'revisado_en'          => $solicitud->revisado_en,
+                'admin_id'             => $solicitud->admin_id,
+                'admin_nombre_usuario' => $adminNombre,
             ],
         ]);
     }
