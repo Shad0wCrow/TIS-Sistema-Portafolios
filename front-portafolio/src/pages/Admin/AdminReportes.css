@@ -761,6 +761,32 @@
   outline: 2px solid var(--admin-accent);
   outline-offset: 2px;
 }
+
+.ar-resolve-main-btn--danger {
+  border-color: #e8b8ac;
+  color: var(--admin-danger);
+}
+
+.ar-resolve-main-btn--danger:hover {
+  border-color: var(--admin-danger);
+  color: var(--admin-danger);
+  background: var(--admin-danger-soft);
+  box-shadow: 0 2px 8px rgba(155, 53, 32, 0.15);
+}
+
+.ar-resolve-main-btn--danger.ar-resolve-main-btn--ready {
+  border-color: var(--admin-danger);
+  background: var(--admin-danger);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(155, 53, 32, 0.28);
+}
+
+.ar-resolve-main-btn--danger.ar-resolve-main-btn--ready:hover {
+  background: #b8401e;
+  border-color: #b8401e;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(155, 53, 32, 0.38);
+}
  
 /* ══════════════════════════════════════════════════════════════════════
    2. ACCIONES DE CABECERA — FILTROS + BOTÓN EN LÍNEA (CA-1)
