@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\DashboardPortafolioController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ReportePortafolioController;
 use App\Http\Controllers\Api\GithubController;
+use App\Http\Controllers\Api\NotificacionUsuarioController;
 use App\Http\Controllers\Api\AdminVisualizacionesController;
 
 use App\Http\Controllers\Api\SolicitudReactivacionController;
@@ -39,7 +40,7 @@ Route::post('/public/portafolios/{slug}/visualizacion', [PortafolioPublicoContro
 //Reportar portafolio, accesible sin autenticacion obligatoria
 Route::post('/public/portafolios/{slug}/reportar', [ReportePortafolioController::class, 'reportar']);
 Route::post('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'store']);
-// Rutas protegidas 
+// Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
 
 
@@ -53,8 +54,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/github',     [GithubController::class, 'show']);
     Route::post('/github',    [GithubController::class, 'save']);
     Route::get('/github/repos', [GithubController::class, 'repos']);
+    Route::get('/notificaciones', [NotificacionUsuarioController::class, 'index']);
+    Route::get('/notificaciones/resumen', [NotificacionUsuarioController::class, 'resumen']);
+    Route::patch('/notificaciones/leer-todas', [NotificacionUsuarioController::class, 'marcarTodasLeidas']);
+    Route::patch('/notificaciones/{id}/leer', [NotificacionUsuarioController::class, 'marcarLeida']);
 
-    // Pantalla "Edición de Portafolio" 
+    // Pantalla "EdiciÃ³n de Portafolio"
     Route::get('/dashboard/portafolios',          [DashboardPortafolioController::class, 'show']);
     Route::get('/portafolio',                     [PortafolioController::class, 'show']);
     Route::get('/portafolios/publicos',           [PortafoliosPublicosController::class, 'index']);
@@ -72,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/portafolio/proyectos/{id}',      [PortafolioController::class, 'updateProyecto']);
     Route::delete('/portafolio/proyectos/{id}',   [PortafolioController::class, 'removeProyecto']);
 
-    // CRUD habilidades 
+    // CRUD habilidades
     Route::get('/catalogo/habilidades',           [HabilidadController::class, 'catalogo']);
     Route::get('/habilidades',                    [HabilidadController::class, 'index']);
     Route::post('/habilidades',                   [HabilidadController::class, 'store']);
@@ -81,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/habilidades/{id}',            [HabilidadController::class, 'destroy']);
     Route::patch('/habilidades/{id}/visibilidad', [HabilidadController::class, 'updateVisibilidad']);
 
-    // CRUD proyectos 
+    // CRUD proyectos
     Route::get('/proyectos',                      [ProyectoController::class, 'index']);
     Route::post('/proyectos',                     [ProyectoController::class, 'store']);
     Route::get('/proyectos/{id}',                 [ProyectoController::class, 'show']);
@@ -136,13 +141,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/idiomas/{id}',                    [IdiomaController::class, 'destroy']);
     Route::patch('/idiomas/{id}/visibilidad',         [IdiomaController::class, 'updateVisibilidad']);
     Route::put('/idiomas/{id}',                       [IdiomaController::class, 'update']);
-    // HU-23: Configuración de visibilidad de secciones del portafolio
+    // HU-23: ConfiguraciÃ³n de visibilidad de secciones del portafolio
     Route::get('/visibilidad/secciones',  [VisibilidadController::class, 'show']);
     Route::put('/visibilidad/secciones',  [VisibilidadController::class, 'update']);
 
     Route::get('/perfil/sugerencias-profesion', [PerfilController::class, 'sugerenciasProfecion']);
 
-    //Para crear enlaces públicos de portafolio
+    //Para crear enlaces pÃºblicos de portafolio
     Route::post('/portafolio/enlace/generar',  [PortafolioPublicacionController::class, 'generarEnlace']);
     Route::post('/portafolio/enlace/revocar',  [PortafolioPublicacionController::class, 'revocarEnlace']);
 
@@ -158,23 +163,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/usuarios/historial-estados', [AdminController::class, 'historialEstadosUsuario']);
         Route::get('/reportes/resumen', [AdminController::class, 'reporteResumen']);
 
-        // Estadísticas e indicadores
+        // EstadÃ­sticas e indicadores
         Route::get('/estadisticas/usuarios', [AdminController::class, 'estadisticasUsuarios']);
         Route::get('/estadisticas/portafolios', [AdminController::class, 'estadisticasPortafolios']);
         Route::get('/mas-visitados', [AdminVisualizacionesController::class, 'masVisitados']);
-        
-        // Gestión de reportes de portafolios
+
+        // GestiÃ³n de reportes de portafolios
         Route::get('/reportes/portafolios', [ReportePortafolioController::class, 'index']);
         Route::patch('/reportes/portafolios/{id}/resolver', [ReportePortafolioController::class, 'resolver']);
 
-        // Solicitudes de reactivación de cuenta        
+        // Solicitudes de reactivaciÃ³n de cuenta
         Route::get('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'index']);
         Route::patch('/solicitudes-reactivacion/{id}/resolver', [SolicitudReactivacionController::class, 'resolver']);
-        
+
     });
 
 
-    
+
 });
 
 // Debug endpoints for controlling past month views & rankings
@@ -204,12 +209,12 @@ Route::get('/debug/publications', function () {
 Route::post('/debug/publications/{id}/set-visits', function ($id) {
     $visitsTarget = (int) request('visits', 0);
     if ($visitsTarget < 0) {
-        return response()->json(['message' => 'El número de visitas debe ser mayor o igual a 0'], 400);
+        return response()->json(['message' => 'El nÃºmero de visitas debe ser mayor o igual a 0'], 400);
     }
-    
+
     $pub = Illuminate\Support\Facades\DB::table('portafolio_publicacion')->where('id_publicacion', $id)->first();
     if (!$pub) {
-        return response()->json(['message' => 'No se encontró la publicación'], 404);
+        return response()->json(['message' => 'No se encontrÃ³ la publicaciÃ³n'], 404);
     }
 
     $periodo = now()->subMonth();
@@ -242,18 +247,18 @@ Route::post('/debug/publications/{id}/set-visits', function ($id) {
     } elseif ($visitsTarget < $currentCount) {
         $toDelete = $currentCount - $visitsTarget;
         $idsToDelete = $currentVisits->take($toDelete)->pluck('id_visualizacion_evento');
-        
+
         Illuminate\Support\Facades\DB::table('portafolio_visualizacion_evento')
             ->whereIn('id_visualizacion_evento', $idsToDelete)
             ->delete();
     }
 
-    return response()->json(['message' => 'Visitas actualizadas con éxito']);
+    return response()->json(['message' => 'Visitas actualizadas con Ã©xito']);
 });
 
 Route::post('/debug/ranking/close', function () {
     Illuminate\Support\Facades\Artisan::call('ranking:cerrar-mes');
-    return response()->json(['message' => 'Ranking calculado y guardado con éxito']);
+    return response()->json(['message' => 'Ranking calculado y guardado con Ã©xito']);
 });
 
 Route::get('/debug/ranking', function () {
