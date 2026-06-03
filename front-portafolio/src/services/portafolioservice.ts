@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 
 import type {
   ConfiguracionSecciones,
@@ -115,7 +115,7 @@ export const updatePerfil = async (data: {
   return res.data;
 };
 
-// ── Habilidades ───────────────────────────────────────────────────────────────
+// â”€â”€ Habilidades â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getCatalogoHabilidades = async () => {
   const res = await axios.get(`${API}/catalogo/habilidades`, {
     headers: authHeaders(),
@@ -147,7 +147,7 @@ export const removeHabilidad = async (id: number) => {
   return res.data;
 };
 
-// ── Proyectos ─────────────────────────────────────────────────────────────────
+// â”€â”€ Proyectos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const addProyecto = async (data: {
   titulo: string;
   descripcion?: string;
@@ -188,7 +188,7 @@ export const removeProyecto = async (id: number) => {
   return res.data;
 };
 
-// ── GitHub ───────────────────────────────────────────────────────────────────
+// â”€â”€ GitHub â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getGithubConnection = async (): Promise<{
   github_username: string | null;
   github_conectado_en: string | null;
@@ -221,7 +221,7 @@ export const getGithubRepos = async (username?: string): Promise<{
   return res.data;
 };
 
-// ── Cursos ────────────────────────────────────────────────────────────────────
+// â”€â”€ Cursos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const addCurso = async (data: {
   nombre_curso: string;
   institucion: string;
@@ -268,7 +268,7 @@ export const getSugerenciasCurso = async (q: string): Promise<string[]> => {
   return res.data.sugerencias ?? [];
 };
 
-// ── Educación (Grado de Formación) ────────────────────────────────────────────
+// â”€â”€ EducaciÃ³n (Grado de FormaciÃ³n) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getEducaciones = async () => {
   const res = await axios.get(`${API}/educacion`, {
     headers: authHeaders(),
@@ -287,7 +287,7 @@ export const getSugerenciasInstitucion = async (
   return res.data.sugerencias ?? [];
 };
 
-// HU-8: el campo "grado" ahora es obligatorio para educación formal.
+// HU-8: el campo "grado" ahora es obligatorio para educaciÃ³n formal.
 export const addEducacion = async (data: {
   institucion: string;
   titulo: string;
@@ -325,7 +325,7 @@ export const removeEducacion = async (id: number) => {
   return res.data;
 };
 
-// ── Logros ───────────────────────────────────────────────────────────────────
+// â”€â”€ Logros â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getCatalogoEntidades = async () => {
   const res = await axios.get(`${API}/catalogo/entidades`, {
     headers: authHeaders(),
@@ -368,7 +368,7 @@ export const updateLogro = async (
   return res.data;
 };
 
-// ── Experiencia ───────────────────────────────────────────────────────────────
+// â”€â”€ Experiencia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type ExperienciaPayload = {
   nombre_empresa: string;
   puesto: string;
@@ -440,7 +440,7 @@ export const removeIdioma = async (id: number) => {
   return res.data;
 };
 
-// ── Certificaciones ───────────────────────────────────────────────────────────────
+// â”€â”€ Certificaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getCertificaciones = async () => {
   const res = await axios.get(`${API}/certificaciones`, { headers: authHeaders() });
   return res.data.certificaciones;
@@ -525,7 +525,7 @@ export const updateExperiencia = async (id: number, data: ExperienciaUpdatePaylo
   return res.data;
 };
 
-// ── Sugerencias de Empresa (Experiencia) ─────────────────────────────────────
+// â”€â”€ Sugerencias de Empresa (Experiencia) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getSugerenciasEmpresa = async (q: string): Promise<string[]> => {
   if (q.trim().length < 3) return [];
   const res = await axios.get(`${API}/experiencias/sugerencias`, {
@@ -535,7 +535,7 @@ export const getSugerenciasEmpresa = async (q: string): Promise<string[]> => {
   return res.data.sugerencias ?? [];
 };
 
-// ── Sugerencias de Entidad
+// â”€â”€ Sugerencias de Entidad
 export const getSugerenciasEntidad = async (q: string): Promise<string[]> => {
   if (q.trim().length < 3) return [];
   const res = await axios.get(`${API}/logros/sugerencias`, {
@@ -545,7 +545,7 @@ export const getSugerenciasEntidad = async (q: string): Promise<string[]> => {
   return res.data.sugerencias ?? [];
 };
 
-// ── Sugerencias de Idioma ─────────────────────────────────────────────────────
+// â”€â”€ Sugerencias de Idioma â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getSugerenciasIdioma = async (q: string): Promise<string[]> => {
   if (q.trim().length < 2) return [];
   const res = await axios.get(`${API}/idiomas/sugerencias`, {
@@ -555,7 +555,7 @@ export const getSugerenciasIdioma = async (q: string): Promise<string[]> => {
   return res.data.sugerencias ?? [];
 };
 
-// ── Sugerencias de Profesión ──────────────────────────────────────────────────
+// â”€â”€ Sugerencias de ProfesiÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getSugerenciasProfecion = async (q: string): Promise<string[]> => {
   if (q.trim().length < 2) return [];
   const res = await axios.get(`${API}/perfil/sugerencias-profesion`, {
@@ -565,7 +565,7 @@ export const getSugerenciasProfecion = async (q: string): Promise<string[]> => {
   return res.data.sugerencias ?? [];
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function dataUrlToBlob(dataUrl: string): Blob {
   const [header, base64] = dataUrl.split(",");
   const mime = header.match(/:(.*?);/)?.[1] ?? "image/jpeg";
@@ -577,7 +577,7 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
-/** Obtiene la configuración de secciones visibles del portafolio. */
+/** Obtiene la configuraciÃ³n de secciones visibles del portafolio. */
 export const getVisibilidadSecciones = async (): Promise<ConfiguracionSecciones> => {
   const res = await axios.get(`${API}/visibilidad/secciones`, {
     headers: authHeaders(),
@@ -585,7 +585,7 @@ export const getVisibilidadSecciones = async (): Promise<ConfiguracionSecciones>
   return res.data.configuracion;
 };
 
-/** Guarda la configuración de secciones visibles del portafolio. */
+/** Guarda la configuraciÃ³n de secciones visibles del portafolio. */
 export const updateVisibilidadSecciones = async (
   data: ConfiguracionSecciones
 ): Promise<ConfiguracionSecciones> => {
@@ -802,6 +802,67 @@ export const marcarNotificacionLeida = async (
 export const marcarTodasNotificacionesLeidas = async (): Promise<{ no_leidas: number }> => {
   const res = await axios.patch(`${API}/notificaciones/leer-todas`, {}, {
     headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export interface TopPortafolioMes {
+  id_publicacion: number;
+  slug_publico: string;
+  nombre: string;
+  profesion: string | null;
+  foto_url: string | null;
+  total_visualizaciones: number;
+}
+
+export interface TopRankingResponse {
+  portafolios: TopPortafolioMes[];
+  label: string;
+}
+
+export const getTopPortafoliosMes = async (): Promise<TopRankingResponse> => {
+  const res = await axios.get(`${API}/portafolios/top-mes`, {
+    headers: authHeaders(),
+    params: { limite: 3 },
+  });
+  return {
+    portafolios: res.data.portafolios ?? [],
+    label: res.data.periodo?.label ?? "",
+  };
+};
+
+// HU-83: EstadÃ­sticas del portafolio propio
+export interface EstadisticasPortafolio {
+  total_vistas_historico: number;
+  total_guardados_historico: number;
+  vistas_periodo: number;
+  guardados_periodo: number;
+  evolucion_vistas: { fecha: string; cantidad: number }[];
+  secciones: {
+    proyectos: number;
+    educacion: number;
+    cursos: number;
+    experiencia: number;
+    certificaciones: number;
+    logros: number;
+    habilidades: number;
+    idiomas: number;
+  };
+  periodo: {
+    filtro: string;
+    fecha_inicio: string;
+    fecha_fin: string;
+  };
+}
+
+export const getPortafolioEstadisticas = async (params: {
+  filtro?: string;
+  fecha_inicio?: string | null;
+  fecha_fin?: string | null;
+}): Promise<EstadisticasPortafolio> => {
+  const res = await axios.get(`${API}/portafolio/estadisticas`, {
+    headers: authHeaders(),
+    params,
   });
   return res.data;
 };

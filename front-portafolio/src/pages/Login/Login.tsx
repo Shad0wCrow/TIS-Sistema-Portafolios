@@ -305,7 +305,7 @@ function volverALogin() {
 
           <p className="login-inhabilitado-desc" style={{ marginTop: 0 }}>
             Si crees que existe un error, contacta al soporte directamente por
-            fuera de la plataforma en <strong>enigmasoftsrl@gmail.com</strong> .
+            fuera de la plataforma en <a href="mailto:enigmasoftsrl@gmail.com?subject=Revisión%20de%20cuenta%20baneada" style={{ color: "#10b981", textDecoration: "none", fontWeight: "bold" }}>enigmasoftsrl@gmail.com</a>.
           </p>
 
           <button

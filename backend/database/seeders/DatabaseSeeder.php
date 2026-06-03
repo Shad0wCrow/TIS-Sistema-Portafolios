@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             ProyectosSeeder::class,
             PortafolioPublicacionSeeder::class,
             DemoPortfoliosSeeder::class,
+            RankingVisitasSeeder::class,
         ]);
     }
 }

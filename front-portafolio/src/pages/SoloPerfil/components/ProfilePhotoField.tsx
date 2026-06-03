@@ -91,6 +91,7 @@ export default function ProfilePhotoField({
                 <img
                   src={fotoUrl.trim()}
                   alt="Foto de perfil"
+                  crossOrigin="anonymous"
                   onError={() => onError("La URL no pudo cargarse. Revisa el enlace.")}
                 />
               ) : (
@@ -199,7 +200,7 @@ export default function ProfilePhotoField({
                   <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileSelect} />
                   {modalPreview ? (
                     <div className={styles.dropzonePreview}>
-                      <img src={modalPreview} alt="Vista previa" />
+                      <img src={modalPreview} alt="Vista previa" crossOrigin="anonymous" />
                       <span className={styles.dropzoneChange}>Haz clic para cambiar</span>
                     </div>
                   ) : (
@@ -236,7 +237,7 @@ export default function ProfilePhotoField({
                   />
                   {modalPreview && (
                     <div className={styles.modalUrlPreview}>
-                      <img src={modalPreview} alt="Vista previa" onError={() => setModalPreview(null)} />
+                      <img src={modalPreview} alt="Vista previa" crossOrigin="anonymous" onError={() => setModalPreview(null)} />
                     </div>
                   )}
                 </div>

@@ -40,7 +40,7 @@ function Register() {
     }
 
     if (!acceptTerms) {
-      setErrorTerms("Debes aceptar los términos y condiciones para continuar");
+      setErrorTerms("Debe aceptar los términos y condiciones para continuar");
       hasError = true;
     }
 
@@ -127,7 +127,7 @@ function Register() {
               style={{ cursor: "pointer", width: "16px", height: "16px" }}
             />
             <label htmlFor="terms" style={{ cursor: "pointer" }}>
-              Acepto los <button type="button" onClick={() => setShowTermsModal(true)} style={{ background: "none", border: "none", color: "#60a5fa", textDecoration: "underline", cursor: "pointer", padding: 0, fontSize: "0.9rem" }}>Términos y Condiciones</button>
+              Acepto los <button type="button" onClick={() => setShowTermsModal(true)} style={{ background: "none", border: "none", color: "#10b981", textDecoration: "underline", cursor: "pointer", padding: 0, fontSize: "0.9rem" }}>Términos y Condiciones</button>
             </label>
           </div>
           
@@ -153,39 +153,93 @@ function Register() {
       </div>
 
       {showTermsModal && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.7)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "20px"
-        }}>
-          <div style={{
-            background: "#fff", padding: "24px", borderRadius: "12px", maxWidth: "550px", width: "100%", maxHeight: "85vh", overflowY: "auto", color: "#333", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
-          }}>
-            <h2 style={{ marginTop: 0, borderBottom: "1px solid #e5e7eb", paddingBottom: "12px", fontSize: "1.5rem" }}>Términos y Condiciones</h2>
-            <div style={{ fontSize: "0.95rem", lineHeight: "1.6", color: "#4b5563" }}>
-              <p>Bienvenido al Sistema de Portafolios. Al utilizar nuestra plataforma, usted acepta los siguientes términos:</p>
-              
-              <h3 style={{ fontSize: "1.1rem", marginTop: "20px", color: "#111827" }}>1. Uso de la Plataforma y Conducta</h3>
-              <p>Los usuarios se comprometen a publicar información verídica en sus portafolios (experiencia, educación, proyectos, etc.). Queda estrictamente prohibido el contenido inapropiado, spam, acoso o la infracción de derechos de autor.</p>
-              
-              <h3 style={{ fontSize: "1.1rem", marginTop: "20px", color: "#111827" }}>2. Moderación y Funciones de Administrador</h3>
-              <p>El sistema cuenta con administradores encargados de velar por la integridad de la comunidad. Los administradores tienen la facultad de:</p>
-              <ul style={{ paddingLeft: "20px" }}>
-                <li>Revisar y gestionar reportes realizados por otros usuarios o visitantes.</li>
-                <li><strong>Inhabilitar o suspender cuentas</strong> de manera temporal o permanente si se detectan violaciones a estas normas (ej. perfiles falsos o información maliciosa).</li>
-              </ul>
-              
-              <h3 style={{ fontSize: "1.1rem", marginTop: "20px", color: "#111827" }}>3. Privacidad de Datos</h3>
-              <p>La información configurada como "privada" en su portafolio no será expuesta públicamente. Sin embargo, los administradores pueden revisar el estado de las cuentas en caso de reportes para fines de moderación.</p>
+  <div style={{
+    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(16, 185, 129, 0.3)", // Fondo translúcido verde
+    backdropFilter: "blur(5px)", // Efecto cristal/desenfoque moderno
+    display: "flex", justifyContent: "center", alignItems: "center", 
+    zIndex: 1000, padding: "20px",
+    fontFamily: "'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" // Tipografía limpia
+  }}>
+    <div style={{
+      background: "#ffffff", 
+      padding: "32px", 
+      borderRadius: "16px", // Bordes más redondeados
+      maxWidth: "600px", 
+      width: "100%", 
+      maxHeight: "85vh", 
+      display: "flex", 
+      flexDirection: "column",
+      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 15px rgba(0,0,0,0.05)" // Sombra más suave y profunda
+    }}>
+      
+      {/* Cabecera del Modal */}
+      <div style={{ borderBottom: "2px solid #f1f5f9", paddingBottom: "16px", marginBottom: "20px" }}>
+        <h2 style={{ margin: 0, fontSize: "1.5rem", color: "#0f172a", fontWeight: "700" }}>
+          Términos y Condiciones
+        </h2>
+      </div>
+      
+      
+      <div 
+        tabIndex={0}
+        aria-label="Contenido de los términos y condiciones"
+        style={{ fontSize: "0.95rem", lineHeight: "1.7", color: "#475569", overflowY: "auto", paddingRight: "8px" }}
+      >
+        <p style={{ marginTop: 0 }}>Bienvenido al Sistema de Portafolios. Al utilizar nuestra plataforma, usted acepta los siguientes términos:</p>
+        
+        <h3 style={{ fontSize: "1.1rem", marginTop: "24px", marginBottom: "8px", color: "#1e293b", fontWeight: "600" }}>
+          1. Uso de la Plataforma y Conducta
+        </h3>
+        <p style={{ margin: 0 }}>Los usuarios se comprometen a publicar información verídica en sus portafolios (experiencia, educación, proyectos, etc.). Queda estrictamente prohibido el contenido inapropiado, el spam, el acoso o la infracción de derechos de autor.</p>
+        
+        <h3 style={{ fontSize: "1.1rem", marginTop: "24px", marginBottom: "8px", color: "#1e293b", fontWeight: "600" }}>
+          2. Moderación y Funciones de Administrador
+        </h3>
+        <p style={{ margin: 0 }}>El sistema cuenta con administradores encargados de velar por la integridad de la comunidad. Los administradores tienen la facultad de:</p>
+        <ul style={{ paddingLeft: "24px", marginTop: "8px", marginBottom: "0" }}>
+          <li style={{ marginBottom: "8px" }}>Revisar y gestionar reportes realizados por otros usuarios o visitantes.</li>
+          <li><strong>Inhabilitar o suspender cuentas</strong> de manera temporal o permanente si se detectan violaciones a estas normas (contenido inapropiado, spam o publicidad no deseada, perfil falso, suplantación de identidad, información falsa o engañosa, violación de derechos de autor, acoso o comportamiento abusivo, entre otros).</li>
+        </ul>
+        
+        <h3 style={{ fontSize: "1.1rem", marginTop: "24px", marginBottom: "8px", color: "#1e293b", fontWeight: "600" }}>
+          3. Privacidad de Datos
+        </h3>
+        <p style={{ margin: 0 }}>La información configurada como "privada" en su portafolio no será expuesta públicamente. Sin embargo, los administradores pueden revisar el estado de las cuentas y su contenido interno en caso de reportes para fines de moderación y seguridad.</p>
 
-              <h3 style={{ fontSize: "1.1rem", marginTop: "20px", color: "#111827" }}>4. Soporte y Contacto</h3>
-              <p>Para consultas, aclaraciones sobre la inhabilitación de cuentas o soporte técnico, por favor comuníquese a nuestro correo oficial de referencia: <a href="mailto:Enigmasoftsrl@gmail.com" style={{ color: "#2563eb", textDecoration: "none" }}>Enigmasoftsrl@gmail.com</a>.</p>
-            </div>
-            <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end", borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
-              <button type="button" onClick={() => setShowTermsModal(false)} style={{ background: "#111827", color: "#fff", border: "none", padding: "10px 24px", borderRadius: "6px", cursor: "pointer", fontWeight: "500" }}>Entendido</button>
-            </div>
-          </div>
-        </div>
-      )}
+        <h3 style={{ fontSize: "1.1rem", marginTop: "24px", marginBottom: "8px", color: "#1e293b", fontWeight: "600" }}>
+          4. Soporte y Contacto
+        </h3>
+        <p style={{ margin: 0 }}>Para consultas, aclaraciones sobre la inhabilitación de cuentas o soporte técnico, por favor comuníquese a nuestro correo oficial de referencia: <a href="mailto:Enigmasoftsrl@gmail.com?subject=Consulta%20Soporte%20Portafolios" style={{ color: "#10b981", textDecoration: "none", fontWeight: "500" }}>Enigmasoftsrl@gmail.com</a>.</p>
+      </div>
+      
+      {/* Footer del Modal (Botón) */}
+      <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end", borderTop: "2px solid #f1f5f9", paddingTop: "20px" }}>
+        <button 
+          type="button" 
+          onClick={() => setShowTermsModal(false)} 
+          style={{ 
+            background: "#10b981", // Verde moderno
+            color: "#ffffff", 
+            border: "none", 
+            padding: "12px 28px", 
+            borderRadius: "8px", 
+            cursor: "pointer", 
+            fontWeight: "600",
+            fontSize: "0.95rem",
+            boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.2)", // Sombra del botón
+            transition: "all 0.2s ease-in-out"
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#059669"}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#10b981"}
+>
+          Entendido
+        </button>
+      </div>
+      
+    </div>
+  </div>
+)}
     </AuthLayout>
   );
 }

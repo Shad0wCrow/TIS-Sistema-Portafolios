@@ -171,6 +171,16 @@ function darkenHex(hex: string, factor: number) {
   return `rgb(${dr}, ${dg}, ${db})`;
 }
 
+export function resetAccentColor(): void {
+  document.documentElement.style.removeProperty("--color-accent");
+  document.documentElement.style.removeProperty("--color-accent-soft");
+  document.documentElement.style.removeProperty("--color-accent-dark");
+  document.documentElement.style.removeProperty("--color-accent-bg");
+  document.documentElement.style.removeProperty("--color-accent-bg2");
+  document.documentElement.style.removeProperty("--color-accent-border");
+  document.documentElement.style.removeProperty("--color-accent-ring");
+}
+
 export function applyAccentColor(color: string): void {
   const { r, g, b } = hexToRgb(color);
 

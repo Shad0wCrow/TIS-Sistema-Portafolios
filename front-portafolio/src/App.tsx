@@ -13,6 +13,7 @@ import PortafolioPublico from "./pages/portafolio/PortafolioPublico";
 import EditarPerfil from "./pages/SoloPerfil/editarPerfil";
 import ConfiguracionPublicacion from "./pages/Visibilidad/ConfiguracionPublicacion";
 import PublicarPortafolio from "./pages/Publicar/PublicarPortafolio";
+import Estadisticas from "./pages/Estadisticas/Estadisticas";
 
 // Admin — Dashboard: solo estadísticas de usuarios
 import AdminDashboard from "./pages/Admin/AdminDashboard";
@@ -20,6 +21,8 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminReportes from "./pages/Admin/reportes/AdminReportes";
 import EstadisticasUsuarios from "./pages/Admin/reportes/EstadisticasUsuarios";
 import EstadisticasPortafolios from "./pages/Admin/reportes/EstadisticasPortafolios";
+// Nueva vista de Portafolios Más Visitados
+import AdminPortafoliosVisitados from "./pages/Admin/AdminPortafoliosVisitados";
 
 import CvGenerator from "./pages/editPortafolio/CvGenerator";
 
@@ -76,6 +79,16 @@ function App() {
         element={
           <AdminRoute>
             <EstadisticasPortafolios />
+          </AdminRoute>
+        }
+      />
+
+      {/* /admin/mas-visitados → portafolios más visitados */}
+      <Route
+        path="/admin/mas-visitados"
+        element={
+          <AdminRoute>
+            <AdminPortafoliosVisitados />
           </AdminRoute>
         }
       />
@@ -160,8 +173,18 @@ function App() {
         }
       />
 
+      <Route
+        path="/portafolio/estadisticas"
+        element={
+          <PortafolioRoute>
+            <Estadisticas />
+          </PortafolioRoute>
+        }
+      />
+
       <Route path="/generar-cv" element={<CvGenerator />} />
     </Routes>
+    
   );
 }
 

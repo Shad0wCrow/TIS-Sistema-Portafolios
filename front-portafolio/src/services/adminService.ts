@@ -91,6 +91,18 @@ export const getAdminUsers = async (params: {
   return res.data;
 };
 
+export const getPortafoliosMasVisitados = async (
+  periodo: string,
+  fecha?: string,
+  limit: number = 15
+) => {
+  const res = await axios.get(`${API}/admin/mas-visitados`, {
+    headers: authHeaders(),
+    params: { periodo, fecha, limit },
+  });
+  return res.data;
+};
+
 export const updateAdminUserStatus = async (
   id: number,
   eliminado: boolean
