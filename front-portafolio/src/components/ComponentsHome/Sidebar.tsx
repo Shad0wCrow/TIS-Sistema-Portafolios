@@ -43,32 +43,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
   ];
 
   const quickActions: Record<string, QuickAction[]> = {
-    inicio: [
-      { label: 'Inicio', description: 'Volver al tablero principal', action: 'inicio' },
-      { label: 'Notificaciones', description: 'Revisar alertas recientes', action: 'notificaciones' },
-      { label: 'Guardados', description: 'Abrir portafolios guardados', action: 'bookmarks' },
-    ],
-    perfil: [
-      { label: 'Editar perfil', description: 'Actualizar datos personales', action: 'perfil' },
-      { label: 'Completar cuenta', description: 'Crear o finalizar tu perfil', action: 'crear-perfil' },
-    ],
     portafolio: [
       { label: 'Editar portafolio', description: 'Modificar secciones y contenido', action: 'portafolio' },
       { label: 'Vista previa', description: 'Revisar como se vera tu portafolio', action: 'vista-portafolio' },
       { label: 'Publicar', description: 'Configurar enlace publico', action: 'publicar' },
       { label: 'Visibilidad', description: 'Controlar secciones visibles', action: 'visibilidad' },
       { label: 'Generar CV', description: 'Crear un CV desde tu informacion', action: 'generar-cv' },
-    ],
-    estadisticas: [
-      { label: 'Estadisticas', description: 'Ver visitas e indicadores', action: 'estadisticas' },
-      { label: 'Publicacion', description: 'Gestionar enlace publico', action: 'publicar' },
-    ],
-    bookmarks: [
-      { label: 'Guardados', description: 'Ver portafolios favoritos', action: 'bookmarks' },
-      { label: 'Explorar', description: 'Volver al listado principal', action: 'inicio' },
-    ],
-    salir: [
-      { label: 'Cerrar sesion', description: 'Salir de tu cuenta actual', action: 'salir' },
     ],
   };
 
@@ -216,12 +196,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
             const actions = quickActions[item.id] ?? [];
 
             return (
-              <div className="dashboard-menu-group" key={item.id}>
+              <div
+                className={`dashboard-menu-group${actions.length > 0 ? ' dashboard-menu-group-has-panel' : ''}`}
+                key={item.id}
+              >
                 <button
                   className={`dashboard-menu-item ${selectedItem === item.id ? 'dashboard-menu-item-active' : ''}`}
                   onClick={() => handleNavigation(item.id)}
                   type="button"
-                  aria-describedby={`quick-actions-${item.id}`}
+                  aria-describedby={actions.length > 0 ? `quick-actions-${item.id}` : undefined}
                 >
                   <img
                     src={item.icon}
@@ -232,30 +215,32 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
                   <span className="dashboard-menu-text">{item.name}</span>
                 </button>
 
-                <div
-                  id={`quick-actions-${item.id}`}
-                  className="dashboard-quick-panel"
-                  role="menu"
-                  aria-label={`Accesos de ${item.name}`}
-                >
-                  <div className="dashboard-quick-panel-title">{item.name}</div>
-                  <div className="dashboard-quick-panel-list">
-                    {actions.map((quickAction) => (
-                      <button
-                        key={quickAction.action}
-                        type="button"
-                        className="dashboard-quick-action"
-                        role="menuitem"
-                        onClick={() => handleQuickAction(quickAction.action)}
-                      >
-                        <span className="dashboard-quick-action-label">{quickAction.label}</span>
-                        <span className="dashboard-quick-action-description">
-                          {quickAction.description}
-                        </span>
-                      </button>
-                    ))}
+                {actions.length > 0 && (
+                  <div
+                    id={`quick-actions-${item.id}`}
+                    className="dashboard-quick-panel"
+                    role="menu"
+                    aria-label={`Accesos de ${item.name}`}
+                  >
+                    <div className="dashboard-quick-panel-title">{item.name}</div>
+                    <div className="dashboard-quick-panel-list">
+                      {actions.map((quickAction) => (
+                        <button
+                          key={quickAction.action}
+                          type="button"
+                          className="dashboard-quick-action"
+                          role="menuitem"
+                          onClick={() => handleQuickAction(quickAction.action)}
+                        >
+                          <span className="dashboard-quick-action-label">{quickAction.label}</span>
+                          <span className="dashboard-quick-action-description">
+                            {quickAction.description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
