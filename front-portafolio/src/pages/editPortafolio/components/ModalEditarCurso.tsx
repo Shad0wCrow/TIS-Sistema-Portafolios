@@ -123,7 +123,7 @@ export default function ModalEditarCurso({
                   Fecha de fin
                   {!!curso.fecha_fin && (
                     <span style={{ marginLeft: 6, fontSize: "11px", color: "var(--text3, #888)", fontWeight: 400 }}>
-                      &nbsp;(bloqueado)
+                      &nbsp;
                     </span>
                   )}
                 </label>
