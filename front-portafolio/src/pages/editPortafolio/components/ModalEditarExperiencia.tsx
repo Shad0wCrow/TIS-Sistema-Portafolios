@@ -109,7 +109,14 @@ export default function ModalEditarExperiencia({
               <input id="edit-exp-inicio" type="date" className={styles.input} value={experiencia.fecha_inicio} disabled />
             </div>
             <div className={styles.field}>
-              <label className={styles.label} htmlFor="edit-exp-fin">Fecha de fin</label>
+              <label className={styles.label} htmlFor="edit-exp-fin">
+                Fecha de fin
+                {!experiencia.es_actual && !!experiencia.fecha_fin && (
+                  <span style={{ marginLeft: 6, fontSize: "11px", color: "var(--text3, #888)", fontWeight: 400 }}>
+                    &nbsp;(bloqueado)
+                  </span>
+                )}
+              </label>
               <input
                 id="edit-exp-fin"
                 type="date"
@@ -118,13 +125,19 @@ export default function ModalEditarExperiencia({
                 value={form.fecha_fin}
                 min={experiencia.fecha_inicio}
                 onChange={handleChange}
+                disabled={!experiencia.es_actual && !!experiencia.fecha_fin}
+                title={
+                  !experiencia.es_actual && !!experiencia.fecha_fin
+                    ? "La fecha de fin no se puede modificar porque ya fue definida al registrar"
+                    : undefined
+                }
               />
             </div>
           </div>
 
           {experiencia.es_actual && (
             <p className={styles.error} style={{ color: "var(--text3)" }}>
-              Al registrar una fecha de fin, la experiencia dejara de marcarse como actual.
+              Al registrar una fecha de fin, la experiencia dejará de marcarse como actual.
             </p>
           )}
 
