@@ -119,7 +119,14 @@ export default function ModalEditarCurso({
               </div>
 
               <div className={styles.modalField}>
-                <label htmlFor="edit-curso-fin">Fecha de fin</label>
+                <label htmlFor="edit-curso-fin">
+                  Fecha de fin
+                  {!!curso.fecha_fin && (
+                    <span style={{ marginLeft: 6, fontSize: "11px", color: "var(--text3, #888)", fontWeight: 400 }}>
+                      &nbsp;(bloqueado)
+                    </span>
+                  )}
+                </label>
                 <input
                   id="edit-curso-fin"
                   type="date"
@@ -127,6 +134,12 @@ export default function ModalEditarCurso({
                   value={form.fecha_fin}
                   min={curso.fecha_inicio}
                   onChange={handleChange}
+                  disabled={!!curso.fecha_fin}
+                  title={
+                    curso.fecha_fin
+                      ? "La fecha de fin no se puede modificar porque ya fue definida al registrar"
+                      : undefined
+                  }
                 />
               </div>
 
