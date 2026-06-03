@@ -127,9 +127,7 @@ export default function ModalEditarEducacion({
             <label htmlFor="edit-edu-fin">
               Fecha de fin
               {!!educacion.fecha_fin && (
-                <span style={{ marginLeft: 6, fontSize: "11px", color: "var(--text3, #888)", fontWeight: 400 }}>
-                  &nbsp;(bloqueado)
-                </span>
+                <span className={styles.fieldHint}>(bloqueado)</span>
               )}
             </label>
             <input
