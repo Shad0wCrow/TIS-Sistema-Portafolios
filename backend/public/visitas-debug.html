@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Visitas (Debug)</title>
+    <style>
+        :root {
+            --color-green: #16a34a;
+            --color-green-hover: #15803d;
+            --color-border: #d1d5db;
+            --color-bg: #f9fafb;
+            --color-text: #111827;
+            --color-text-muted: #4b5563;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #ffffff;
+            color: var(--color-text);
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        p.subtitle {
+            color: var(--color-text-muted);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        section {
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 20px;
+            background-color: var(--color-bg);
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border: 1px solid var(--color-green);
+            background-color: var(--color-green);
+            color: #ffffff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--color-green-hover);
+            border-color: var(--color-green-hover);
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+
+        .input-visits {
+            width: 70px;
+            padding: 4px 6px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .input-visits:focus {
+            outline: none;
+            border-color: var(--color-green);
+        }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .item {
+            background-color: #ffffff;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-info h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .item-info p {
+            font-size: 13px;
+            color: var(--color-text-muted);
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Ranking */
+        .rank-badge {
+            font-weight: 700;
+            color: var(--color-green);
+            font-size: 16px;
+            min-width: 25px;
+        }
+
+        .rank-views {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1f2937;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <header>
+            <h1>Control de Visitas del Mes Pasado</h1>
+            <p class="subtitle">Herramienta minimalista para simular vistas y recalcular el ranking mensual (Mayo 2026)</p>
+        </header>
+
+        <div class="grid">
+            <!-- Portafolios -->
+            <section>
+                <h2>Portafolios Públicos</h2>
+                <div class="list" id="publication-list">
+                    <p style="color: var(--color-text-muted);">Cargando...</p>
+                </div>
+            </section>
+
+            <!-- Ranking -->
+            <section>
+                <h2>
+                    <span>Ranking</span>
+                    <button class="btn" onclick="cerrarMes()">Recalcular</button>
+                </h2>
+                <div class="list" id="ranking-list">
+                    <p style="color: var(--color-text-muted);">Sin datos cargados.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Notificación</div>
+
+    <script>
+        const API_BASE = '/api/debug';
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2500);
+        }
+
+        async function fetchPublications() {
+            try {
+                const response = await fetch(`${API_BASE}/publications`);
+                const data = await response.json();
+                
+                const listEl = document.getElementById('publication-list');
+                listEl.innerHTML = '';
+
+                if (data.length === 0) {
+                    listEl.innerHTML = '<p style="color: var(--color-text-muted);">No hay portafolios públicos registrados.</p>';
+                    return;
+                }
+
+                data.forEach(pub => {
+                    const nombre = pub.nombre_perfil ? `${pub.nombre_perfil} ${pub.apellido_perfil || ''}` : pub.nombre_usuario;
+                    const row = document.createElement('div');
+                    row.className = 'item';
+                    row.innerHTML = `
+                        <div class="item-info">
+                            <h3>${nombre}</h3>
+                            <p>@${pub.nombre_usuario} (/${pub.slug_publico})</p>
+                        </div>
+                        <div class="controls">
+                            <input type="number" class="input-visits" id="input-${pub.id_publicacion}" value="${pub.visitas_mes_pasado}" min="0">
+                            <button class="btn btn-small" onclick="saveVisits(${pub.id_publicacion})">Guardar</button>
+                        </div>
+                    `;
+                    listEl.appendChild(row);
+                });
+            } catch (error) {
+                console.error(error);
+                showToast('Error al cargar datos');
+            }
+        }
+
+        async function fetchRanking() {
+            try {
+                const response = await fetch(`${API_BASE}/ranking`);
+                const data = await response.json();
+                
+                const listEl = document.getElementById('ranking-list');
+                listEl.innerHTML = '';
+
+                if (data.length === 0) {
+                    listEl.innerHTML = '<p style="color: var(--color-text-muted);">El ranking está vacío.</p>';
+                    return;
+                }
+                
+                data.forEach(item => {
+                    const nombre = item.nombre_perfil ? `${item.nombre_perfil} ${item.apellido_perfil || ''}` : item.nombre_usuario;
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'item';
+                    itemEl.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="rank-badge">#${item.posicion}</span>
+                            <div class="item-info">
+                                <h3>${nombre}</h3>
+                                <p>@${item.nombre_usuario}</p>
+                            </div>
+                        </div>
+                        <span class="rank-views">${item.total_visualizaciones} vistas</span>
+                    `;
+                    listEl.appendChild(itemEl);
+                });
+            } catch (error) {
+                console.error(error);
+                showToast('Error al obtener ranking');
+            }
+        }
+
+        async function saveVisits(id) {
+            try {
+                const inputEl = document.getElementById(`input-${id}`);
+                const value = parseInt(inputEl.value) || 0;
+
+                const response = await fetch(`${API_BASE}/publications/${id}/set-visits`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ visits: value })
+                });
+                
+                if (response.ok) {
+                    showToast('Visitas actualizadas');
+                } else {
+                    const err = await response.json();
+                    showToast(err.message || 'Error');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error de conexión');
+            }
+        }
+
+        async function cerrarMes() {
+            try {
+                const response = await fetch(`${API_BASE}/ranking/close`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    showToast('Ranking recalculado');
+                    await fetchRanking();
+                } else {
+                    showToast('Error al recalcular');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error de conexión');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchPublications();
+            fetchRanking();
+        });
+    </script>
+</body>
+</html>

@@ -13,6 +13,7 @@ const MEDAL = [
 export default function TopRankingSection() {
   const navigate = useNavigate();
   const [top, setTop] = useState<TopPortafolioMes[]>([]);
+  const [periodoLabel, setPeriodoLabel] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,10 @@ export default function TopRankingSection() {
     setLoading(true);
     getTopPortafoliosMes()
       .then((data) => {
-        if (!cancelled) setTop(data);
+        if (!cancelled) {
+          setTop(data.portafolios);
+          setPeriodoLabel(data.label);
+        }
       })
       .catch(() => {
         if (!cancelled) setError("No se pudo cargar el ranking mensual.");
@@ -35,10 +39,10 @@ export default function TopRankingSection() {
   return (
     <section className="top-ranking-section" aria-label="Ranking mensual de portafolios">
       <div className="top-ranking-header">
-        <span className="publication-kicker">Ranking mensual</span>
-        <h2 className="top-ranking-title">Top 3 más visitados del mes</h2>
+        <span className="publication-kicker">Ranking mensual {periodoLabel ? `(${periodoLabel})` : ""}</span>
+        <h2 className="top-ranking-title">Top 3 más visitados de {periodoLabel || "el mes anterior"}</h2>
         <p className="top-ranking-subtitle">
-          Los portafolios con más visitas en el periodo actual.
+          Los portafolios con más visitas correspondientes al periodo de {periodoLabel || "cálculo"}.
         </p>
       </div>
 

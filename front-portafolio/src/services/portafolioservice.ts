@@ -758,10 +758,18 @@ export interface TopPortafolioMes {
   total_visualizaciones: number;
 }
  
-export const getTopPortafoliosMes = async (): Promise<TopPortafolioMes[]> => {
+export interface TopRankingResponse {
+  portafolios: TopPortafolioMes[];
+  label: string;
+}
+ 
+export const getTopPortafoliosMes = async (): Promise<TopRankingResponse> => {
   const res = await axios.get(`${API}/portafolios/top-mes`, {
     headers: authHeaders(),
     params: { limite: 3 },
   });
-  return res.data.portafolios ?? [];
+  return {
+    portafolios: res.data.portafolios ?? [],
+    label: res.data.periodo?.label ?? "",
+  };
 };

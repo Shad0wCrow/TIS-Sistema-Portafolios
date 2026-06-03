@@ -174,3 +174,103 @@ Route::middleware('auth:sanctum')->group(function () {
 
     
 });
+
+// Debug endpoints for controlling past month views & rankings
+Route::get('/debug/publications', function () {
+    $periodo = now()->subMonth();
+    $inicioMes = $periodo->copy()->startOfMonth()->toDateString();
+    $finMes = $periodo->copy()->endOfMonth()->toDateString();
+
+    $publications = Illuminate\Support\Facades\DB::table('portafolio_publicacion as pub')
+        ->join('usuario', 'usuario.id_usuario', '=', 'pub.usuario_id')
+        ->leftJoin('perfil', 'perfil.usuario_id', '=', 'pub.usuario_id')
+        ->where('pub.publicado', true)
+        ->select([
+            'pub.id_publicacion',
+            'pub.usuario_id',
+            'pub.slug_publico',
+            'usuario.nombre_usuario',
+            'perfil.nombre_perfil',
+            'perfil.apellido_perfil',
+            Illuminate\Support\Facades\DB::raw("(SELECT COUNT(*) FROM portafolio_visualizacion_evento WHERE publicacion_id = pub.id_publicacion AND fecha_visita BETWEEN '$inicioMes' AND '$finMes') as visitas_mes_pasado")
+        ])
+        ->get();
+
+    return response()->json($publications);
+});
+
+Route::post('/debug/publications/{id}/set-visits', function ($id) {
+    $visitsTarget = (int) request('visits', 0);
+    if ($visitsTarget < 0) {
+        return response()->json(['message' => 'El número de visitas debe ser mayor o igual a 0'], 400);
+    }
+    
+    $pub = Illuminate\Support\Facades\DB::table('portafolio_publicacion')->where('id_publicacion', $id)->first();
+    if (!$pub) {
+        return response()->json(['message' => 'No se encontró la publicación'], 404);
+    }
+
+    $periodo = now()->subMonth();
+    $inicioMes = $periodo->copy()->startOfMonth()->toDateString();
+    $finMes = $periodo->copy()->endOfMonth()->toDateString();
+
+    $currentVisits = Illuminate\Support\Facades\DB::table('portafolio_visualizacion_evento')
+        ->where('publicacion_id', $id)
+        ->whereBetween('fecha_visita', [$inicioMes, $finMes])
+        ->get();
+
+    $currentCount = $currentVisits->count();
+
+    if ($visitsTarget > $currentCount) {
+        $toInsert = $visitsTarget - $currentCount;
+        for ($i = 0; $i < $toInsert; $i++) {
+            $fecha = $periodo->copy()->startOfMonth()->addDays(rand(0, $periodo->copy()->startOfMonth()->daysInMonth - 1))->toDateString();
+            Illuminate\Support\Facades\DB::table('portafolio_visualizacion_evento')->insert([
+                'publicacion_id' => $id,
+                'usuario_id_propietario' => $pub->usuario_id,
+                'usuario_id_visitante' => null,
+                'slug_publico' => $pub->slug_publico,
+                'session_key' => 'session_debug_' . $id . '_' . uniqid(),
+                'fecha_visita' => $fecha,
+                'ip_hash' => md5('ip_' . uniqid()),
+                'user_agent' => 'Debug Panel',
+                'creado_en' => now(),
+            ]);
+        }
+    } elseif ($visitsTarget < $currentCount) {
+        $toDelete = $currentCount - $visitsTarget;
+        $idsToDelete = $currentVisits->take($toDelete)->pluck('id_visualizacion_evento');
+        
+        Illuminate\Support\Facades\DB::table('portafolio_visualizacion_evento')
+            ->whereIn('id_visualizacion_evento', $idsToDelete)
+            ->delete();
+    }
+
+    return response()->json(['message' => 'Visitas actualizadas con éxito']);
+});
+
+Route::post('/debug/ranking/close', function () {
+    Illuminate\Support\Facades\Artisan::call('ranking:cerrar-mes');
+    return response()->json(['message' => 'Ranking calculado y guardado con éxito']);
+});
+
+Route::get('/debug/ranking', function () {
+    $periodo = now()->subMonth();
+    $top = Illuminate\Support\Facades\DB::table('ranking_mensual as r')
+        ->join('portafolio_publicacion as pub', 'pub.id_publicacion', '=', 'r.publicacion_id')
+        ->join('usuario', 'usuario.id_usuario', '=', 'pub.usuario_id')
+        ->leftJoin('perfil', 'perfil.usuario_id', '=', 'pub.usuario_id')
+        ->where('r.anio', $periodo->year)
+        ->where('r.mes', $periodo->month)
+        ->orderBy('r.posicion')
+        ->get([
+            'r.posicion',
+            'r.total_visualizaciones',
+            'pub.slug_publico',
+            'usuario.nombre_usuario',
+            'perfil.nombre_perfil',
+            'perfil.apellido_perfil',
+            'perfil.profesion'
+        ]);
+    return response()->json($top);
+});
