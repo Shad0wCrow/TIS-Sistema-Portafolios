@@ -6,6 +6,7 @@ import UserIcon from '../../assets/icons/perfil.svg';
 import BriefcaseIcon from '../../assets/icons/Briefcase.svg';
 import BookmarkIcon from '../../assets/icons/Bookmark.svg';
 import LogoutIcon from '../../assets/icons/Logout.svg';
+import ChartIcon from '../../assets/icons/Chart.svg';
 
 import ModalCrearPortafolio from '../portafolio/ModalCrearPortafolio';
 
@@ -27,11 +28,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const menuItems: MenuItem[] = [
-    { id: 'inicio',     name: 'Inicio',    icon: HomeIcon      },
-    { id: 'perfil',     name: 'Perfil',    icon: UserIcon      },
-    { id: 'portafolio', name: 'Portafolio', icon: BriefcaseIcon },
-    { id: 'bookmarks',  name: 'Guardados', icon: BookmarkIcon  },
-    { id: 'salir',      name: 'Salir',     icon: LogoutIcon    },
+    { id: 'inicio',       name: 'Inicio',       icon: HomeIcon      },
+    { id: 'perfil',       name: 'Perfil',       icon: UserIcon      },
+    { id: 'portafolio',   name: 'Portafolio',   icon: BriefcaseIcon },
+    { id: 'estadisticas', name: 'Estadísticas', icon: ChartIcon     },
+    { id: 'bookmarks',    name: 'Guardados',    icon: BookmarkIcon  },
+    { id: 'salir',        name: 'Salir',        icon: LogoutIcon    },
   ];
 
   useEffect(() => {
@@ -93,6 +95,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
         }
         break;
 
+      case 'estadisticas':
+        navigate('/portafolio/estadisticas');
+        break;
+
       case 'bookmarks':
         if (onNavigate) {
           onNavigate('bookmarks');
@@ -133,6 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
   const routeActiveItem = (): string => {
     if (location.pathname.startsWith('/guardados')) return 'bookmarks';
     if (location.pathname.startsWith('/perfil') || location.pathname.startsWith('/createAccount')) return 'perfil';
+    if (location.pathname.startsWith('/portafolio/estadisticas')) return 'estadisticas';
     if (location.pathname.startsWith('/portafolio')) return 'portafolio';
     return 'inicio';
   };

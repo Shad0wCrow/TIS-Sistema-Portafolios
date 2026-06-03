@@ -552,7 +552,7 @@ export default function CreateAccount({ embedded = false, onSaved, onCancel }: C
                                     <ErrorMessage message={errors.pais} />
                                 </div>
 
-                                <div className={styles.fieldGroup} style={{ display: "none" }}>
+                                <div className={styles.fieldGroup}>
                                     <label className={styles.label}>Ciudad</label>
                                     <select
                                         className={`${styles.input} ${errors.ciudad ? styles.inputError : ""}`}

@@ -196,10 +196,20 @@ const Dashboard: React.FC = () => {
             <section className="dashboard-content">
                       <div className="dashboard-feed">
             <section className="dashboard-views-card" aria-label="Visualizaciones del portafolio">
-              <span className="dashboard-views-label">Visualizaciones</span>
-              <strong className="dashboard-views-value">
-                {loadingPublicacion ? "..." : publicacion?.visualizaciones ?? 0}
-              </strong>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span className="dashboard-views-label">Visualizaciones</span>
+                <strong className="dashboard-views-value">
+                  {loadingPublicacion ? "..." : publicacion?.visualizaciones ?? 0}
+                </strong>
+              </div>
+              <button
+                type="button"
+                className="publication-small-btn"
+                onClick={() => navigate('/portafolio/estadisticas')}
+                style={{ marginLeft: 'auto', alignSelf: 'center' }}
+              >
+                Mis estadísticas
+              </button>
             </section>
           
             <section className="dashboard-section">

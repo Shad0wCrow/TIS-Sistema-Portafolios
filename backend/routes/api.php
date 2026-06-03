@@ -147,6 +147,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/portafolio/enlace/revocar',  [PortafolioPublicacionController::class, 'revocarEnlace']);
 
     Route::patch('/portafolio/color', [PortafolioPublicacionController::class, 'guardarColor']);
+    Route::get('/portafolio/estadisticas', [\App\Http\Controllers\Api\EstadisticasPortafolioController::class, 'index']);
 
     Route::get('/portafolios/top-mes', [PortafoliosPublicosController::class, 'ranking']);
 
