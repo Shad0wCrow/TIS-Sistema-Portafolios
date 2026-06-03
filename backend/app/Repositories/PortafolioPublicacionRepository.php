@@ -89,6 +89,42 @@ class PortafolioPublicacionRepository
             ]);
     }
 
+    /**
+     * Lee el Top 3 ya calculado y guardado en ranking_mensual para el mes anterior.
+     * Incluye los datos de perfil necesarios para armar la tarjeta.
+     */
+    public function listarTopMensualCerrado(int $anio, int $mes)
+    {
+        return DB::table('ranking_mensual as r')
+            ->join('portafolio_publicacion as pub', 'pub.id_publicacion', '=', 'r.publicacion_id')
+            ->join('usuario', 'usuario.id_usuario', '=', 'pub.usuario_id')
+            ->leftJoin('perfil', function ($join) {
+                $join->on('perfil.usuario_id', '=', 'pub.usuario_id')
+                     ->where('perfil.eliminado', false);
+            })
+            ->leftJoin('configuracion_privacidad as privacidad', 'privacidad.usuario_id', '=', 'pub.usuario_id')
+            ->where('r.anio', $anio)
+            ->where('r.mes', $mes)
+            ->orderBy('r.posicion')
+            ->get([
+                'pub.id_publicacion',
+                'pub.usuario_id',
+                'pub.slug_publico',
+                'pub.publicado_en',
+                'usuario.nombre_usuario',
+                'perfil.nombre_perfil',
+                'perfil.apellido_perfil',
+                'perfil.profesion',
+                'perfil.descripcion',
+                'perfil.foto_url',
+                'privacidad.seccion_perfil',
+                'r.posicion',
+                'r.total_visualizaciones',
+                'r.anio',
+                'r.mes',
+            ]);
+    }
+
     public function guardarColorAcento(int $usuarioId, ?string $color): void
     {
         PortafolioPublicacion::updateOrCreate(
@@ -145,52 +181,5 @@ class PortafolioPublicacionRepository
         $publicacion->update(['enlace_activo' => false]);
 
         return $publicacion;
-    }
-
-       public function listarTopMensual(): \Illuminate\Support\Collection
-    {
-        $inicioMes = now()->startOfMonth()->toDateString();
-        $finMes    = now()->endOfMonth()->toDateString();
- 
-        return DB::table('portafolio_publicacion as publicacion')
-            ->join('portafolio_visualizacion_evento as v', 'v.publicacion_id', '=', 'publicacion.id_publicacion')
-            ->join('usuario', 'usuario.id_usuario', '=', 'publicacion.usuario_id')
-            ->leftJoin('perfil', function ($join) {
-                $join->on('perfil.usuario_id', '=', 'publicacion.usuario_id')
-                     ->where('perfil.eliminado', false);
-            })
-            ->leftJoin('configuracion_privacidad as privacidad', 'privacidad.usuario_id', '=', 'publicacion.usuario_id')
-            ->where('publicacion.publicado', true)
-            ->where('usuario.eliminado', false)
-            ->whereBetween('v.fecha_visita', [$inicioMes, $finMes])
-            ->groupBy(
-                'publicacion.id_publicacion',
-                'publicacion.usuario_id',
-                'publicacion.slug_publico',
-                'publicacion.publicado_en',
-                'usuario.nombre_usuario',
-                'perfil.nombre_perfil',
-                'perfil.apellido_perfil',
-                'perfil.profesion',
-                'perfil.descripcion',
-                'perfil.foto_url',
-                'privacidad.seccion_perfil'
-            )
-            ->orderByDesc('total_visitas')
-            ->limit(3)
-            ->get([
-                'publicacion.id_publicacion',
-                'publicacion.usuario_id',
-                'publicacion.slug_publico',
-                'publicacion.publicado_en',
-                'usuario.nombre_usuario',
-                'perfil.nombre_perfil',
-                'perfil.apellido_perfil',
-                'perfil.profesion',
-                'perfil.descripcion',
-                'perfil.foto_url',
-                'privacidad.seccion_perfil',
-                DB::raw('COUNT(v.id_visualizacion_evento) as total_visitas'),
-            ]);
     }
 }
