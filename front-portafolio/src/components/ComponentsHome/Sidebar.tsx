@@ -16,6 +16,12 @@ export interface MenuItem {
   id: string;
 }
 
+interface QuickAction {
+  label: string;
+  description: string;
+  action: string;
+}
+
 interface SidebarProps {
   activeItem?: string;
   onNavigate?: (id: string) => void;
@@ -35,6 +41,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
     { id: 'bookmarks',    name: 'Guardados',    icon: BookmarkIcon  },
     { id: 'salir',        name: 'Salir',        icon: LogoutIcon    },
   ];
+
+  const quickActions: Record<string, QuickAction[]> = {
+    portafolio: [
+      { label: 'Editar portafolio', description: 'Modificar secciones y contenido', action: 'portafolio' },
+      { label: 'Vista previa', description: 'Revisar como se vera tu portafolio', action: 'vista-portafolio' },
+      { label: 'Publicar', description: 'Configurar enlace publico', action: 'publicar' },
+      { label: 'Visibilidad', description: 'Controlar secciones visibles', action: 'visibilidad' },
+      { label: 'Generar CV', description: 'Crear un CV desde tu informacion', action: 'generar-cv' },
+    ],
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -116,6 +132,32 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
     }
   };
 
+  const handleQuickAction = (action: string): void => {
+    switch (action) {
+      case 'notificaciones':
+        navigate('/notificaciones');
+        break;
+      case 'crear-perfil':
+        navigate('/createAccount');
+        break;
+      case 'vista-portafolio':
+        navigate('/portafolio');
+        break;
+      case 'publicar':
+        navigate('/portafolio/publicar');
+        break;
+      case 'visibilidad':
+        navigate('/portafolio/visibilidad');
+        break;
+      case 'generar-cv':
+        navigate('/generar-cv');
+        break;
+      default:
+        handleNavigation(action);
+        break;
+    }
+  };
+
   const handleCrear = () => {
     localStorage.setItem('hasPortafolio', 'true');
     setShowModal(false);
@@ -150,21 +192,58 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
     <>
       <aside className="dashboard-sidebar">
         <nav className="dashboard-menu">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              className={`dashboard-menu-item ${selectedItem === item.id ? 'dashboard-menu-item-active' : ''}`}
-              onClick={() => handleNavigation(item.id)}
-              type="button"
-            >
-              <img
-                src={item.icon}
-                alt={item.name}
-                className="dashboard-menu-icon-svg"
-              />
-              <span className="dashboard-menu-text">{item.name}</span>
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            const actions = quickActions[item.id] ?? [];
+
+            return (
+              <div
+                className={`dashboard-menu-group${actions.length > 0 ? ' dashboard-menu-group-has-panel' : ''}`}
+                key={item.id}
+              >
+                <button
+                  className={`dashboard-menu-item ${selectedItem === item.id ? 'dashboard-menu-item-active' : ''}`}
+                  onClick={() => handleNavigation(item.id)}
+                  type="button"
+                  aria-describedby={actions.length > 0 ? `quick-actions-${item.id}` : undefined}
+                >
+                  <img
+                    src={item.icon}
+                    alt=""
+                    aria-hidden="true"
+                    className="dashboard-menu-icon-svg"
+                  />
+                  <span className="dashboard-menu-text">{item.name}</span>
+                </button>
+
+                {actions.length > 0 && (
+                  <div
+                    id={`quick-actions-${item.id}`}
+                    className="dashboard-quick-panel"
+                    role="menu"
+                    aria-label={`Accesos de ${item.name}`}
+                  >
+                    <div className="dashboard-quick-panel-title">{item.name}</div>
+                    <div className="dashboard-quick-panel-list">
+                      {actions.map((quickAction) => (
+                        <button
+                          key={quickAction.action}
+                          type="button"
+                          className="dashboard-quick-action"
+                          role="menuitem"
+                          onClick={() => handleQuickAction(quickAction.action)}
+                        >
+                          <span className="dashboard-quick-action-label">{quickAction.label}</span>
+                          <span className="dashboard-quick-action-description">
+                            {quickAction.description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
       </aside>
 

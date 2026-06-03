@@ -138,9 +138,13 @@ function QRSection({ url }: { url: string | null }) {
         <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted, #64748b)', lineHeight: 1.6 }}>
           <strong style={{ color: 'var(--color-text, #1e293b)' }}>¿Cómo funciona?</strong>
           <ol style={{ margin: '0.4rem 0 0', paddingLeft: '1.2rem' }}>
-            <li>Presiona <strong>Generar QR</strong> para crear el código asociado a tu enlace público.</li>
-            <li>Escanea el QR con cualquier cámara para acceder al portafolio.</li>
-            <li>Descarga la imagen para usarla en tu CV, redes sociales o tarjeta personal.</li>
+            <li>
+              Asegúrate de tener un enlace público activo. Si aún no tienes uno, ve a la pestaña{" "}
+              <strong>Exportar Enlace</strong> y presiona <strong>Generar enlace público</strong>.
+            </li>
+            <li>Regresa a esta pestaña y presiona <strong>Generar QR</strong> para crear el código asociado a tu enlace.</li>
+            <li>Escanea el QR con cualquier cámara para acceder directamente al portafolio.</li>
+            <li>Descarga o copia la imagen para usarla en tu CV, redes sociales o tarjeta personal.</li>
           </ol>
         </div>
       </div>
