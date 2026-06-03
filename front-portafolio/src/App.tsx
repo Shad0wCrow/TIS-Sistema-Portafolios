@@ -19,6 +19,8 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminReportes from "./pages/Admin/reportes/AdminReportes";
 import EstadisticasUsuarios from "./pages/Admin/reportes/EstadisticasUsuarios";
 import EstadisticasPortafolios from "./pages/Admin/reportes/EstadisticasPortafolios";
+// Nueva vista de Portafolios Más Visitados
+import AdminPortafoliosVisitados from "./pages/Admin/AdminPortafoliosVisitados";
 
 import CvGenerator from "./pages/editPortafolio/CvGenerator";
 
@@ -74,6 +76,16 @@ function App() {
         element={
           <AdminRoute>
             <EstadisticasPortafolios />
+          </AdminRoute>
+        }
+      />
+
+      {/* /admin/mas-visitados → portafolios más visitados */}
+      <Route
+        path="/admin/mas-visitados"
+        element={
+          <AdminRoute>
+            <AdminPortafoliosVisitados />
           </AdminRoute>
         }
       />
@@ -160,6 +172,7 @@ function App() {
 
       <Route path="/generar-cv" element={<CvGenerator />} />
     </Routes>
+    
   );
 }
 

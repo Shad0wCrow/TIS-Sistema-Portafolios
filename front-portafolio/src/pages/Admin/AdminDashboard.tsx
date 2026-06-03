@@ -66,6 +66,9 @@ export default function AdminDashboard() {
           <Link to="/admin/estadisticas-portafolios" className="admin-nav-link">
             Estadísticas Portafolios
           </Link>
+          <Link to="/admin/mas-visitados" className="admin-nav-link">
+            Publicaciones más visitadas
+          </Link>
           <Link to="/admin/reportes" className="admin-nav-link">
             Reportes y usuarios
           </Link>
@@ -166,6 +169,21 @@ export default function AdminDashboard() {
               </div>
               <Link to="/admin/estadisticas-portafolios" className="admin-current-user" style={{ textDecoration: "none", display: "inline-flex", justifyContent: "center", width: "fit-content" }}>
                 Ver Gráficos de Portafolios →
+              </Link>
+            </article>
+
+            <article className="admin-report-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div>
+                <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "18px" }}>👁️</span>
+                  Publicaciones más visitadas
+                </h2>
+                <p className="admin-empty-text" style={{ fontSize: "13px", marginBottom: "16px" }}>
+                  Visualiza el ranking de los portafolios con mayor cantidad de visitas en distintos periodos de tiempo.
+                </p>
+              </div>
+              <Link to="/admin/mas-visitados" className="admin-current-user" style={{ textDecoration: "none", display: "inline-flex", justifyContent: "center", width: "fit-content" }}>
+                Ver Ranking de Visitas →
               </Link>
             </article>
           </div>
