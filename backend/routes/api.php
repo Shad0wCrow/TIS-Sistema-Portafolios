@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\DashboardPortafolioController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ReportePortafolioController;
 use App\Http\Controllers\Api\GithubController;
+use App\Http\Controllers\Api\AdminVisualizacionesController;
 
 use App\Http\Controllers\Api\SolicitudReactivacionController;
 
@@ -159,7 +160,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Estadísticas e indicadores
         Route::get('/estadisticas/usuarios', [AdminController::class, 'estadisticasUsuarios']);
         Route::get('/estadisticas/portafolios', [AdminController::class, 'estadisticasPortafolios']);
-
+        Route::get('/mas-visitados', [AdminVisualizacionesController::class, 'masVisitados']);
+        
         // Gestión de reportes de portafolios
         Route::get('/reportes/portafolios', [ReportePortafolioController::class, 'index']);
         Route::patch('/reportes/portafolios/{id}/resolver', [ReportePortafolioController::class, 'resolver']);
@@ -167,10 +169,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Solicitudes de reactivación de cuenta        
         Route::get('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'index']);
         Route::patch('/solicitudes-reactivacion/{id}/resolver', [SolicitudReactivacionController::class, 'resolver']);
-
-
-
+        
     });
+
 
     
 });
