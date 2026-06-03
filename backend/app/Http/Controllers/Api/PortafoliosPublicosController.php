@@ -42,4 +42,26 @@ class PortafoliosPublicosController extends Controller
             ], 500);
         }
     }
+
+
+    public function ranking()
+    {
+        try {
+            return response()->json([
+                'portafolios' => $this->exploracionService->obtenerTopMensual(), // <-- 'portafolios', no 'ranking'
+                'periodo' => [
+                    'mes'  => now()->month,
+                    'anio' => now()->year,
+                ],
+            ]);
+    } catch (\Throwable $exception) {
+            Log::error('Error al obtener ranking mensual', [
+                'error' => $exception->getMessage(),
+            ]);
+ 
+            return response()->json([
+                'message' => 'No se pudo cargar el ranking. Intenta nuevamente.',
+            ], 500);
+        }
+    }
 }

@@ -1604,7 +1604,7 @@ function GrupoPublicacion({
                   <td><EstadoBadge estado={r.estado} /></td>
                   <td>
                     {r.estado === "pendiente" ? (
-                      // CA5: botón en cada fila del grupo para resolver
+                      
                       <button type="button" className="ar-btn ar-btn--resolve"
                         onClick={() => onResolver(r)}>Resolver</button>
                     ) : (

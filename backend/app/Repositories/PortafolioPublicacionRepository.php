@@ -146,4 +146,51 @@ class PortafolioPublicacionRepository
 
         return $publicacion;
     }
+
+       public function listarTopMensual(): \Illuminate\Support\Collection
+    {
+        $inicioMes = now()->startOfMonth()->toDateString();
+        $finMes    = now()->endOfMonth()->toDateString();
+ 
+        return DB::table('portafolio_publicacion as publicacion')
+            ->join('portafolio_visualizacion_evento as v', 'v.publicacion_id', '=', 'publicacion.id_publicacion')
+            ->join('usuario', 'usuario.id_usuario', '=', 'publicacion.usuario_id')
+            ->leftJoin('perfil', function ($join) {
+                $join->on('perfil.usuario_id', '=', 'publicacion.usuario_id')
+                     ->where('perfil.eliminado', false);
+            })
+            ->leftJoin('configuracion_privacidad as privacidad', 'privacidad.usuario_id', '=', 'publicacion.usuario_id')
+            ->where('publicacion.publicado', true)
+            ->where('usuario.eliminado', false)
+            ->whereBetween('v.fecha_visita', [$inicioMes, $finMes])
+            ->groupBy(
+                'publicacion.id_publicacion',
+                'publicacion.usuario_id',
+                'publicacion.slug_publico',
+                'publicacion.publicado_en',
+                'usuario.nombre_usuario',
+                'perfil.nombre_perfil',
+                'perfil.apellido_perfil',
+                'perfil.profesion',
+                'perfil.descripcion',
+                'perfil.foto_url',
+                'privacidad.seccion_perfil'
+            )
+            ->orderByDesc('total_visitas')
+            ->limit(3)
+            ->get([
+                'publicacion.id_publicacion',
+                'publicacion.usuario_id',
+                'publicacion.slug_publico',
+                'publicacion.publicado_en',
+                'usuario.nombre_usuario',
+                'perfil.nombre_perfil',
+                'perfil.apellido_perfil',
+                'perfil.profesion',
+                'perfil.descripcion',
+                'perfil.foto_url',
+                'privacidad.seccion_perfil',
+                DB::raw('COUNT(v.id_visualizacion_evento) as total_visitas'),
+            ]);
+    }
 }

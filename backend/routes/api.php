@@ -35,7 +35,7 @@ Route::get('/public/portafolios/{slug}', [PortafolioPublicoController::class, 's
 Route::post('/public/portafolios/{slug}/contacto', [PortafolioPublicoController::class, 'registrarContacto']);
 Route::post('/public/portafolios/{slug}/visualizacion', [PortafolioPublicoController::class, 'registrarVisualizacion']);
 
-// HU-61: Reportar portafolio, accesible sin autenticacion obligatoria
+//Reportar portafolio, accesible sin autenticacion obligatoria
 Route::post('/public/portafolios/{slug}/reportar', [ReportePortafolioController::class, 'reportar']);
 Route::post('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'store']);
 // Rutas protegidas 
@@ -146,23 +146,31 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/portafolio/enlace/revocar',  [PortafolioPublicacionController::class, 'revocarEnlace']);
 
     Route::patch('/portafolio/color', [PortafolioPublicacionController::class, 'guardarColor']);
+
+    Route::get('/portafolios/top-mes', [PortafoliosPublicosController::class, 'ranking']);
+
+    //ADMIN
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/usuarios', [AdminController::class, 'usuarios']);
         Route::patch('/usuarios/{id}/estado', [AdminController::class, 'actualizarEstadoUsuario']);
         Route::get('/usuarios/historial-estados', [AdminController::class, 'historialEstadosUsuario']);
         Route::get('/reportes/resumen', [AdminController::class, 'reporteResumen']);
 
-        // HU-40: Estadísticas e indicadores
+        // Estadísticas e indicadores
         Route::get('/estadisticas/usuarios', [AdminController::class, 'estadisticasUsuarios']);
         Route::get('/estadisticas/portafolios', [AdminController::class, 'estadisticasPortafolios']);
 
-        // HU-61: Gestión de reportes de portafolios
+        // Gestión de reportes de portafolios
         Route::get('/reportes/portafolios', [ReportePortafolioController::class, 'index']);
         Route::patch('/reportes/portafolios/{id}/resolver', [ReportePortafolioController::class, 'resolver']);
 
-        // HU-98: Solicitudes de reactivación de cuenta        
+        // Solicitudes de reactivación de cuenta        
         Route::get('/solicitudes-reactivacion', [SolicitudReactivacionController::class, 'index']);
         Route::patch('/solicitudes-reactivacion/{id}/resolver', [SolicitudReactivacionController::class, 'resolver']);
 
+
+
     });
+
+    
 });

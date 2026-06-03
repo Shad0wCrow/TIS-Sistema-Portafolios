@@ -39,7 +39,7 @@ class PortafolioExploracionService
         return min($limite, self::LIMITE_MAXIMO);
     }
 
-    private function formatearTarjeta($publicacion): array
+    protected function formatearTarjeta($publicacion): array
     {
         $perfilPublico = ($publicacion->seccion_perfil ?? ConfiguracionPrivacidad::PUBLICO) === ConfiguracionPrivacidad::PUBLICO;
 
@@ -78,4 +78,24 @@ class PortafolioExploracionService
 
         return $baseUrl . '/portafolio/publico/' . $slug;
     }
+
+    public function obtenerTopMensual(): array
+{
+    $medallas = ['oro', 'plata', 'bronce'];
+
+    return $this->publicacionRepository
+        ->listarTopMensual()
+        ->values()
+        ->map(function ($publicacion, $indice) use ($medallas) {
+            return array_merge(
+                $this->formatearTarjeta($publicacion),
+                [
+                    'posicion'             => $indice + 1,
+                    'medalla'              => $medallas[$indice],
+                    'total_visualizaciones' => (int) $publicacion->total_visitas, // ← nombre que espera el frontend
+                ]
+            );
+        })
+        ->all();
+}
 }
