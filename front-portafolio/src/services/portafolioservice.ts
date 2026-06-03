@@ -747,3 +747,61 @@ export const registrarVisualizacionPortafolio = async (slug: string): Promise<vo
 export const guardarColorAcento = async (colorAcento: string | null): Promise<void> => {
   await axios.patch(`${API}/portafolio/color`, { color_acento: colorAcento }, { headers: authHeaders() });
 };
+
+export interface NotificacionUsuario {
+  id_notificacion: number;
+  usuario_id: number;
+  reporte_id: number | null;
+  tipo: "reporte_portafolio" | string;
+  titulo: string;
+  mensaje: string;
+  slug_publico: string | null;
+  portafolio_nombre: string | null;
+  leida: boolean;
+  leida_en: string | null;
+  creado_en: string;
+}
+
+export interface NotificacionesResponse {
+  notificaciones: {
+    data: NotificacionUsuario[];
+    current_page: number;
+    last_page: number;
+    total: number;
+  };
+  no_leidas: number;
+}
+
+export const getNotificaciones = async (
+  estado: "todas" | "no_leidas" | "leidas" = "todas",
+  page = 1
+): Promise<NotificacionesResponse> => {
+  const res = await axios.get(`${API}/notificaciones`, {
+    headers: authHeaders(),
+    params: { estado, page, per_page: 10 },
+  });
+  return res.data;
+};
+
+export const getResumenNotificaciones = async (): Promise<{ no_leidas: number }> => {
+  const res = await axios.get(`${API}/notificaciones/resumen`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const marcarNotificacionLeida = async (
+  id: number
+): Promise<{ notificacion: NotificacionUsuario; no_leidas: number }> => {
+  const res = await axios.patch(`${API}/notificaciones/${id}/leer`, {}, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};
+
+export const marcarTodasNotificacionesLeidas = async (): Promise<{ no_leidas: number }> => {
+  const res = await axios.patch(`${API}/notificaciones/leer-todas`, {}, {
+    headers: authHeaders(),
+  });
+  return res.data;
+};

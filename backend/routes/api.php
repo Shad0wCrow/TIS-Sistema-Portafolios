@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\DashboardPortafolioController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ReportePortafolioController;
 use App\Http\Controllers\Api\GithubController;
+use App\Http\Controllers\Api\NotificacionUsuarioController;
 
 use App\Http\Controllers\Api\SolicitudReactivacionController;
 
@@ -52,6 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/github',     [GithubController::class, 'show']);
     Route::post('/github',    [GithubController::class, 'save']);
     Route::get('/github/repos', [GithubController::class, 'repos']);
+    Route::get('/notificaciones', [NotificacionUsuarioController::class, 'index']);
+    Route::get('/notificaciones/resumen', [NotificacionUsuarioController::class, 'resumen']);
+    Route::patch('/notificaciones/leer-todas', [NotificacionUsuarioController::class, 'marcarTodasLeidas']);
+    Route::patch('/notificaciones/{id}/leer', [NotificacionUsuarioController::class, 'marcarLeida']);
 
     // Pantalla "Edición de Portafolio" 
     Route::get('/dashboard/portafolios',          [DashboardPortafolioController::class, 'show']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\NotificacionUsuario;
 use App\Models\ReportePortafolio;
 use App\Models\Usuario;
 use App\Repositories\PortafolioPublicacionRepository;
@@ -104,6 +105,18 @@ class ReportePortafolioController extends Controller
                 'creado_en'      => now(),
             ]);
 
+            NotificacionUsuario::create([
+                'usuario_id' => $usuarioReportado->id_usuario,
+                'reporte_id' => $reporte->id_reporte,
+                'tipo' => 'reporte_portafolio',
+                'titulo' => 'Advertencia por reporte recibido',
+                'mensaje' => 'Tu portafolio publicado recibio un reporte. Revisa el contenido para asegurarte de que cumple las normas de la plataforma.',
+                'slug_publico' => $publicacion->slug_publico,
+                'portafolio_nombre' => $snapshotReportado['nombre'],
+                'leida' => false,
+                'creado_en' => now(),
+            ]);
+
             return response()->json([
                 'message' => 'Reporte registrado correctamente. Gracias por ayudarnos a mantener la comunidad.',
                 'reporte' => [
@@ -193,6 +206,16 @@ class ReportePortafolioController extends Controller
                         'Reporte de portafolio',
                         $data['nota_moderador'] ?? null
                     );
+                }
+
+                if ($data['estado'] === 'desestimado') {
+                    NotificacionUsuario::where('reporte_id', $reporte->id_reporte)
+                        ->update([
+                            'titulo' => 'Reporte desestimado por administracion',
+                            'mensaje' => 'Una advertencia asociada a tu portafolio fue desestimada por administracion. Se conserva en tu historial como referencia.',
+                            'leida' => true,
+                            'leida_en' => now(),
+                        ]);
                 }
             });
 
