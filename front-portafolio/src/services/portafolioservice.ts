@@ -773,3 +773,39 @@ export const getTopPortafoliosMes = async (): Promise<TopRankingResponse> => {
     label: res.data.periodo?.label ?? "",
   };
 };
+
+// HU-83: Estadísticas del portafolio propio
+export interface EstadisticasPortafolio {
+  total_vistas_historico: number;
+  total_guardados_historico: number;
+  vistas_periodo: number;
+  guardados_periodo: number;
+  evolucion_vistas: { fecha: string; cantidad: number }[];
+  secciones: {
+    proyectos: number;
+    educacion: number;
+    cursos: number;
+    experiencia: number;
+    certificaciones: number;
+    logros: number;
+    habilidades: number;
+    idiomas: number;
+  };
+  periodo: {
+    filtro: string;
+    fecha_inicio: string;
+    fecha_fin: string;
+  };
+}
+
+export const getPortafolioEstadisticas = async (params: {
+  filtro?: string;
+  fecha_inicio?: string | null;
+  fecha_fin?: string | null;
+}): Promise<EstadisticasPortafolio> => {
+  const res = await axios.get(`${API}/portafolio/estadisticas`, {
+    headers: authHeaders(),
+    params,
+  });
+  return res.data;
+};
