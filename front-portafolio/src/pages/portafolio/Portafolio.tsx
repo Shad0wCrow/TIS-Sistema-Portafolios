@@ -30,6 +30,7 @@ import {
   DEFAULT_SECTION_ORDER,
   SECTION_LABELS,
   applyAccentColor,
+  resetAccentColor,
   isSectionPublic,
   loadSectionOrder,
   saveSectionOrder,
@@ -43,6 +44,9 @@ import { formatPhoneWithPrefix } from "../../utils/countryPhoneOptions";
 // ── Colores de acento disponibles ────────────────────────────────────────────
 const COLOR_STORAGE_KEY = "portafolio_accent_color";
 
+/** Valor centinela que indica "usar paleta del sistema" */
+const SYSTEM_COLOR = "system";
+
 const PRESET_COLORS = [
   { id: "indigo",   label: "Índigo",     value: "#4f46e5" },
   { id: "sky",      label: "Cielo",      value: "#0ea5e9" },
@@ -54,17 +58,22 @@ const PRESET_COLORS = [
   { id: "teal",     label: "Verde azul", value: "#14b8a6" },
 ] as const;
 
+/** Devuelve el color guardado, o SYSTEM_COLOR si el usuario nunca eligió uno */
 function loadAccentColor(): string {
   try {
-    return localStorage.getItem(COLOR_STORAGE_KEY) ?? PRESET_COLORS[0].value;
+    return localStorage.getItem(COLOR_STORAGE_KEY) ?? SYSTEM_COLOR;
   } catch {
-    return PRESET_COLORS[0].value;
+    return SYSTEM_COLOR;
   }
 }
 
 function saveAccentColor(color: string): void {
   try {
-    localStorage.setItem(COLOR_STORAGE_KEY, color);
+    if (color === SYSTEM_COLOR) {
+      localStorage.removeItem(COLOR_STORAGE_KEY);
+    } else {
+      localStorage.setItem(COLOR_STORAGE_KEY, color);
+    }
   } catch { /* noop */ }
 }
 
@@ -93,7 +102,11 @@ export default function Portafolio() {
 
   // Aplica el color guardado al montar el componente
   useEffect(() => {
-    applyAccentColor(accentColor);
+    if (accentColor === SYSTEM_COLOR) {
+      resetAccentColor();
+    } else {
+      applyAccentColor(accentColor);
+    }
   }, [accentColor]);
 
   const openColorModal = () => {
@@ -104,9 +117,14 @@ export default function Portafolio() {
   const saveColor = () => {
     saveAccentColor(draftColor);
     setAccentColor(draftColor);
-    applyAccentColor(draftColor);
+    if (draftColor === SYSTEM_COLOR) {
+      resetAccentColor();
+      guardarColorAcento("").catch(() => undefined);
+    } else {
+      applyAccentColor(draftColor);
+      guardarColorAcento(draftColor).catch(() => undefined);
+    }
     setShowColorModal(false);
-    guardarColorAcento(draftColor).catch(() => undefined);
   };
   // ────────────────────────────────────────────────────────────────────────────
 
@@ -653,12 +671,12 @@ const canvas = await html2canvas(element, {
                 width: 13,
                 height: 13,
                 borderRadius: "50%",
-                background: accentColor,
+                background: accentColor === SYSTEM_COLOR ? "var(--color-accent, #1a6644)" : accentColor,
                 border: "2px solid currentColor",
                 flexShrink: 0,
               }}
             />
-            Color
+            {accentColor === SYSTEM_COLOR ? "Color (sistema)" : "Color"}
           </button>
 
           <button
@@ -781,8 +799,10 @@ const canvas = await html2canvas(element, {
                 gap: "0.75rem",
                 padding: "0.75rem 1rem",
                 borderRadius: "0.5rem",
-                background: `rgba(${parseInt(draftColor.slice(1, 3), 16)},${parseInt(draftColor.slice(3, 5), 16)},${parseInt(draftColor.slice(5, 7), 16)},0.10)`,
-                border: `1.5px solid ${draftColor}`,
+                background: draftColor === SYSTEM_COLOR
+                  ? "rgba(26,102,68,0.08)"
+                  : `rgba(${parseInt(draftColor.slice(1, 3), 16)},${parseInt(draftColor.slice(3, 5), 16)},${parseInt(draftColor.slice(5, 7), 16)},0.10)`,
+                border: `1.5px solid ${draftColor === SYSTEM_COLOR ? "#1a6644" : draftColor}`,
                 marginBottom: "1.25rem",
                 transition: "all 0.2s",
               }}
@@ -792,17 +812,66 @@ const canvas = await html2canvas(element, {
                   width: 28,
                   height: 28,
                   borderRadius: "50%",
-                  background: draftColor,
+                  background: draftColor === SYSTEM_COLOR ? "var(--color-accent, #1a6644)" : draftColor,
                   display: "block",
                   flexShrink: 0,
-                  boxShadow: `0 0 0 4px ${draftColor}33`,
+                  boxShadow: `0 0 0 4px ${draftColor === SYSTEM_COLOR ? "#1a664433" : draftColor + "33"}`,
                 }}
               />
               <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>
-                Color seleccionado:&nbsp;
-                <code style={{ fontFamily: "monospace", letterSpacing: "0.03em" }}>{draftColor}</code>
+                {draftColor === SYSTEM_COLOR
+                  ? "Paleta del sistema (predeterminado)"
+                  : <>Color seleccionado:&nbsp;<code style={{ fontFamily: "monospace", letterSpacing: "0.03em" }}>{draftColor}</code></>
+                }
               </span>
             </div>
+
+            {/* Opción: Paleta del sistema */}
+            <button
+              type="button"
+              onClick={() => setDraftColor(SYSTEM_COLOR)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.65rem",
+                width: "100%",
+                padding: "0.65rem 0.85rem",
+                borderRadius: "0.5rem",
+                border: draftColor === SYSTEM_COLOR
+                  ? "2px solid #1a6644"
+                  : "2px solid var(--color-border, #e2e8f0)",
+                background: draftColor === SYSTEM_COLOR
+                  ? "rgba(26,102,68,0.08)"
+                  : "var(--color-surface-alt, #f8fafc)",
+                cursor: "pointer",
+                marginBottom: "1rem",
+                transition: "border 0.15s, background 0.15s",
+                textAlign: "left",
+              }}
+            >
+              <span
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  background: "conic-gradient(#1a6644 0% 33%, #4f46e5 33% 66%, #f43f5e 66% 100%)",
+                  display: "block",
+                  flexShrink: 0,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                }}
+              />
+              <div>
+                <span style={{ fontSize: "0.83rem", fontWeight: 600, display: "block", color: "var(--color-text, #0f172a)" }}>
+                  Paleta del sistema
+                </span>
+                <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted, #64748b)" }}>
+                  Usa el color predeterminado de la aplicación
+                </span>
+              </div>
+              {draftColor === SYSTEM_COLOR && (
+                <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#1a6644", fontWeight: 700 }}>✓</span>
+              )}
+            </button>
 
             {/* Paleta de colores predefinidos */}
             <div
@@ -887,7 +956,7 @@ const canvas = await html2canvas(element, {
               </span>
               <input
                 type="color"
-                value={draftColor}
+                value={draftColor === SYSTEM_COLOR ? "#1a6644" : draftColor}
                 onChange={(e) => setDraftColor(e.target.value)}
                 style={{
                   width: 36,
@@ -907,7 +976,7 @@ const canvas = await html2canvas(element, {
                   letterSpacing: "0.04em",
                 }}
               >
-                {draftColor}
+                {draftColor === SYSTEM_COLOR ? "sistema" : draftColor}
               </code>
             </div>
 
