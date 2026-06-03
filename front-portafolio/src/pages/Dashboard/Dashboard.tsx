@@ -9,6 +9,8 @@ import PublicPortfolioSection from './components/PublicPortfolioSection';
 import EditarPerfil from '../SoloPerfil/editarPerfil';
 import CreateAccount from '../createAccount/createAccount';
 import PageLoader from '../../components/ui/PageLoader/PageLoader';
+import TopRankingSection from "./components/TopRankingSection";
+
 import "./Dashboard.css";
 
 const DASHBOARD_CACHE_KEY = 'dashboardPortafoliosCache';
@@ -192,34 +194,37 @@ const Dashboard: React.FC = () => {
             </section>
           ) : (
             <section className="dashboard-content">
-              <div className="dashboard-feed">
-                <section className="dashboard-views-card" aria-label="Visualizaciones del portafolio">
-                  <span className="dashboard-views-label">Visualizaciones</span>
-                  <strong className="dashboard-views-value">
-                    {loadingPublicacion ? "..." : publicacion?.visualizaciones ?? 0}
-                  </strong>
-                </section>
-
-                <section className="dashboard-section">
-                  <MyPublicationPanel
-                    publicacion={publicacion}
-                    loading={loadingPublicacion}
-                    copied={copied}
-                    onCopy={handleCopy}
-                    onOpen={abrirPortafolio}
-                    onConfigure={() => navigate('/portafolio/publicar')}
-                  />
-                </section>
-
-                <PublicPortfolioSection
-                  portafolios={portafolios}
-                  loading={loadingPortafolios}
-                  error={portafoliosError}
-                  savingSlug={savingSlug}
-                  onOpen={abrirPortafolio}
-                  onSave={guardarDesdeHome}
-                />
-              </div>
+                      <div className="dashboard-feed">
+            <section className="dashboard-views-card" aria-label="Visualizaciones del portafolio">
+              <span className="dashboard-views-label">Visualizaciones</span>
+              <strong className="dashboard-views-value">
+                {loadingPublicacion ? "..." : publicacion?.visualizaciones ?? 0}
+              </strong>
+            </section>
+          
+            <section className="dashboard-section">
+              <MyPublicationPanel
+                publicacion={publicacion}
+                loading={loadingPublicacion}
+                copied={copied}
+                onCopy={handleCopy}
+                onOpen={abrirPortafolio}
+                onConfigure={() => navigate('/portafolio/publicar')}
+              />
+            </section>
+          
+            {/* ── Ranking mensual Top 3 ── */}
+            <TopRankingSection />
+          
+            <PublicPortfolioSection
+              portafolios={portafolios}
+              loading={loadingPortafolios}
+              error={portafoliosError}
+              savingSlug={savingSlug}
+              onOpen={abrirPortafolio}
+              onSave={guardarDesdeHome}
+            />
+          </div>
             </section>
           )}
         </main>

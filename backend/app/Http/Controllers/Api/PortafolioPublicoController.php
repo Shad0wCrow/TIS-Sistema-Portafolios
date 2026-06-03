@@ -10,6 +10,7 @@ use App\Repositories\PortafolioPublicacionRepository;
 use App\Repositories\PortafolioRepository;
 use App\Services\PortafolioPublicoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -26,16 +27,15 @@ class PortafolioPublicoController extends Controller
         ConfiguracionPrivacidadRepository $configuracionRepository,
         PortafolioRepository $portafolioRepository
     ) {
-        $this->publicacionRepository = $publicacionRepository;
+        $this->publicacionRepository   = $publicacionRepository;
         $this->portafolioPublicoService = $portafolioPublicoService;
-        $this->configuracionRepository = $configuracionRepository;
-        $this->portafolioRepository = $portafolioRepository;
+        $this->configuracionRepository  = $configuracionRepository;
+        $this->portafolioRepository     = $portafolioRepository;
     }
 
     public function show(string $slug)
     {
         try {
-            // Acepta el portafolio si está publicado en plataforma O si tiene enlace activo.
             $publicacion = $this->publicacionRepository->buscarPublicadoPorSlug($slug)
                         ?? $this->publicacionRepository->buscarPorSlugConEnlaceActivo($slug);
 
@@ -76,11 +76,12 @@ class PortafolioPublicoController extends Controller
                 ], 404);
             }
 
-            $configuracion = $this->configuracionRepository->obtenerOCrearPorUsuario($publicacion->usuario_id);
-            $correo = $this->portafolioRepository->correoContacto($publicacion->usuario_id);
-            $telefono = $this->portafolioRepository->telefonoContacto($publicacion->usuario_id);
-            $medio = $data['medio'] ?? ($telefono !== null ? 'whatsapp' : 'email');
+            $configuracion  = $this->configuracionRepository->obtenerOCrearPorUsuario($publicacion->usuario_id);
+            $correo         = $this->portafolioRepository->correoContacto($publicacion->usuario_id);
+            $telefono       = $this->portafolioRepository->telefonoContacto($publicacion->usuario_id);
+            $medio          = $data['medio'] ?? ($telefono !== null ? 'whatsapp' : 'email');
             $numeroWhatsapp = $telefono ? preg_replace('/\D+/', '', $telefono) : null;
+
             $contactoDisponible = $medio === 'whatsapp'
                 ? $numeroWhatsapp !== null && $numeroWhatsapp !== ''
                 : $correo !== null;
@@ -96,22 +97,22 @@ class PortafolioPublicoController extends Controller
             }
 
             PortafolioContactoEvento::create([
-                'publicacion_id' => $publicacion->id_publicacion,
+                'publicacion_id'         => $publicacion->id_publicacion,
                 'usuario_id_propietario' => $publicacion->usuario_id,
-                'slug_publico' => $publicacion->slug_publico,
-                'medio' => $medio,
-                'ip_hash' => $request->ip() ? hash('sha256', $request->ip()) : null,
-                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                'slug_publico'           => $publicacion->slug_publico,
+                'medio'                  => $medio,
+                'ip_hash'                => $request->ip() ? hash('sha256', $request->ip()) : null,
+                'user_agent'             => substr((string) $request->userAgent(), 0, 500),
             ]);
 
             $response = [
                 'message' => 'Contacto registrado correctamente.',
-                'medio' => $medio,
+                'medio'   => $medio,
             ];
 
             if ($medio === 'whatsapp') {
-                $response['telefono'] = $telefono;
-                $response['whatsapp_url'] = 'https://wa.me/' . $numeroWhatsapp;
+                $response['telefono']      = $telefono;
+                $response['whatsapp_url']  = 'https://wa.me/' . $numeroWhatsapp;
             } else {
                 $response['mailto'] = 'mailto:' . $correo;
             }
@@ -119,7 +120,7 @@ class PortafolioPublicoController extends Controller
             return response()->json($response);
         } catch (\Throwable $exception) {
             Log::error('Error al registrar contacto directo', [
-                'slug' => $slug,
+                'slug'  => $slug,
                 'error' => $exception->getMessage(),
             ]);
 
@@ -146,34 +147,37 @@ class PortafolioPublicoController extends Controller
             if ($visitanteId && (int) $visitanteId === (int) $publicacion->usuario_id) {
                 return response()->json([
                     'registrada' => false,
-                    'motivo' => 'propietario',
+                    'motivo'     => 'propietario',
                 ]);
             }
 
-            $sessionKey = $this->resolverSessionKey($request, $visitanteId);
+            $sessionKey  = $this->resolverSessionKey($request, $visitanteId);
             $fechaVisita = now()->toDateString();
 
             $evento = PortafolioVisualizacionEvento::firstOrCreate(
                 [
                     'publicacion_id' => $publicacion->id_publicacion,
-                    'session_key' => $sessionKey,
-                    'fecha_visita' => $fechaVisita,
+                    'session_key'    => $sessionKey,
+                    'fecha_visita'   => $fechaVisita,
                 ],
                 [
                     'usuario_id_propietario' => $publicacion->usuario_id,
-                    'usuario_id_visitante' => $visitanteId,
-                    'slug_publico' => $publicacion->slug_publico,
-                    'ip_hash' => $request->ip() ? hash('sha256', $request->ip()) : null,
-                    'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                    'usuario_id_visitante'   => $visitanteId,
+                    'slug_publico'           => $publicacion->slug_publico,
+                    'ip_hash'                => $request->ip() ? hash('sha256', $request->ip()) : null,
+                    'user_agent'             => substr((string) $request->userAgent(), 0, 500),
                 ]
             );
+
+            // El ranking del mes en curso aún está abierto (no se muestra hasta que cierre).
+            // El Cache::forget no aplica aquí porque el ranking que se sirve es el del mes anterior.
 
             return response()->json([
                 'registrada' => $evento->wasRecentlyCreated,
             ]);
         } catch (\Throwable $exception) {
             Log::error('Error al registrar visualizacion de portafolio', [
-                'slug' => $slug,
+                'slug'  => $slug,
                 'error' => $exception->getMessage(),
             ]);
 
@@ -192,7 +196,7 @@ class PortafolioPublicoController extends Controller
         }
 
         $accessToken = PersonalAccessToken::findToken($token);
-        $usuario = $accessToken ? $accessToken->tokenable : null;
+        $usuario     = $accessToken ? $accessToken->tokenable : null;
 
         return $usuario ? (int) $usuario->id_usuario : null;
     }

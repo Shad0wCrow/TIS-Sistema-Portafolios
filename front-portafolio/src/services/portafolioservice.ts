@@ -747,3 +747,29 @@ export const registrarVisualizacionPortafolio = async (slug: string): Promise<vo
 export const guardarColorAcento = async (colorAcento: string | null): Promise<void> => {
   await axios.patch(`${API}/portafolio/color`, { color_acento: colorAcento }, { headers: authHeaders() });
 };
+
+
+export interface TopPortafolioMes {
+  id_publicacion: number;
+  slug_publico: string;
+  nombre: string;
+  profesion: string | null;
+  foto_url: string | null;
+  total_visualizaciones: number;
+}
+ 
+export interface TopRankingResponse {
+  portafolios: TopPortafolioMes[];
+  label: string;
+}
+ 
+export const getTopPortafoliosMes = async (): Promise<TopRankingResponse> => {
+  const res = await axios.get(`${API}/portafolios/top-mes`, {
+    headers: authHeaders(),
+    params: { limite: 3 },
+  });
+  return {
+    portafolios: res.data.portafolios ?? [],
+    label: res.data.periodo?.label ?? "",
+  };
+};
