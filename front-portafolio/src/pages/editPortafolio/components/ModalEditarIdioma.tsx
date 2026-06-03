@@ -99,7 +99,7 @@ export default function ModalEditarIdioma({ idioma, onClose, onSave }: ModalEdit
               </div>
 
               {error && (
-                <span style={{ fontSize: 11, color: "var(--red,#e53e3e)", gridColumn: "1/-1" }}>
+                <span className={`${styles.fieldError} ${styles.modalFieldFull}`}>
                   {error}
                 </span>
               )}

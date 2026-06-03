@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from "react";
-import styles from "./modalExperiencia.module.css";
+import styles from "./modals.module.css";
 import type { Experiencia } from "../../../types/portafolioTypes";
 
 type EditableExperiencia = {
@@ -70,95 +70,88 @@ export default function ModalEditarExperiencia({
     }
   };
 
+  const fechaFinBloqueada = !experiencia.es_actual && !!experiencia.fecha_fin;
+
   return (
-    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.modal}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>Editar experiencia laboral</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar formulario de edicion">
+    <div className={styles.modalOverlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={`${styles.modal} ${styles.modalLg}`}>
+        <div className={styles.modalHead}>
+          <span className={styles.modalTitle}>Editar experiencia laboral</span>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar formulario de edicion">
             x
           </button>
         </div>
 
-        <div className={styles.body}>
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="edit-exp-empresa">Empresa</label>
-              <input id="edit-exp-empresa" className={styles.input} value={experiencia.nombre_empresa ?? ""} disabled />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="edit-exp-puesto">Puesto / Cargo</label>
-              <input id="edit-exp-puesto" className={styles.input} value={experiencia.puesto ?? ""} disabled />
-            </div>
+        <div className={styles.modalGrid}>
+          <div className={styles.modalField}>
+            <label htmlFor="edit-exp-empresa">Empresa</label>
+            <input id="edit-exp-empresa" value={experiencia.nombre_empresa ?? ""} disabled />
           </div>
 
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="edit-exp-tipo">Tipo de empleo</label>
-              <input id="edit-exp-tipo" className={styles.input} value={experiencia.tipo ?? ""} disabled />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="edit-exp-ubicacion">Ubicacion</label>
-              <input id="edit-exp-ubicacion" className={styles.input} value={experiencia.ubicacion ?? ""} disabled />
-            </div>
+          <div className={styles.modalField}>
+            <label htmlFor="edit-exp-puesto">Puesto / Cargo</label>
+            <input id="edit-exp-puesto" value={experiencia.puesto ?? ""} disabled />
           </div>
 
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="edit-exp-inicio">Fecha de inicio</label>
-              <input id="edit-exp-inicio" type="date" className={styles.input} value={experiencia.fecha_inicio} disabled />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="edit-exp-fin">
-                Fecha de fin
-                {!experiencia.es_actual && !!experiencia.fecha_fin && (
-                  <span style={{ marginLeft: 6, fontSize: "11px", color: "var(--text3, #888)", fontWeight: 400 }}>
-                    &nbsp;(bloqueado)
-                  </span>
-                )}
-              </label>
-              <input
-                id="edit-exp-fin"
-                type="date"
-                name="fecha_fin"
-                className={styles.input}
-                value={form.fecha_fin}
-                min={experiencia.fecha_inicio}
-                onChange={handleChange}
-                disabled={!experiencia.es_actual && !!experiencia.fecha_fin}
-                title={
-                  !experiencia.es_actual && !!experiencia.fecha_fin
-                    ? "La fecha de fin no se puede modificar porque ya fue definida al registrar"
-                    : undefined
-                }
-              />
-            </div>
+          <div className={styles.modalField}>
+            <label htmlFor="edit-exp-tipo">Tipo de empleo</label>
+            <input id="edit-exp-tipo" value={experiencia.tipo ?? ""} disabled />
+          </div>
+
+          <div className={styles.modalField}>
+            <label htmlFor="edit-exp-ubicacion">Ubicacion</label>
+            <input id="edit-exp-ubicacion" value={experiencia.ubicacion ?? ""} disabled />
+          </div>
+
+          <div className={styles.modalField}>
+            <label htmlFor="edit-exp-inicio">Fecha de inicio</label>
+            <input id="edit-exp-inicio" type="date" value={experiencia.fecha_inicio} disabled />
+          </div>
+
+          <div className={styles.modalField}>
+            <label htmlFor="edit-exp-fin">Fecha de fin</label>
+            <input
+              id="edit-exp-fin"
+              type="date"
+              name="fecha_fin"
+              value={form.fecha_fin}
+              min={experiencia.fecha_inicio}
+              onChange={handleChange}
+              disabled={fechaFinBloqueada}
+              title={
+                fechaFinBloqueada
+                  ? "La fecha de fin no se puede modificar porque ya fue definida al registrar"
+                  : undefined
+              }
+            />
+            {fechaFinBloqueada && (
+              <span className={styles.fieldHint}>Este campo esta bloqueado porque ya fue definido.</span>
+            )}
           </div>
 
           {experiencia.es_actual && (
-            <p className={styles.error} style={{ color: "var(--text3)" }}>
-              Al registrar una fecha de fin, la experiencia dejará de marcarse como actual.
+            <p className={`${styles.fieldHint} ${styles.modalFieldFull}`}>
+              Al registrar una fecha de fin, la experiencia dejara de marcarse como actual.
             </p>
           )}
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="edit-exp-desc">Descripcion</label>
+          <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+            <label htmlFor="edit-exp-desc">Descripcion</label>
             <textarea
               id="edit-exp-desc"
               name="descripcion"
-              className={styles.textarea}
               value={form.descripcion}
               onChange={handleChange}
               rows={4}
+              placeholder="Actualiza la descripcion de la experiencia..."
             />
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="edit-exp-visibilidad">Visibilidad</label>
+          <div className={styles.modalField}>
+            <label htmlFor="edit-exp-visibilidad">Visibilidad</label>
             <select
               id="edit-exp-visibilidad"
               name="visibilidad"
-              className={styles.select}
               value={form.visibilidad}
               onChange={handleChange}
             >
@@ -167,14 +160,18 @@ export default function ModalEditarExperiencia({
             </select>
           </div>
 
-          {error && <span className={styles.error}>{error}</span>}
+          {error && (
+            <div className={`${styles.duplicadoWarning} ${styles.modalFieldFull}`} role="alert">
+              {error}
+            </div>
+          )}
         </div>
 
-        <div className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={onClose} disabled={saving}>
+        <div className={styles.modalActions}>
+          <button className={styles.btnCancel} onClick={onClose} disabled={saving}>
             Cancelar
           </button>
-          <button className={styles.saveBtn} onClick={handleSubmit} disabled={saving}>
+          <button className={styles.btnSave} onClick={handleSubmit} disabled={saving}>
             {saving ? "Guardando..." : "Guardar cambios"}
           </button>
         </div>

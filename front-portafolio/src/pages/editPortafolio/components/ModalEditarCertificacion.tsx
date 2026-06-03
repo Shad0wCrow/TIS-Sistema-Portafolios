@@ -181,7 +181,7 @@ export default function ModalEditarCertificacion({
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleFile}
-                  style={{ display: "none" }}
+                  className={styles.hiddenFileInput}
                 />
                 <button
                   type="button"
@@ -194,15 +194,7 @@ export default function ModalEditarCertificacion({
                   <img
                     src={imagenPreview ?? currentImage ?? ""}
                     alt="Vista previa de certificacion"
-                    style={{
-                      marginTop: 10,
-                      width: 160,
-                      maxWidth: "100%",
-                      height: 100,
-                      objectFit: "cover",
-                      borderRadius: 7,
-                      border: "1px solid var(--border2)",
-                    }}
+                    className={styles.previewImage}
                   />
                 )}
               </div>
