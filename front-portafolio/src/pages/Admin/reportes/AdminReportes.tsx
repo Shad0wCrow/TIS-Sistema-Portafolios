@@ -68,10 +68,8 @@ export default function AdminReportes() {
   const [totalReportes, setTotalReportes] = useState(0);
   const [loadingReportes, setLoadingReportes] = useState(true);
 
-  // HU-95: reporte seleccionado (fila completa clickeable)
   const [reporteSeleccionado, setReporteSeleccionado] = useState<ReportePortafolio | null>(null);
 
-  // HU-95: modal de resolución
   const [modalResolucionAbierto, setModalResolucionAbierto] = useState(false);
   const [accionResolucion, setAccionResolucion] = useState<"inhabilitar" | "desestimar" | null>(null);
   const [comentarioDesestimar, setComentarioDesestimar] = useState("");
@@ -103,7 +101,6 @@ export default function AdminReportes() {
 
   useEffect(() => { setPageReportes(1); }, [filtroEstado]);
 
-  // HU-95 CA1/CA2: "Resolver conflictos" — abre flujo o muestra aviso
   function handleResolverConflictos() {
     if (!reporteSeleccionado) {
       showError("Selecciona el reporte a Resolver");
@@ -115,11 +112,9 @@ export default function AdminReportes() {
     setModalResolucionAbierto(true);
   }
 
-  // HU-95 CA7/CA8/CA9: confirmar resolución
   async function confirmarResolucionHU95() {
     if (!reporteSeleccionado || !accionResolucion) return;
 
-    // CA9: comentario obligatorio para desestimar
     if (accionResolucion === "desestimar" && !comentarioDesestimar.trim()) {
       setComentarioError(true);
       comentarioRef.current?.focus();
@@ -149,7 +144,6 @@ export default function AdminReportes() {
       setModalResolucionAbierto(false);
       setReporteSeleccionado(null);
 
-      // CA10: reflejar nuevo estado en la lista
       if (filtroEstado === "pendiente") {
         setReportes((prev) => prev.filter((r) => r.id_reporte !== reporteSeleccionado.id_reporte));
         setTotalReportes((t) => Math.max(0, t - 1));
@@ -159,7 +153,6 @@ export default function AdminReportes() {
         );
       }
 
-      // Refrescar agrupados si estaban cargados
       if (grupos.length > 0) cargarGrupos();
     } catch (err: any) {
       showError(err?.response?.data?.message || "Error al resolver el reporte.");
@@ -178,7 +171,6 @@ export default function AdminReportes() {
   const [filtroGrupo, setFiltroGrupo] = useState<EstadoReporte | "todos">("todos");
   const [grupoExpandido, setGrupoExpandido] = useState<string | null>(null);
 
-  // HU-95 CA4/CA5: reporte seleccionado en "Por publicación"
   const [reporteSeleccionadoGrupo, setReporteSeleccionadoGrupo] = useState<ReportePortafolio | null>(null);
   const [modalGrupoAbierto, setModalGrupoAbierto] = useState(false);
   const [accionGrupo, setAccionGrupo] = useState<"inhabilitar" | "desestimar" | null>(null);
@@ -250,7 +242,7 @@ export default function AdminReportes() {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TAB 3: GESTIÓN DE USUARIOS (HU-45 + HU-46)
+  // TAB 3: GESTIÓN DE USUARIOS
   // ══════════════════════════════════════════════════════════════════════════
   const currentUserId = useMemo(() => {
     try {
@@ -276,6 +268,11 @@ export default function AdminReportes() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [historialEstados, setHistorialEstados] = useState<AdminUserStateHistoryEvent[]>([]);
   const [loadingHistorialEstados, setLoadingHistorialEstados] = useState(false);
+
+  // Cuando se cambia a "todos", limpiar selección
+  useEffect(() => {
+    if (estadoUsuario === "todos") setSelectedUser(null);
+  }, [estadoUsuario]);
 
   const loadUsers = useCallback(async () => {
     setLoadingUsers(true);
@@ -374,30 +371,30 @@ export default function AdminReportes() {
   useEffect(() => { setPageSolicitudes(1); }, [filtroSolicitud]);
 
   async function resolverSolicitud(accion: "aceptar" | "rechazar") {
-      if (!solicitudActiva) return;
-      setResolviendoSolicitud(true);
-      try {
-        const res = await resolverSolicitudReactivacion(solicitudActiva.id_solicitud, accion);
-        showMessage(res.message);
+    if (!solicitudActiva) return;
+    setResolviendoSolicitud(true);
+    try {
+      const res = await resolverSolicitudReactivacion(solicitudActiva.id_solicitud, accion);
+      showMessage(res.message);
 
-        const solicitudActualizada: SolicitudReactivacion = {
-          ...solicitudActiva,
-          estado:      res.solicitud.estado,
-          revisado_en: res.solicitud.revisado_en,
-        };
-        
-        setSolicitudes((prev) =>
-          prev.map((s) =>
-            s.id_solicitud === solicitudActiva.id_solicitud ? solicitudActualizada : s
-          )
-        );
-        setSolicitudActiva(solicitudActualizada);
-      } catch (err: any) {
-        showError(err?.response?.data?.message || "No se pudo resolver la solicitud.");
-      } finally {
-        setResolviendoSolicitud(false);
-      }
+      const solicitudActualizada: SolicitudReactivacion = {
+        ...solicitudActiva,
+        estado:      res.solicitud.estado,
+        revisado_en: res.solicitud.revisado_en,
+      };
+
+      setSolicitudes((prev) =>
+        prev.map((s) =>
+          s.id_solicitud === solicitudActiva.id_solicitud ? solicitudActualizada : s
+        )
+      );
+      setSolicitudActiva(solicitudActualizada);
+    } catch (err: any) {
+      showError(err?.response?.data?.message || "No se pudo resolver la solicitud.");
+    } finally {
+      setResolviendoSolicitud(false);
     }
+  }
 
   // ── Logout ────────────────────────────────────────────────────────────────
   function handleLogout() {
@@ -405,6 +402,9 @@ export default function AdminReportes() {
     sessionStorage.removeItem("dashboardPortafoliosCache");
     navigate("/login");
   }
+
+  // ── Determina si las filas de usuarios son seleccionables ─────────────────
+  const usuariosSeleccionables = estadoUsuario !== "todos";
 
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER
@@ -521,7 +521,6 @@ export default function AdminReportes() {
                     </button>
                   ))}
                 </div>
-                {/* CA1: único botón "Resolver conflictos" */}
                 <button
                   type="button"
                   className={`ar-resolve-main-btn${reporteSeleccionado ? " ar-resolve-main-btn--ready" : ""}`}
@@ -561,7 +560,6 @@ export default function AdminReportes() {
                     {reportes.map((r) => {
                       const selected = reporteSeleccionado?.id_reporte === r.id_reporte;
                       return (
-                        // CA3: fila completa clickeable como botón
                         <tr
                           key={r.id_reporte}
                           role="button"
@@ -632,7 +630,6 @@ export default function AdminReportes() {
             )}
           </main>
 
-          {/* Panel de instrucciones / reporte seleccionado */}
           <aside className="ar-preview" aria-label="Detalle del reporte seleccionado">
             {!reporteSeleccionado ? (
               <div className="ar-preview-empty">
@@ -834,7 +831,8 @@ export default function AdminReportes() {
                   aria-label="Listado de usuarios registrados"
                 >
                   <colgroup>
-                    <col style={{ width: "48px" }} />
+                    {/* Columna de selección solo visible cuando se puede seleccionar */}
+                    {usuariosSeleccionables && <col style={{ width: "48px" }} />}
                     <col style={{ width: "26%" }} />
                     <col style={{ width: "12%" }} />
                     <col style={{ width: "13%" }} />
@@ -844,7 +842,8 @@ export default function AdminReportes() {
                   </colgroup>
                   <thead>
                     <tr>
-                      <th scope="col">Selección</th>
+                      {/* Encabezado de selección solo cuando aplica */}
+                      {usuariosSeleccionables && <th scope="col">Selección</th>}
                       <th scope="col">Usuario</th>
                       <th scope="col">Rol</th>
                       <th scope="col">Estado</th>
@@ -860,27 +859,43 @@ export default function AdminReportes() {
                       return (
                         <tr
                           key={u.id_usuario}
-                          role="button"
-                          aria-pressed={isSelected}
-                          tabIndex={0}
-                          className={`ar-row ar-row--selectable${isSelected ? " ar-row--selected" : ""}${isSelf ? " ar-row--self" : ""}`}
-                          onClick={() => setSelectedUser(isSelected ? null : u)}
+                          // Sin rol "button" ni cursor pointer cuando no es seleccionable
+                          role={usuariosSeleccionables ? "button" : undefined}
+                          aria-pressed={usuariosSeleccionables ? isSelected : undefined}
+                          tabIndex={usuariosSeleccionables ? 0 : -1}
+                          className={`ar-row${usuariosSeleccionables ? " ar-row--selectable" : ""}${isSelected ? " ar-row--selected" : ""}${isSelf ? " ar-row--self" : ""}`}
+                          onClick={() => {
+                            if (!usuariosSeleccionables) return;
+                            setSelectedUser(isSelected ? null : u);
+                          }}
                           onKeyDown={(e) => {
+                            if (!usuariosSeleccionables) return;
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
                               setSelectedUser(isSelected ? null : u);
                             }
                           }}
-                          title={isSelf ? "Tu propia cuenta" : isSelected ? "Haz clic para deseleccionar" : "Haz clic para seleccionar"}
+                          title={
+                            !usuariosSeleccionables
+                              ? undefined
+                              : isSelf
+                                ? "Tu propia cuenta"
+                                : isSelected
+                                  ? "Haz clic para deseleccionar"
+                                  : "Haz clic para seleccionar"
+                          }
                         >
-                          <td>
-                            <span
-                              className={`ar-row-check${isSelected ? " ar-row-check--on" : ""}`}
-                              aria-hidden="true"
-                            >
-                              {isSelected ? "✓" : "○"}
-                            </span>
-                          </td>
+                          {/* Check de selección solo cuando aplica */}
+                          {usuariosSeleccionables && (
+                            <td>
+                              <span
+                                className={`ar-row-check${isSelected ? " ar-row-check--on" : ""}`}
+                                aria-hidden="true"
+                              >
+                                {isSelected ? "✓" : "○"}
+                              </span>
+                            </td>
+                          )}
                           <td>
                             <div className="admin-user-cell">
                               <div className="admin-avatar" aria-hidden="true">
@@ -1008,7 +1023,6 @@ export default function AdminReportes() {
               <div>
                 <h2 className="ar-section-title">Solicitudes de reactivación</h2>
                 <p className="ar-section-subtitle">
-                  {/* CA18: si no hay solicitudes, se muestra en panel derecho */}
                   {totalSolicitudes} solicitud{totalSolicitudes !== 1 ? "es" : ""} encontrada{totalSolicitudes !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -1026,12 +1040,10 @@ export default function AdminReportes() {
               </div>
             </div>
 
-            {/* CA12: lista de solicitudes */}
             <div className="admin-table-wrap">
               {loadingSolicitudes ? (
                 <div className="admin-table-state">Cargando solicitudes…</div>
               ) : solicitudes.length === 0 ? (
-                /* CA18: sin solicitudes pendientes */
                 <div className="admin-table-state ar-empty-reactivacion">
                   <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
                     fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1111,7 +1123,6 @@ export default function AdminReportes() {
             )}
           </main>
 
-          {/* Panel de detalle: CA13/CA14 */}
           <aside className="ar-preview" aria-label="Detalle de solicitud de reactivación">
             {!solicitudActiva ? (
               <div className="ar-preview-empty">
@@ -1162,7 +1173,6 @@ export default function AdminReportes() {
                 </div>
               </div>
 
-              {/* CA6: opciones inhabilitar / desestimar */}
               <div className="ar-modal-field">
                 <label className="ar-modal-label">Acción a tomar</label>
                 <div className="ar-modal-radio-group">
@@ -1185,7 +1195,6 @@ export default function AdminReportes() {
                 </div>
               </div>
 
-              {/* CA8/CA9: comentario obligatorio para desestimar */}
               {accionResolucion === "desestimar" && (
                 <div className="ar-modal-field">
                   <label className="ar-modal-label" htmlFor="comentario-desestimar">
@@ -1337,7 +1346,6 @@ export default function AdminReportes() {
 // Sub-componentes
 // ══════════════════════════════════════════════════════════════════════════
 
-/** Panel derecho de detalle de un reporte (HU-95 Tab 1) */
 function PreviewReporteHU95({
   reporte: r,
   onClose,
@@ -1422,7 +1430,6 @@ function PreviewReporteHU95({
   );
 }
 
-/** Panel de detalle de una solicitud de reactivación (HU-95 CAs 13–16) */
 function DetalleSolicitud({
   solicitud: s,
   onClose,
@@ -1455,7 +1462,6 @@ function DetalleSolicitud({
         </div>
       </div>
 
-      {/* CA13: explicación, queja o solución propuesta por el usuario */}
       <div className="ar-preview-section">
         <p className="ar-preview-label">Mensaje del usuario</p>
         <p className="ar-preview-comment" style={{ whiteSpace: "pre-wrap" }}>{s.mensaje}</p>
@@ -1481,15 +1487,12 @@ function DetalleSolicitud({
         </div>
       )}
 
-      {/* CA14: aceptar o mantener inhabilitado */}
       {s.estado === "pendiente" && (
         <div className="ar-preview-section ar-preview-actions">
-          {/* CA15: aceptar reactivación */}
           <button type="button" className="ar-preview-btn ar-btn--resolve"
             onClick={() => onResolver("aceptar")} disabled={resolviendo}>
             {resolviendo ? "Procesando…" : "✓ Aceptar reactivación"}
           </button>
-          {/* CA16: rechazar solicitud */}
           <button type="button" className="ar-preview-btn ar-btn--dismiss"
             onClick={() => onResolver("rechazar")} disabled={resolviendo}>
             ✕ Mantener inhabilitado
@@ -1512,7 +1515,6 @@ function DetalleSolicitud({
   );
 }
 
-/** Fila expandible de un grupo de reportes por publicación */
 function GrupoPublicacion({
   grupo: g,
   expandido,
@@ -1526,7 +1528,6 @@ function GrupoPublicacion({
 }) {
   return (
     <article className={`ar-grupo${expandido ? " ar-grupo--open" : ""}`}>
-      {/* CA4: cabecera completa clickeable como botón */}
       <button type="button" className="ar-grupo-header" onClick={onToggle}
         aria-expanded={expandido}>
         <div className="ar-user-cell">
@@ -1578,7 +1579,6 @@ function GrupoPublicacion({
             </thead>
             <tbody>
               {g.reportes.map((r, idx) => (
-                // CA4: cada fila del grupo también seleccionable como botón
                 <tr key={r.id_reporte} className="ar-row">
                   <td className="admin-muted" style={{ fontFamily: "var(--admin-font-mono)", fontSize: 12 }}>
                     {idx + 1}
@@ -1604,7 +1604,6 @@ function GrupoPublicacion({
                   <td><EstadoBadge estado={r.estado} /></td>
                   <td>
                     {r.estado === "pendiente" ? (
-                      
                       <button type="button" className="ar-btn ar-btn--resolve"
                         onClick={() => onResolver(r)}>Resolver</button>
                     ) : (
