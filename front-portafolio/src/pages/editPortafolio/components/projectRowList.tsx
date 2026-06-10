@@ -1,12 +1,21 @@
+import type { ReactNode } from "react";
 import styles from "./projectRow.module.css";
-import { IconPencil } from "./icons";
 import type { Proyecto } from "../../../types/portafolioTypes";
+
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
 
 interface ProjectRowListProps {
   proyectos: Proyecto[];
   onEdit: (proyecto: Proyecto) => void;
   onRemove: (id: number) => void;
   onAdd: () => void;
+  activeAction?: SectionAction;
+  headerAction?: ReactNode;
+  importState?: {
+    importedUrls: Set<string>;
+    importingUrls: Set<string>;
+    onImport: (proyecto: Proyecto) => void;
+  };
 }
 
 const ESTADO_LABEL: Record<Proyecto["estado"], string> = {
@@ -44,8 +53,16 @@ export default function ProjectRowList({
   proyectos,
   onEdit,
   onRemove,
-  onAdd,
+  activeAction,
+  headerAction,
+  importState,
 }: ProjectRowListProps) {
+  const showEdit = activeAction === "editar";
+  const showRemove = activeAction === "eliminar";
+  
+  const isActionActive = showEdit || showRemove;
+  const actionText = showEdit ? "SELECCIONA EL PROYECTO A EDITAR" : showRemove ? "SELECCIONA EL PROYECTO A ELIMINAR" : ""; 
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -56,9 +73,11 @@ export default function ProjectRowList({
           </span>
         </div>
 
-        <button type="button" className={styles.btnAdd} onClick={onAdd}>
-          <span>+</span> Agregar
-        </button>
+        {headerAction && (
+          <div className={styles.headerActions}>
+            {headerAction}
+          </div>
+        )}
       </div>
 
       {proyectos.length === 0 ? (
@@ -71,8 +90,25 @@ export default function ProjectRowList({
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {proyectos.map((p) => (
-            <li key={p.id_proyecto} className={styles.item}>
+            <li 
+              key={p.id_proyecto} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showEdit) onEdit(p);
+                if (showRemove) onRemove(p.id_proyecto);
+              }}
+              tabIndex={isActionActive ? 0 : undefined}
+              role={isActionActive ? "button" : undefined}
+              onKeyDown={(e) => {
+                if (isActionActive && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  if (showEdit) onEdit(p);
+                  if (showRemove) onRemove(p.id_proyecto);
+                }
+              }}
+            >
               <div className={styles.itemIcon}>
                 <ProjectIcon />
               </div>
@@ -89,9 +125,7 @@ export default function ProjectRowList({
                   {formatFecha(p.fecha_inicio)} — {formatFecha(p.fecha_fin)}
                 </span>
 
-                {p.descripcion && (
-                  <span className={styles.itemDesc}>{p.descripcion}</span>
-                )}
+                {p.descripcion && <span className={styles.itemDesc}>{p.descripcion}</span>}
 
                 {p.roles?.length > 0 && (
                   <div className={styles.roleList}>
@@ -111,6 +145,10 @@ export default function ProjectRowList({
                         target="_blank"
                         rel="noreferrer"
                         className={styles.demoLink}
+                        tabIndex={isActionActive ? -1 : 0}
+                        onClick={(e) => {
+                          if (isActionActive) e.preventDefault();
+                        }}
                       >
                         Ver demo ↗
                       </a>
@@ -122,6 +160,10 @@ export default function ProjectRowList({
                         target="_blank"
                         rel="noreferrer"
                         className={styles.repoLink}
+                        tabIndex={isActionActive ? -1 : 0}
+                        onClick={(e) => {
+                          if (isActionActive) e.preventDefault();
+                        }}
                       >
                         Repositorio ↗
                       </a>
@@ -130,30 +172,34 @@ export default function ProjectRowList({
                 )}
               </div>
 
-              <div className={styles.itemActions}>
-                <button
-                  type="button"
-                  className={styles.btnEdit}
-                  onClick={() => onEdit(p)}
-                  title="Editar"
-                >
-                  <IconPencil />
-                  Editar
-                </button>
-
-                <button
-                  type="button"
-                  className={styles.btnRemove}
-                  onClick={() => onRemove(p.id_proyecto)}
-                  title="Eliminar"
-                >
-                  Eliminar
-                </button>
-              </div>
+              {importState && (
+                <div className={styles.itemActions}>
+                  <button
+                    type="button"
+                    className={styles.btnEdit}
+                    disabled={
+                      !p.repositorio_url ||
+                      importState.importedUrls.has(p.repositorio_url) ||
+                      importState.importingUrls.has(p.repositorio_url)
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      importState.onImport(p);
+                    }}
+                  >
+                    {p.repositorio_url && importState.importedUrls.has(p.repositorio_url)
+                      ? "Importado"
+                      : p.repositorio_url && importState.importingUrls.has(p.repositorio_url)
+                        ? "Importando..."
+                        : "Importar"}
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       )}
+
     </div>
   );
 }

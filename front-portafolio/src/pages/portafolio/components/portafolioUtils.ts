@@ -46,6 +46,7 @@ const NIVEL_IDIOMA: Record<string, string> = {
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
 const DEFAULTS_SECCIONES: ConfiguracionSecciones = {
+  mostrar_correo: false,
   seccion_perfil: "publico",
   seccion_habilidades: "publico",
   seccion_proyectos: "publico",
@@ -150,3 +151,44 @@ export {
 };
 
 export type { SectionId, PreviewSnapshot };
+
+export const DEFAULT_ACCENT_COLOR = "#1a6644";
+
+function hexToRgb(hex: string) {
+  const clean = hex.replace("#", "");
+  return {
+    r: parseInt(clean.slice(0, 2), 16),
+    g: parseInt(clean.slice(2, 4), 16),
+    b: parseInt(clean.slice(4, 6), 16),
+  };
+}
+
+function darkenHex(hex: string, factor: number) {
+  const { r, g, b } = hexToRgb(hex);
+  const dr = Math.max(0, Math.round(r * factor));
+  const dg = Math.max(0, Math.round(g * factor));
+  const db = Math.max(0, Math.round(b * factor));
+  return `rgb(${dr}, ${dg}, ${db})`;
+}
+
+export function resetAccentColor(): void {
+  document.documentElement.style.removeProperty("--color-accent");
+  document.documentElement.style.removeProperty("--color-accent-soft");
+  document.documentElement.style.removeProperty("--color-accent-dark");
+  document.documentElement.style.removeProperty("--color-accent-bg");
+  document.documentElement.style.removeProperty("--color-accent-bg2");
+  document.documentElement.style.removeProperty("--color-accent-border");
+  document.documentElement.style.removeProperty("--color-accent-ring");
+}
+
+export function applyAccentColor(color: string): void {
+  const { r, g, b } = hexToRgb(color);
+
+  document.documentElement.style.setProperty("--color-accent", color);
+  document.documentElement.style.setProperty("--color-accent-soft", `rgba(${r}, ${g}, ${b}, 0.20)`);
+  document.documentElement.style.setProperty("--color-accent-dark", darkenHex(color, 0.7));
+  document.documentElement.style.setProperty("--color-accent-bg", `rgba(${r}, ${g}, ${b}, 0.35)`);
+  document.documentElement.style.setProperty("--color-accent-bg2", `rgba(${r}, ${g}, ${b}, 0.22)`);
+  document.documentElement.style.setProperty("--color-accent-border", `rgba(${r}, ${g}, ${b}, 0.50)`);
+  document.documentElement.style.setProperty("--color-accent-ring", `rgba(${r}, ${g}, ${b}, 0.55)`);
+}

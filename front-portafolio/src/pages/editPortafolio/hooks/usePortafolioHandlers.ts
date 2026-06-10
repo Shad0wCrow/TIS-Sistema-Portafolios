@@ -10,14 +10,19 @@ import {
   removeExperiencia,
   updateExperiencia,
   addEducacion,
+  updateEducacion,
   removeEducacion,
   addCurso,
+  updateCurso,
   removeCurso,
   addLogro,
   removeLogro,
+  updateLogro,
   addIdioma,
   removeIdioma,
+  updateIdioma,
   addCertificacion,
+  updateCertificacion,
   removeCertificacion
 } from "../../../services/portafolioservice";
 
@@ -39,11 +44,14 @@ import { detectarDuplicado } from "../../../utils/detectarDuplicado";
 type AlertState = { mensaje: string; onConfirm: () => void } | null;
 type ModalProyectoState = Proyecto | null | "nuevo";
 type ModalExperienciaState = Experiencia | null | "nueva";
+type ModalLogroState = Logro | null | "nuevo";
+type ModalCertificacionState = CertificacionApi | null | "nueva";
 
 type CertificacionApi = Certificacion & {
   entidad_emisora?: { nombre?: string | null } | null;
   entidadEmisora?: { nombre?: string | null } | null;
   nombre_entidad_emisora?: string | null;
+  imagen_url?: string | null;
 };
 
 type ActiveSection = "perfil" | "habilidades" | "proyectos" | "educacion" | "cursos" | "logros" | "idiomas" | "experiencia" | "certificaciones";
@@ -69,6 +77,7 @@ const normalizarCertificaciones = (items: CertificacionApi[] = []): Certificacio
       cert.entidadEmisora?.nombre ??
       cert.nombre_entidad_emisora ??
       "",
+    url_imagen: cert.url_imagen ?? cert.imagen_url ?? null,
   }));
 
 interface UsePortafolioHandlersParams {
@@ -80,7 +89,8 @@ interface UsePortafolioHandlersParams {
   certificaciones: Certificacion[];
   setCertificaciones: Dispatch<SetStateAction<Certificacion[]>>;
   modalProy: ModalProyectoState;
-  modalExp: ModalExperienciaState;
+  modalLogro?: ModalLogroState;
+  modalCertificacion?: ModalCertificacionState;
   setModalAlert: Dispatch<SetStateAction<AlertState>>;
   setSuccessMessage: Dispatch<SetStateAction<string | null>>;
   setErrorMessage: Dispatch<SetStateAction<string | null>>;
@@ -92,7 +102,6 @@ interface UsePortafolioHandlersParams {
   setWarningLogro: Dispatch<SetStateAction<string | undefined>>;
   setWarningIdioma: Dispatch<SetStateAction<string | undefined>>;
   setWarningCertificacion: Dispatch<SetStateAction<string | undefined>>;
-  refreshData: () => Promise<void>;
 }
 
 export function usePortafolioHandlers({
@@ -104,7 +113,8 @@ export function usePortafolioHandlers({
   certificaciones,
   setCertificaciones,
   modalProy,
-  modalExp,
+  modalLogro,
+  modalCertificacion,
   setModalAlert,
   setSuccessMessage,
   setErrorMessage,
@@ -116,7 +126,6 @@ export function usePortafolioHandlers({
   setWarningLogro,
   setWarningIdioma,
   setWarningCertificacion,
-  refreshData,
 }: UsePortafolioHandlersParams) {
 
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
@@ -150,6 +159,7 @@ export function usePortafolioHandlers({
       const key = habilidad.habilidad?.tipo === "tecnica" ? "habilidades_tecnicas" : "habilidades_blandas";
       return { ...prev, [key]: [...prev[key], item] };
     });
+    setSuccessMessage("La habilidad ha sido agregada correctamente.");
     return true;
   };
 
@@ -200,8 +210,8 @@ export function usePortafolioHandlers({
         ? proyectos.filter((proyecto) => proyecto.id_proyecto !== modalProy.id_proyecto)
         : proyectos;
 
-    if (detectarDuplicado(proyectosAComparar, { titulo: formData.titulo }, ["titulo"])) {
-      setWarningProyecto("Ya tienes un proyecto con ese título.");
+    if (detectarDuplicado(proyectosAComparar, { titulo: formData.titulo, fecha_inicio: formData.fecha_inicio }, ["titulo", "fecha_inicio"])) {
+      setWarningProyecto("Ya tienes un proyecto registrado con ese título y fecha de inicio.");
       return false;
     }
 
@@ -217,12 +227,14 @@ export function usePortafolioHandlers({
           }
         : prev
       );
+      setSuccessMessage("El proyecto ha sido actualizado correctamente.");
     } else {
       const res = await addProyecto(formData);
       setData((prev) => prev
         ? { ...prev, proyectos: [res.proyecto, ...prev.proyectos] }
         : prev
       );
+      setSuccessMessage("El proyecto ha sido agregado correctamente.");
     }
     return true;
   };
@@ -247,28 +259,25 @@ export function usePortafolioHandlers({
   };
 
   const handleSaveExperiencia = async (formData: Parameters<typeof addExperiencia>[0]) => {
-    const experienciasAComparar =
-      modalExp && modalExp !== "nueva"
-        ? experiencias.filter((experiencia) => experiencia.id_experiencia !== modalExp.id_experiencia)
-        : experiencias;
-
-    if (detectarDuplicado(experienciasAComparar, { nombre_empresa: formData.nombre_empresa, puesto: formData.puesto }, ["nombre_empresa", "puesto"])) {
-      setWarningExperiencia("Ya tienes una experiencia registrada con esa empresa y puesto.");
+    if (detectarDuplicado(experiencias, {
+      nombre_empresa: formData.nombre_empresa,
+      puesto: formData.puesto,
+      tipo: formData.tipo,
+      ubicacion: formData.ubicacion,
+      fecha_inicio: formData.fecha_inicio
+    }, ["nombre_empresa", "puesto", "tipo", "ubicacion", "fecha_inicio"])) {
+      setWarningExperiencia("Ya tienes una experiencia registrada con la misma empresa, puesto, tipo de empleo, ubicación y fecha de inicio.");
       return false;
     }
 
     setWarningExperiencia(undefined);
-    if (modalExp && modalExp !== "nueva") {
-      await updateExperiencia(modalExp.id_experiencia, formData);
-      await refreshData();
-    } else {
-      const res = await addExperiencia(formData);
-      const experiencia = {
-        ...res.experiencia,
-        nombre_empresa: formData.nombre_empresa,
-      };
-      setExperiencias((prev) => [experiencia, ...prev]);
-    }
+    const res = await addExperiencia(formData);
+    const experiencia = {
+      ...res.experiencia,
+      nombre_empresa: formData.nombre_empresa,
+    };
+    setExperiencias((prev) => [experiencia, ...prev]);
+    setSuccessMessage("La experiencia laboral ha sido agregada correctamente.");
     return true;
   };
 
@@ -289,14 +298,47 @@ export function usePortafolioHandlers({
   };
 
   const handleSaveEducacion = async (formData: Parameters<typeof addEducacion>[0]) => {
-    if (detectarDuplicado(educaciones, { institucion: formData.institucion, titulo: formData.titulo }, ["institucion", "titulo"])) {
-      setWarningEducacion("Ya tienes este registro de educación en tu perfil.");
+    if (detectarDuplicado(educaciones, { institucion: formData.institucion, titulo: formData.titulo, grado: formData.grado }, ["institucion", "titulo", "grado"])) {
+      setWarningEducacion("Ya tienes este registro de educación en tu perfil con la misma institución, grado y título.");
       return false;
     }
     setWarningEducacion(undefined);
     const res = await addEducacion(formData);
     setData((prev) => prev ? { ...prev, educaciones: [res.educacion, ...prev.educaciones] } : prev);
+    setSuccessMessage("El grado de formacion ha sido agregado correctamente.");
     return true;
+  };
+
+  const handleEditExperiencia = async (
+    id: number,
+    formData: Parameters<typeof updateExperiencia>[1]
+  ) => {
+    const res = await updateExperiencia(id, formData);
+    const experiencia = {
+      ...res.experiencia,
+      nombre_empresa: res.experiencia.empresa?.nombre ?? res.experiencia.nombre_empresa ?? "",
+    };
+    setExperiencias((prev) =>
+      prev.map((item) => item.id_experiencia === id ? experiencia : item)
+    );
+    setSuccessMessage("La experiencia laboral ha sido actualizada correctamente.");
+  };
+
+  const handleEditEducacion = async (
+    id: number,
+    formData: Parameters<typeof updateEducacion>[1]
+  ) => {
+    const res = await updateEducacion(id, formData);
+    setData((prev) => prev
+      ? {
+          ...prev,
+          educaciones: prev.educaciones.map((educacion) =>
+            educacion.id_educacion === id ? res.educacion : educacion
+          ),
+        }
+      : prev
+    );
+    setSuccessMessage("El grado de formacion ha sido actualizado correctamente.");
   };
 
   const handleRemoveEducacion = async (id: number) => {
@@ -319,14 +361,32 @@ export function usePortafolioHandlers({
   };
 
   const handleSaveCurso = async (formData: Parameters<typeof addCurso>[0]) => {
-    if (detectarDuplicado(cursos, { titulo: formData.nombre_curso, institucion: formData.institucion }, ["titulo", "institucion"])) {
-      setWarningCurso("Ya tienes este curso registrado en tu perfil.");
+    if (detectarDuplicado(cursos, { titulo: formData.nombre_curso, institucion: formData.institucion, rol_curso: formData.rol_curso }, ["titulo", "institucion", "rol_curso"])) {
+      setWarningCurso("Ya tienes este curso registrado en tu perfil con el mismo nombre, institución y rol.");
       return false;
     }
     setWarningCurso(undefined);
     const res = await addCurso(formData);
     setData((prev) => prev ? { ...prev, cursos: [res.curso, ...prev.cursos] } : prev);
+    setSuccessMessage("El curso ha sido agregado correctamente.");
     return true;
+  };
+
+  const handleEditCurso = async (
+    id: number,
+    formData: Parameters<typeof updateCurso>[1]
+  ) => {
+    const res = await updateCurso(id, formData);
+    setData((prev) => prev
+      ? {
+          ...prev,
+          cursos: prev.cursos.map((curso) =>
+            curso.id_educacion === id ? res.curso : curso
+          ),
+        }
+      : prev
+    );
+    setSuccessMessage("El curso ha sido actualizado correctamente.");
   };
 
   const handleRemoveCurso = async (id: number) => {
@@ -367,19 +427,55 @@ export function usePortafolioHandlers({
     });
   };
 
-  const handleAddLogro = async (formData: Parameters<typeof addLogro>[0]) => {
-    if (detectarDuplicado(logros as any[], { titulo: formData.titulo, entidad_nombre: formData.nombre_entidad }, ["titulo", "entidad_nombre"])) {
-      setWarningLogro("Ya tienes este logro registrado en tu perfil.");
+  const handleSaveLogro = async (formData: Parameters<typeof addLogro>[0], idParam?: number) => {
+    const idToEdit = idParam ?? (modalLogro && modalLogro !== "nuevo" ? modalLogro.id_logro : undefined);
+    const logrosAComparar = idToEdit ? logros.filter(l => l.id_logro !== idToEdit) : logros;
+
+    if (detectarDuplicado(logrosAComparar as any[], { titulo: formData.titulo, entidad_nombre: formData.nombre_entidad, fecha_obtencion: formData.fecha_obtencion }, ["titulo", "entidad_nombre", "fecha_obtencion"])) {
+      setWarningLogro("Ya tienes este logro registrado en tu perfil con el mismo título, fecha y entidad emisora.");
       return false;
     }
     setWarningLogro(undefined);
-    const res = await addLogro(formData);
-    const logro = {
+
+    if (idToEdit) {
+      const res = await updateLogro(idToEdit, formData);
+      const logroActualizado = {
+        ...res.logro,
+        entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
+      };
+      setData((prev) => prev ? { ...prev, logros: prev.logros.map(l => l.id_logro === idToEdit ? logroActualizado : l) } : prev);
+      setSuccessMessage("El logro ha sido actualizado correctamente.");
+    } else {
+      const res = await addLogro(formData);
+      const logro = {
+        ...res.logro,
+        entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
+      };
+      setData((prev) => prev ? { ...prev, logros: [logro, ...prev.logros] } : prev);
+      setSuccessMessage("El logro ha sido agregado correctamente.");
+    }
+    return true;
+  };
+
+  const handleEditLogro = async (
+    id: number,
+    formData: Parameters<typeof updateLogro>[1]
+  ) => {
+    const res = await updateLogro(id, formData);
+    const logroActualizado = {
       ...res.logro,
       entidad_nombre: res.logro.entidad_emisora?.nombre ?? res.logro.entidadEmisora?.nombre ?? res.logro.entidad_nombre ?? null,
     };
-    setData((prev) => prev ? { ...prev, logros: [logro, ...prev.logros] } : prev);
-    return true;
+    setData((prev) => prev
+      ? {
+          ...prev,
+          logros: prev.logros.map((logro) =>
+            logro.id_logro === id ? logroActualizado : logro
+          ),
+        }
+      : prev
+    );
+    setSuccessMessage("El logro ha sido actualizado correctamente.");
   };
 
   const handleAddIdioma = async (formData: Parameters<typeof addIdioma>[0]) => {
@@ -396,8 +492,28 @@ export function usePortafolioHandlers({
       visibilidad: res.idioma.visibilidad,
     };
     setData((prev) => prev ? { ...prev, idiomas: [...prev.idiomas, idioma] } : prev);
+    setSuccessMessage("El idioma ha sido agregado correctamente.");
     return true;
   };
+
+  const handleEditIdioma = async (
+  id: number,
+  datos: { nivel: string; visibilidad: "publico" | "privado" }
+) => {
+  await updateIdioma(id, datos);
+  setData((prev) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      idiomas: prev.idiomas.map((idioma) =>
+        idioma.id_usuario_idioma === id
+          ? { ...idioma, nivel: datos.nivel as Idioma["nivel"], visibilidad: datos.visibilidad }
+          : idioma
+      ),
+    };
+  });
+  setSuccessMessage("El idioma ha sido actualizado correctamente.");
+};
 
   const handleRemoveIdioma = async (id: number) => {
     setModalAlert({
@@ -418,29 +534,57 @@ export function usePortafolioHandlers({
     });
   };
 
-  const handleSaveCertificacion = async (
+ const handleSaveCertificacion = async (
     formData: Parameters<typeof addCertificacion>[0],
-    imagenBase64: string | null
+    arg2?: string | null | number
   ) => {
-    if (detectarDuplicado(certificaciones as any[], { nombre: formData.nombre, nombre_entidad: formData.nombre_entidad }, ["nombre", "nombre_entidad"])) {
-      setWarningCertificacion("Ya tienes esta certificación registrada en tu perfil.");
+    const idToEdit = typeof arg2 === "number" ? arg2 : (modalCertificacion && modalCertificacion !== "nueva" ? modalCertificacion.id_certificacion : undefined);
+    const certificacionesAComparar = idToEdit ? certificaciones.filter(c => c.id_certificacion !== idToEdit) : certificaciones;
+
+    if (detectarDuplicado(certificacionesAComparar as any[], { nombre: formData.nombre, nombre_entidad: formData.nombre_entidad, url_certificado: formData.url_certificado }, ["nombre", "nombre_entidad", "url_certificado"])) {
+      setWarningCertificacion("Ya tienes esta certificación registrada en tu perfil con el mismo título, entidad emisora y URL."); 
       return false;
+
     }
     setWarningCertificacion(undefined);
-    const res = await addCertificacion(formData);
-    const id = res.certificacion?.id_certificacion;
-    if (imagenBase64 && id) {
-      const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-      stored[id] = imagenBase64;
-      localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
+    
+    if (idToEdit) {
+      const res = await updateCertificacion(idToEdit, formData);
+      const certificacionActualizada = {
+        ...res.certificacion,
+        nombre_entidad: formData.nombre_entidad,
+        url_imagen: res.certificacion?.imagen_url ?? res.certificacion?.url_imagen ?? null,
+      };
+      setCertificaciones((prev) => prev.map((c) => c.id_certificacion === idToEdit ? certificacionActualizada : c));
+      setSuccessMessage("La certificacion ha sido actualizada correctamente.");
+    } else {
+      const res = await addCertificacion(formData);
+      const certificacion = {
+        ...res.certificacion,
+        nombre_entidad: formData.nombre_entidad,
+        url_imagen: res.certificacion?.imagen_url ?? res.certificacion?.url_imagen ?? null,
+      };
+      setCertificaciones((prev) => [certificacion, ...prev]);
+      setSuccessMessage("La certificacion ha sido agregada correctamente.");
     }
-    const certificacion = {
-      ...res.certificacion,
-      nombre_entidad: formData.nombre_entidad,
-      imagen_url: imagenBase64,
-    };
-    setCertificaciones((prev) => [certificacion, ...prev]);
     return true;
+  };
+
+  const handleEditCertificacion = async (
+    id: number,
+    formData: Parameters<typeof updateCertificacion>[1]
+  ) => {
+    const res = await updateCertificacion(id, formData);
+    const certificacionActualizada = normalizarCertificaciones([
+      res.certificacion as CertificacionApi,
+    ])[0];
+
+    setCertificaciones((prev) =>
+      prev.map((certificacion) =>
+        certificacion.id_certificacion === id ? certificacionActualizada : certificacion
+      )
+    );
+    setSuccessMessage("La certificacion ha sido actualizada correctamente.");
   };
 
   const handleRemoveCertificacion = async (id: number) => {
@@ -450,9 +594,6 @@ export function usePortafolioHandlers({
         setModalAlert(null);
         try {
           await removeCertificacion(id);
-          const stored = JSON.parse(localStorage.getItem("certificaciones_imagenes") || "{}");
-          delete stored[id];
-          localStorage.setItem("certificaciones_imagenes", JSON.stringify(stored));
           setCertificaciones((prev) => prev.filter((certificacion) => certificacion.id_certificacion !== id));
           setSuccessMessage("La certificacion ha sido eliminada correctamente.");
         } catch (error) {
@@ -469,19 +610,27 @@ export function usePortafolioHandlers({
     handleSaveProyecto,
     handleRemoveProyecto,
     handleSaveExperiencia,
+    handleEditExperiencia,
     handleRemoveExperiencia,
     handleSaveEducacion,
+    handleEditEducacion,
     handleRemoveEducacion,
     handleSaveCurso,
+    handleEditCurso,
     handleRemoveCurso,
     handleRemoveLogro,
-    handleAddLogro,
+    handleSaveLogro,
+    handleAddLogro: handleSaveLogro, // Alias para no romper importaciones de la app mientras lo adaptas
+    handleEditLogro,
     handleAddIdioma,
+    handleEditIdioma,
     handleRemoveIdioma,
     handleSaveCertificacion,
+    handleAddCertificacion: handleSaveCertificacion,
+    handleEditCertificacion,
     handleRemoveCertificacion,
   };
 }
 
 export { SECTION_LABELS, normalizarCertificaciones };
-export type { AlertState, ModalProyectoState, ModalExperienciaState, ActiveSection, CertificacionApi };
+export type { AlertState, ModalProyectoState, ModalExperienciaState, ModalLogroState, ModalCertificacionState, ActiveSection, CertificacionApi };

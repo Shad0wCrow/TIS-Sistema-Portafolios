@@ -20,6 +20,8 @@ class Usuario extends Authenticatable
         'contrasenia',
         'rol',
         'region_id',
+        'github_username',
+        'github_conectado_en',
         'eliminado',
     ];
 

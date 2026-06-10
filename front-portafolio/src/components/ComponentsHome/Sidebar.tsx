@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import HomeIcon from '../../assets/icons/Home.svg';
 import UserIcon from '../../assets/icons/perfil.svg';
 import BriefcaseIcon from '../../assets/icons/Briefcase.svg';
 import BookmarkIcon from '../../assets/icons/Bookmark.svg';
 import LogoutIcon from '../../assets/icons/Logout.svg';
+import ChartIcon from '../../assets/icons/Chart.svg';
 
 import ModalCrearPortafolio from '../portafolio/ModalCrearPortafolio';
 
@@ -15,18 +16,41 @@ export interface MenuItem {
   id: string;
 }
 
-const Sidebar: React.FC = () => {
+interface QuickAction {
+  label: string;
+  description: string;
+  action: string;
+}
+
+interface SidebarProps {
+  activeItem?: string;
+  onNavigate?: (id: string) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showModal, setShowModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const menuItems: MenuItem[] = [
-    { id: 'inicio',     name: 'Inicio',    icon: HomeIcon      },
-    { id: 'perfil',     name: 'Perfil',    icon: UserIcon      },
-    { id: 'portafolio', name: 'Portafolio', icon: BriefcaseIcon },
-    { id: 'bookmarks',  name: 'Guardados', icon: BookmarkIcon  },
-    { id: 'salir',      name: 'Salir',     icon: LogoutIcon    },
+    { id: 'inicio',       name: 'Inicio',       icon: HomeIcon      },
+    { id: 'perfil',       name: 'Perfil',       icon: UserIcon      },
+    { id: 'portafolio',   name: 'Portafolio',   icon: BriefcaseIcon },
+    { id: 'estadisticas', name: 'Estadísticas', icon: ChartIcon     },
+    { id: 'bookmarks',    name: 'Guardados',    icon: BookmarkIcon  },
+    { id: 'salir',        name: 'Salir',        icon: LogoutIcon    },
   ];
+
+  const quickActions: Record<string, QuickAction[]> = {
+    portafolio: [
+      { label: 'Editar portafolio', description: 'Modificar secciones y contenido', action: 'portafolio' },
+      { label: 'Vista previa', description: 'Revisar como se vera tu portafolio', action: 'vista-portafolio' },
+      { label: 'Publicar', description: 'Configurar enlace publico', action: 'publicar' },
+      { label: 'Visibilidad', description: 'Controlar secciones visibles', action: 'visibilidad' },
+      { label: 'Generar CV', description: 'Crear un CV desde tu informacion', action: 'generar-cv' },
+    ],
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -40,6 +64,7 @@ const Sidebar: React.FC = () => {
         });
         const data = await res.json();
         localStorage.setItem('hasProfile', data.has_profile ? 'true' : 'false');
+        if (data.has_profile) localStorage.setItem('hasPortafolio', 'true');
       } catch (error) {
         console.error('Error verificando perfil:', error);
       }
@@ -55,12 +80,20 @@ const Sidebar: React.FC = () => {
 
     switch (id) {
       case 'inicio':
+        if (onNavigate) {
+          onNavigate('inicio');
+          return;
+        }
         navigate('/dashboard');
         break;
 
       case 'perfil':
         if (!token) {
           navigate('/login');
+          return;
+        }
+        if (onNavigate) {
+          onNavigate('perfil');
           return;
         }
         if (hasProfile) {
@@ -78,7 +111,15 @@ const Sidebar: React.FC = () => {
         }
         break;
 
+      case 'estadisticas':
+        navigate('/portafolio/estadisticas');
+        break;
+
       case 'bookmarks':
+        if (onNavigate) {
+          onNavigate('bookmarks');
+          return;
+        }
         navigate('/guardados');
         break;
 
@@ -88,6 +129,32 @@ const Sidebar: React.FC = () => {
 
       default:
         console.warn('Ruta no definida:', id);
+    }
+  };
+
+  const handleQuickAction = (action: string): void => {
+    switch (action) {
+      case 'notificaciones':
+        navigate('/notificaciones');
+        break;
+      case 'crear-perfil':
+        navigate('/createAccount');
+        break;
+      case 'vista-portafolio':
+        navigate('/portafolio');
+        break;
+      case 'publicar':
+        navigate('/portafolio/publicar');
+        break;
+      case 'visibilidad':
+        navigate('/portafolio/visibilidad');
+        break;
+      case 'generar-cv':
+        navigate('/generar-cv');
+        break;
+      default:
+        handleNavigation(action);
+        break;
     }
   };
 
@@ -111,25 +178,72 @@ const Sidebar: React.FC = () => {
     navigate('/login');
   };
 
+  const routeActiveItem = (): string => {
+    if (location.pathname.startsWith('/guardados')) return 'bookmarks';
+    if (location.pathname.startsWith('/perfil') || location.pathname.startsWith('/createAccount')) return 'perfil';
+    if (location.pathname.startsWith('/portafolio/estadisticas')) return 'estadisticas';
+    if (location.pathname.startsWith('/portafolio')) return 'portafolio';
+    return 'inicio';
+  };
+
+  const selectedItem = activeItem ?? routeActiveItem();
+
   return (
     <>
       <aside className="dashboard-sidebar">
         <nav className="dashboard-menu">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              className="dashboard-menu-item"
-              onClick={() => handleNavigation(item.id)}
-              type="button"
-            >
-              <img
-                src={item.icon}
-                alt={item.name}
-                className="dashboard-menu-icon-svg"
-              />
-              <span className="dashboard-menu-text">{item.name}</span>
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            const actions = quickActions[item.id] ?? [];
+
+            return (
+              <div
+                className={`dashboard-menu-group${actions.length > 0 ? ' dashboard-menu-group-has-panel' : ''}`}
+                key={item.id}
+              >
+                <button
+                  className={`dashboard-menu-item ${selectedItem === item.id ? 'dashboard-menu-item-active' : ''}`}
+                  onClick={() => handleNavigation(item.id)}
+                  type="button"
+                  aria-describedby={actions.length > 0 ? `quick-actions-${item.id}` : undefined}
+                >
+                  <img
+                    src={item.icon}
+                    alt=""
+                    aria-hidden="true"
+                    className="dashboard-menu-icon-svg"
+                  />
+                  <span className="dashboard-menu-text">{item.name}</span>
+                </button>
+
+                {actions.length > 0 && (
+                  <div
+                    id={`quick-actions-${item.id}`}
+                    className="dashboard-quick-panel"
+                    role="menu"
+                    aria-label={`Accesos de ${item.name}`}
+                  >
+                    <div className="dashboard-quick-panel-title">{item.name}</div>
+                    <div className="dashboard-quick-panel-list">
+                      {actions.map((quickAction) => (
+                        <button
+                          key={quickAction.action}
+                          type="button"
+                          className="dashboard-quick-action"
+                          role="menuitem"
+                          onClick={() => handleQuickAction(quickAction.action)}
+                        >
+                          <span className="dashboard-quick-action-label">{quickAction.label}</span>
+                          <span className="dashboard-quick-action-description">
+                            {quickAction.description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
       </aside>
 

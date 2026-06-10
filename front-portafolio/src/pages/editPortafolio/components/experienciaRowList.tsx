@@ -1,11 +1,14 @@
 import styles from "./experienciaRowList.module.css";
 import type { Experiencia } from "../../../types/portafolioTypes";
 
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
+
 interface Props {
   experiencias: Experiencia[];
   onEdit: (e: Experiencia) => void;
   onRemove: (id: number) => void;
   onAdd: () => void;
+  activeAction?: SectionAction;
 }
 
 function formatFecha(fecha: string) {
@@ -14,7 +17,18 @@ function formatFecha(fecha: string) {
   return `${meses[parseInt(month, 10) - 1]} ${year}`;
 }
 
-export default function ExperienciaRowList({ experiencias, onRemove, onAdd }: Props) {
+export default function ExperienciaRowList({
+  experiencias,
+  onEdit,
+  onRemove,
+  activeAction,
+}: Props) {
+  const showEdit = activeAction === "editar"; 
+  const showRemove = activeAction === "eliminar";
+  
+  const isActionActive = showEdit || showRemove;
+  const actionText = showEdit ? "SELECCIONA LA EXPERIENCIA A EDITAR" : showRemove ? "SELECCIONA LA EXPERIENCIA A ELIMINAR" : "";
+
   return (
     <div className={styles.container}>
       {experiencias.length === 0 && (
@@ -25,18 +39,37 @@ export default function ExperienciaRowList({ experiencias, onRemove, onAdd }: Pr
       )}
 
       <div className={styles.list}>
+        {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
         {experiencias.map((exp) => (
-          <div key={exp.id_experiencia} className={styles.card}>
+          <div 
+            key={exp.id_experiencia} 
+            className={`${styles.card} ${isActionActive ? styles.itemClickable : ""}`}
+            onClick={() => {
+              if (showEdit) onEdit(exp);
+              if (showRemove) onRemove(exp.id_experiencia);
+            }}
+            tabIndex={isActionActive ? 0 : undefined}
+            role={isActionActive ? "button" : undefined}
+            onKeyDown={(e) => {
+              if (isActionActive && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                if (showEdit) onEdit(exp);
+                if (showRemove) onRemove(exp.id_experiencia);
+              }
+            }}
+          >
             <div className={styles.cardTimeline}>
               <span className={styles.timelineDot} />
               <span className={styles.timelineLine} />
             </div>
+
             <div className={styles.cardBody}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardMain}>
                   <span className={styles.puesto}>{exp.puesto}</span>
                   <span className={styles.empresa}>{exp.nombre_empresa}</span>
                 </div>
+
                 <div className={styles.cardMeta}>
                   {exp.tipo && <span className={styles.badge}>{exp.tipo}</span>}
                   {exp.visibilidad === "privado" && (
@@ -44,6 +77,7 @@ export default function ExperienciaRowList({ experiencias, onRemove, onAdd }: Pr
                   )}
                 </div>
               </div>
+
               <div className={styles.cardDetails}>
                 {exp.ubicacion && (
                   <span className={styles.detail}>
@@ -54,6 +88,7 @@ export default function ExperienciaRowList({ experiencias, onRemove, onAdd }: Pr
                     {exp.ubicacion}
                   </span>
                 )}
+
                 <span className={styles.detail}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -64,32 +99,14 @@ export default function ExperienciaRowList({ experiencias, onRemove, onAdd }: Pr
                   {formatFecha(exp.fecha_inicio)} — {exp.es_actual ? "Actualidad" : exp.fecha_fin ? formatFecha(exp.fecha_fin) : "—"}
                 </span>
               </div>
-              {exp.descripcion && (
-                <p className={styles.descripcion}>{exp.descripcion}</p>
-              )}
+
+              {exp.descripcion && <p className={styles.descripcion}>{exp.descripcion}</p>}
             </div>
-            <div className={styles.cardActions}>
-              
-              <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} onClick={() => onRemove(exp.id_experiencia)} title="Eliminar">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                  <path d="M10 11v6M14 11v6" />
-                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                </svg>
-              </button>
-            </div>
+
           </div>
         ))}
       </div>
 
-      <button className={styles.addBtn} onClick={onAdd}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Agregar experiencia
-      </button>
     </div>
   );
 }

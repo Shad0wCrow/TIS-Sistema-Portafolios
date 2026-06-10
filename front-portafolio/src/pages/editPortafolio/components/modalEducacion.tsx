@@ -2,6 +2,8 @@ import { useState, useEffect, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
 import { addEducacion, getSugerenciasInstitucion } from "../../../services/portafolioservice";
 import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
+import type { GradoEducacion } from "../../../types/portafolioTypes";
+import { GRADO_LABELS } from "../../../types/portafolioTypes";
 
 interface ModalEducacionProps {
   onClose: () => void;
@@ -12,24 +14,37 @@ interface ModalEducacionProps {
 interface FormErrors {
   institucion?: string;
   titulo?: string;
+  grado?: string;
   fecha_inicio?: string;
   fecha_fin?: string;
 }
 
+// Orden de aparición en el select (de menor a mayor nivel académico)
+const GRADOS_ORDENADOS: GradoEducacion[] = [
+  "titulo_bachiller",
+  "tecnico_medio",
+  "titulo_superior",
+  "licenciado",
+  "especialidad",
+  "maestria",
+  "doctorado",
+  "post_doctorado",
+];
+
 export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: ModalEducacionProps) {
   const [form, setForm] = useState({
-    institucion: "",
-    titulo: "",
+    institucion:  "",
+    titulo:       "",
     area_estudio: "",
+    grado:        "" as GradoEducacion | "",
     fecha_inicio: "",
-    fecha_fin: "",
-    es_actual: false,
-    descripcion: "",
-    visibilidad: "privado" as "publico" | "privado",
+    fecha_fin:    "",
+    es_actual:    false,
+    descripcion:  "",
+    visibilidad:  "privado" as "publico" | "privado",
   });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [errors, setErrors]       = useState<FormErrors>({});
+  const [loading, setLoading]     = useState(false);
 
   useEffect(() => {
     if (form.es_actual) {
@@ -58,8 +73,9 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
     const hoy = new Date().toISOString().split("T")[0];
 
     if (!form.institucion.trim()) newErrors.institucion = "La institución es obligatoria.";
-    if (!form.titulo.trim()) newErrors.titulo = "El título o carrera es obligatorio.";
-    if (!form.fecha_inicio) newErrors.fecha_inicio = "La fecha de inicio es obligatoria.";
+    if (!form.titulo.trim())      newErrors.titulo      = "El título o carrera es obligatorio.";
+    if (!form.grado)              newErrors.grado       = "El grado de formación es obligatorio.";
+    if (!form.fecha_inicio)       newErrors.fecha_inicio = "La fecha de inicio es obligatoria.";
 
     if (form.fecha_inicio && form.fecha_fin) {
       if (form.fecha_inicio > form.fecha_fin) {
@@ -78,19 +94,18 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
     setLoading(true);
     try {
       const guardado = await onSave({
-        institucion: form.institucion.trim(),
-        titulo: form.titulo.trim(),
+        institucion:  form.institucion.trim(),
+        titulo:       form.titulo.trim(),
         area_estudio: form.area_estudio.trim() || undefined,
+        grado:        form.grado as GradoEducacion,
         fecha_inicio: form.fecha_inicio,
-        fecha_fin: form.es_actual ? undefined : (form.fecha_fin || undefined),
-        es_actual: form.es_actual as any,
-        descripcion: form.descripcion.trim() || undefined,
-        visibilidad: form.visibilidad,
+        fecha_fin:    form.es_actual ? undefined : (form.fecha_fin || undefined),
+        descripcion:  form.descripcion.trim() || undefined,
+        visibilidad:  form.visibilidad,
       });
       if (guardado === false) return;
 
-      setSuccessMsg("¡Educación registrada correctamente!");
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch {
       setErrors({ institucion: "Error al guardar. Intenta de nuevo." });
     } finally {
@@ -107,25 +122,13 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
         onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.modalHead}>
-          <span className={styles.modalTitle}>Registrar Educación</span>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar formulario de educación">
+          {/* HU-8: título actualizado */}
+          <span className={styles.modalTitle}>Registrar Grado de Formación</span>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar formulario de formación académica">
             ×
           </button>
         </div>
 
-        {successMsg ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "32px 0",
-              color: "var(--accent)",
-              fontWeight: 700,
-              fontSize: 15,
-            }}
-          >
-            ✓ {successMsg}
-          </div>
-        ) : (
           <>
             <div className={styles.modalGrid}>
               {duplicadoWarning && (
@@ -138,6 +141,31 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
                   {duplicadoWarning}
                 </div>
               )}
+
+              {/* HU-8: Grado de formación — campo obligatorio, va primero */}
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="edu-grado">Grado de formación *</label>
+                <select
+                  id="edu-grado"
+                  name="grado"
+                  value={form.grado}
+                  onChange={handleChange}
+                  aria-required="true"
+                  style={errors.grado ? { borderColor: "var(--red, #e53e3e)" } : {}}
+                >
+                  <option value="">Seleccionar grado...</option>
+                  {GRADOS_ORDENADOS.map((g) => (
+                    <option key={g} value={g}>
+                      {GRADO_LABELS[g]}
+                    </option>
+                  ))}
+                </select>
+                {errors.grado && (
+                  <span style={{ fontSize: 11, color: "var(--red, #e53e3e)", marginTop: 2 }}>
+                    {errors.grado}
+                  </span>
+                )}
+              </div>
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label htmlFor="edu-institucion">Institución / Universidad *</label>
@@ -275,7 +303,6 @@ export default function ModalEducacion({ onClose, onSave, duplicadoWarning }: Mo
               </button>
             </div>
           </>
-        )}
       </div>
     </div>
   );

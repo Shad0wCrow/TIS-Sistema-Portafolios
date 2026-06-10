@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Perfil;
+use App\Models\PortafolioPublicacion;
 use App\Models\Usuario;
 use App\Services\PortafolioExploracionService;
 use App\Services\PortafolioPublicacionService;
@@ -56,14 +58,35 @@ class AuthController extends Controller
             'contrasenia' => 'required',
         ]);
 
-        $usuario = Usuario::where('correo', $request->correo)
-            ->where('eliminado', false)
-            ->first();
+        // Buscar usuario sin filtrar por estado (para poder distinguir el motivo del rechazo)
+        $usuario = Usuario::where('correo', $request->correo)->first();
 
+        // Credenciales incorrectas (usuario no existe o contraseña mal)
         if (!$usuario || !Hash::check($request->contrasenia, $usuario->contrasenia)) {
             throw ValidationException::withMessages([
                 'correo' => ['Credenciales incorrectas.'],
             ]);
+        }
+
+        // Cuenta inhabilitada (eliminado = true)
+        if ($usuario->eliminado) {
+            // Verificar si tiene una solicitud de reactivación rechazada
+            $solicitudRechazada = \App\Models\SolicitudReactivacion::where('usuario_id', $usuario->id_usuario)
+                ->where('estado', 'rechazada')
+                ->orderByDesc('creado_en')
+                ->first();
+
+            if ($solicitudRechazada) {
+                return response()->json([
+                    'message'  => 'Tu cuenta ha sido baneada permanentemente por la administración.',
+                    'estado'   => 'baneado',
+                ], 403);
+            }
+
+            return response()->json([
+                'message'  => 'Tu cuenta ha sido inhabilitada.',
+                'estado'   => 'inhabilitado',
+            ], 403);
         }
 
         $token = $usuario->createToken('auth_token')->plainTextToken;
@@ -72,6 +95,8 @@ class AuthController extends Controller
             'message' => 'Login correcto',
             'token' => $token,
             'user' => $usuario,
+            'has_profile' => $this->usuarioTienePerfil($usuario),
+            'has_portafolio' => $this->usuarioTienePortafolio($usuario),
             'dashboard' => $this->dashboardInicial($usuario),
         ]);
     }
@@ -105,5 +130,18 @@ class AuthController extends Controller
 
             return null;
         }
+    }
+
+    private function usuarioTienePerfil(Usuario $usuario): bool
+    {
+        return Perfil::where('usuario_id', $usuario->id_usuario)
+            ->where('eliminado', false)
+            ->exists();
+    }
+
+    private function usuarioTienePortafolio(Usuario $usuario): bool
+    {
+        return $this->usuarioTienePerfil($usuario)
+            || PortafolioPublicacion::where('usuario_id', $usuario->id_usuario)->exists();
     }
 }

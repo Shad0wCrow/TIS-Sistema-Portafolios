@@ -1,11 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   eliminarPortafolioGuardado,
   getEstadoGuardado,
+  getEstadoPublicacion,
   getPortafolioPublico,
   guardarPortafolio,
+  registrarContactoDirecto,
+  registrarVisualizacionPortafolio,
 } from "../../services/portafolioservice";
+import ReportarPortafolio from "./components/ReportarPortafolio";
 import type {
   Certificacion,
   Curso,
@@ -32,6 +37,7 @@ import {
   SECTION_LABELS,
 } from "./components/portafolioUtils";
 import type { SectionId } from "./components/portafolioUtils";
+import { formatPhoneWithPrefix } from "../../utils/countryPhoneOptions";
 
 const emptyData: Required<Pick<
   PortafolioData,
@@ -56,6 +62,45 @@ const emptyData: Required<Pick<
   experiencias: [],
 };
 
+const DEFAULT_ACCENT_COLOR = "#1a6644";
+
+function buildAccentStyle(color?: string | null): CSSProperties {
+  const accent = color && /^#[0-9a-fA-F]{6}$/.test(color.trim())
+    ? color.trim()
+    : DEFAULT_ACCENT_COLOR;
+
+  const r = parseInt(accent.slice(1, 3), 16);
+  const g = parseInt(accent.slice(3, 5), 16);
+  const b = parseInt(accent.slice(5, 7), 16);
+
+  const darken = (factor: number) =>
+    `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
+
+  return {
+    ["--color-accent" as any]:        accent,
+    ["--color-accent-soft" as any]:   `rgba(${r}, ${g}, ${b}, 0.20)`,
+    ["--color-accent-dark" as any]:   darken(0.7),
+    ["--color-accent-bg" as any]:     `rgba(${r}, ${g}, ${b}, 0.35)`,
+    ["--color-accent-bg2" as any]:    `rgba(${r}, ${g}, ${b}, 0.22)`,
+    ["--color-accent-border" as any]: `rgba(${r}, ${g}, ${b}, 0.50)`,
+    ["--color-accent-ring" as any]:   `rgba(${r}, ${g}, ${b}, 0.55)`,
+  };
+}
+
+const getRequestMessage = (err: unknown, fallback: string): string => {
+  if (
+    err &&
+    typeof err === "object" &&
+    "response" in err
+  ) {
+    const response = (err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }).response;
+    const firstError = response?.data?.errors ? Object.values(response.data.errors)[0]?.[0] : "";
+    return firstError || response?.data?.message || fallback;
+  }
+
+  return fallback;
+};
+
 export default function PortafolioPublico() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
@@ -65,6 +110,12 @@ export default function PortafolioPublico() {
   const [guardado, setGuardado] = useState(false);
   const [savingGuardado, setSavingGuardado] = useState(false);
   const [guardadoMessage, setGuardadoMessage] = useState("");
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactDropdownOpen, setContactDropdownOpen] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const contactBtnRef = useRef<HTMLButtonElement>(null);
+  const [esPropioPerfil, setEsPropioPerfil] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -74,7 +125,10 @@ export default function PortafolioPublico() {
     }
 
     getPortafolioPublico(slug)
-      .then(setData)
+      .then((portafolio) => {
+        setData(portafolio);
+        registrarVisualizacionPortafolio(slug).catch(() => undefined);
+      })
       .catch((err) => {
         const message = err?.response?.data?.message ?? "El portafolio no está disponible.";
         setError(message);
@@ -92,6 +146,20 @@ export default function PortafolioPublico() {
       .catch(() => setGuardado(false));
   }, [slug]);
 
+  // CA #6: Detectar si el portafolio pertenece al usuario logueado
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!slug || !token) return;
+
+    getEstadoPublicacion()
+      .then((publicacion) => {
+        if (publicacion.slug_publico && publicacion.slug_publico === slug) {
+          setEsPropioPerfil(true);
+        }
+      })
+      .catch(() => undefined);
+  }, [slug]);
+
   const perfil = (data?.perfil ?? null) as Perfil | null;
   const habilidadesTecnicas = (data?.habilidades_tecnicas ?? emptyData.habilidades_tecnicas) as HabilidadItem[];
   const habilidadesBlandas = (data?.habilidades_blandas ?? emptyData.habilidades_blandas) as HabilidadItem[];
@@ -101,12 +169,30 @@ export default function PortafolioPublico() {
   const logros = (data?.logros ?? emptyData.logros) as Logro[];
   const idiomas = (data?.idiomas ?? emptyData.idiomas) as Idioma[];
   const certificaciones = (data?.certificaciones ?? emptyData.certificaciones) as Certificacion[];
+  const certificacionesConImagenes = useMemo(() => {
+    return certificaciones.map((c) => ({
+      ...c,
+      url_imagen: c.url_imagen ?? c.imagen_url ?? null,
+    }));
+  }, [certificaciones]);
   const experiencias = (data?.experiencias ?? emptyData.experiencias) as Experiencia[];
+  const contactoDirecto = data?.contacto_directo;
+  const telefonoPerfil = formatPhoneWithPrefix(perfil?.prefijo_celular, perfil?.celular);
+  const telefonoContacto = contactoDirecto?.telefono || telefonoPerfil || null;
+  const correoContacto   = contactoDirecto?.correo  || perfil?.correo_contacto || null;
+  const tieneTelefonoContacto = Boolean(telefonoContacto);
+  const tieneCorreoContacto = Boolean(correoContacto);
+  const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
+  const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
+  const mostrarContactoDirecto = Boolean(contactoDirecto?.habilitado && (tieneTelefonoContacto || tieneCorreoContacto) && slug);
+  const tieneMultiplesMediosContacto = tieneTelefonoContacto && tieneCorreoContacto;
 
   const nombreCompleto = useMemo(() => {
     if (!perfil) return "Portafolio profesional";
     return `${perfil.nombre_perfil ?? ""} ${perfil.apellido_perfil ?? ""}`.trim() || "Portafolio profesional";
   }, [perfil]);
+
+  const accentStyle = useMemo(() => buildAccentStyle(data?.color_acento), [data?.color_acento]);
 
   const sectionHasContent: Record<SectionId, boolean> = {
     perfil: Boolean(perfil),
@@ -115,7 +201,7 @@ export default function PortafolioPublico() {
     educacion: educaciones.length > 0,
     experiencia: experiencias.length > 0,
     cursos: cursos.length > 0,
-    certificaciones: certificaciones.length > 0,
+    certificaciones: certificacionesConImagenes.length > 0,
     logros: logros.length > 0,
     idiomas: idiomas.length > 0,
   };
@@ -143,13 +229,57 @@ export default function PortafolioPublico() {
         setGuardado(true);
         setGuardadoMessage("Portafolio guardado correctamente.");
       }
-    } catch (err: any) {
-      const message = err?.response?.data?.errors?.portafolio?.[0]
-        ?? err?.response?.data?.message
-        ?? "No se pudo actualizar guardados.";
-      setGuardadoMessage(message);
+    } catch (err) {
+      setGuardadoMessage(getRequestMessage(err, "No se pudo actualizar guardados."));
     } finally {
       setSavingGuardado(false);
+    }
+  };
+
+  const handleContactoDirecto = async (tipo: "whatsapp" | "correo") => {
+    if (!slug || contactLoading) return;
+    setContactError("");
+
+    if (tipo === "whatsapp") {
+      if (!telefonoContacto) {
+        setContactError("El usuario no tiene número registrado");
+        return;
+      }
+      const numero = telefonoContacto.replace(/\D/g, "");
+      if (!numero) {
+        setContactError("El usuario no tiene número de WhatsApp válido");
+        return;
+      }
+      const fallbackWhatsapp = `https://wa.me/${numero}`;
+      try {
+        setContactLoading(true);
+        const response = await registrarContactoDirecto(slug, "whatsapp");
+        window.open(response.whatsapp_url || fallbackWhatsapp, "_blank", "noreferrer");
+      } catch {
+        window.open(fallbackWhatsapp, "_blank", "noreferrer");
+      } finally {
+        setContactLoading(false);
+        setContactDropdownOpen(false);
+      }
+      return;
+    }
+
+    if (tipo === "correo") {
+      if (!correoContacto) {
+        setContactError("El usuario no tiene correo registrado");
+        return;
+      }
+      const fallbackMailto = `mailto:${correoContacto}`;
+      try {
+        setContactLoading(true);
+        const response = await registrarContactoDirecto(slug, "email");
+        window.open(response.mailto || fallbackMailto, "_blank", "noreferrer");
+      } catch {
+        window.open(fallbackMailto, "_blank", "noreferrer");
+      } finally {
+        setContactLoading(false);
+        setContactDropdownOpen(false);
+      }
     }
   };
 
@@ -173,8 +303,34 @@ export default function PortafolioPublico() {
               </div>
               <div className={styles.profileInfoCard}>
                 <p className={styles.fieldLabel}>Teléfono</p>
-                <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
+                <p className={styles.fieldValue}>{telefonoPerfil || "Sin información"}</p>
               </div>
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Ubicación</p>
+                <p className={styles.fieldValue}>{ubicacionPerfil || "Sin información"}</p>
+              </div>
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Correo</p>
+                <p className={styles.fieldValue}>{perfil?.correo_contacto ?? "Sin información"}</p>
+              </div>
+              {enlacesPerfil.length > 0 && (
+                <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                  <p className={styles.fieldLabel}>Enlaces personalizados</p>
+                  <div className={styles.profileLinks}>
+                    {enlacesPerfil.map((enlace, index) => (
+                      <a
+                        key={`${enlace.url}-${index}`}
+                        href={enlace.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.profileLink}
+                      >
+                        {enlace.titulo}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </SectionShell>
         );
@@ -278,7 +434,7 @@ export default function PortafolioPublico() {
         return (
           <SectionShell key="certificaciones" id="certificaciones" title="Certificaciones" count={certificaciones.length}>
             <div className={styles.certGrid}>
-              {certificaciones.map((certificacion) => (
+              {certificacionesConImagenes.map((certificacion) => (
                 <CertificacionCard key={certificacion.id_certificacion} cert={certificacion} />
               ))}
             </div>
@@ -346,7 +502,7 @@ export default function PortafolioPublico() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} style={accentStyle}>
       <header className={styles.topBar}>
         <div className={styles.brandBlock}>
           <span className={styles.brandKicker}>Devfolio</span>
@@ -382,7 +538,40 @@ export default function PortafolioPublico() {
             <div className={styles.profileHeader}>
               <h2 className={styles.profileName}>{nombreCompleto}</h2>
               {perfil?.profesion && <p className={styles.profileRole}>{perfil.profesion}</p>}
+              {ubicacionPerfil && <p className={styles.profileRole}>{ubicacionPerfil}</p>}
               {perfil?.descripcion && <p className={styles.profileDescription}>{perfil.descripcion}</p>}
+              {mostrarContactoDirecto && (
+                <div className={styles.contactWrapper}>
+                  <button
+                    ref={contactBtnRef}
+                    type="button"
+                    className={styles.contactButton}
+                    onClick={() => {
+                      setContactError("");
+                      if (!tieneMultiplesMediosContacto) {
+                        handleContactoDirecto(tieneTelefonoContacto ? "whatsapp" : "correo");
+                        return;
+                      }
+
+                      if (contactDropdownOpen) {
+                        setContactDropdownOpen(false);
+                        setDropdownPos(null);
+                      } else {
+                        const rect = contactBtnRef.current?.getBoundingClientRect();
+                        if (rect) setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
+                        setContactDropdownOpen(true);
+                      }
+                    }}
+                    aria-haspopup={tieneMultiplesMediosContacto ? "true" : undefined}
+                    aria-expanded={contactDropdownOpen}
+                  >
+                    Contacto directo
+                  </button>
+                  {contactError && (
+                    <p className={styles.contactErrorMsg} role="alert">{contactError}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -400,6 +589,42 @@ export default function PortafolioPublico() {
           {visibleSections.map(renderSection)}
         </section>
       </main>
+
+      {/* CA #1 y #6: Botón flotante de reporte (oculto para el propietario) */}
+      {slug && (
+        <ReportarPortafolio slug={slug} esPropioPerfil={esPropioPerfil} />
+      )}
+      {contactDropdownOpen && dropdownPos && tieneMultiplesMediosContacto && createPortal(
+        <div
+          className={styles.contactDropdown}
+          role="menu"
+          style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 99999 }}
+        >
+          {tieneTelefonoContacto && (
+            <button
+              type="button"
+              className={styles.contactDropdownItem}
+              role="menuitem"
+              onClick={() => handleContactoDirecto("whatsapp")}
+              disabled={contactLoading}
+            >
+              WhatsApp
+            </button>
+          )}
+          {tieneCorreoContacto && (
+            <button
+              type="button"
+              className={styles.contactDropdownItem}
+              role="menuitem"
+              onClick={() => handleContactoDirecto("correo")}
+              disabled={contactLoading}
+            >
+              Correo
+            </button>
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

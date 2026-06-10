@@ -1,12 +1,15 @@
 import styles from "./skillCard.module.css";
 import type { HabilidadItem } from "../../../types/portafolioTypes";
 
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
+
 interface SkillCardProps {
   tipo: "tecnica" | "blanda";
   lista: HabilidadItem[];
   onAdd: () => void;
   onRemove: (id: number) => void;
   onEdit: (habilidad: HabilidadItem) => void;
+  activeAction?: SectionAction;
 }
 
 const IconTecnica = () => (
@@ -32,13 +35,25 @@ const NIVEL_LABEL: Record<string, string> = {
   experto: "Experto",
 };
 
-export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: SkillCardProps) {
+export default function SkillCard({
+  tipo,
+  lista,
+  onRemove,
+  onEdit,
+  activeAction,
+}: SkillCardProps) {
   const titulo = tipo === "tecnica" ? "Habilidades Técnicas" : "Habilidades Blandas";
   const emptyLabel = tipo === "tecnica" ? "habilidades técnicas" : "habilidades blandas";
   const emptySubLabel =
     tipo === "tecnica"
       ? "Agrega lenguajes, frameworks y herramientas que dominas."
       : "Agrega habilidades interpersonales y de trabajo en equipo.";
+
+  const showEdit = activeAction === "editar";
+  const showRemove = activeAction === "eliminar";
+
+  const isActionActive = showEdit || showRemove;
+  const actionText = showEdit ? "SELECCIONA LA HABILIDAD A EDITAR" : showRemove ? "SELECCIONA LA HABILIDAD A ELIMINAR" : "";
 
   return (
     <div className={styles.card}>
@@ -49,9 +64,7 @@ export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: Skil
             {lista.length} registro{lista.length !== 1 ? "s" : ""}
           </span>
         </div>
-        <button className={styles.btnAdd} onClick={onAdd}>
-          <span>+</span> Agregar
-        </button>
+
       </div>
 
       {lista.length === 0 ? (
@@ -64,8 +77,16 @@ export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: Skil
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {lista.map((h) => (
-            <li key={h.id_usuario_habilidad} className={styles.item}>
+            <li 
+              key={h.id_usuario_habilidad} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showEdit) onEdit(h);
+                if (showRemove) onRemove(h.id_usuario_habilidad);
+              }}
+            >
               <div className={styles.itemIconWrap}>
                 {tipo === "tecnica" ? <IconTecnica /> : <IconBlanda />}
               </div>
@@ -81,24 +102,14 @@ export default function SkillCard({ tipo, lista, onAdd, onRemove, onEdit }: Skil
 
               <div className={styles.itemActions}>
                 {h.nivel && (
-                  <span className={`${styles.badge} ${styles[`badgeNivel_${h.nivel}`] ?? styles.badgeDefault}`}>
+                  <span
+                    className={`${styles.badge} ${
+                      styles[`badgeNivel_${h.nivel}`] ?? styles.badgeDefault
+                    }`}
+                  >
                     {NIVEL_LABEL[h.nivel] ?? h.nivel}
                   </span>
                 )}
-                <button
-                  className={styles.btnEdit}
-                  onClick={() => onEdit(h)}
-                  title="Editar nivel"
-                >
-                  Editar
-                </button>
-                <button
-                  className={styles.btnRemove}
-                  onClick={() => onRemove(h.id_usuario_habilidad)}
-                  title="Eliminar"
-                >
-                  Eliminar
-                </button>
               </div>
             </li>
           ))}

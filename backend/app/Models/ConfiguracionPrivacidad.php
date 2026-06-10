@@ -30,6 +30,11 @@ class ConfiguracionPrivacidad extends Model
         'seccion_idiomas',
     ];
 
+    protected $casts = [
+        'mostrar_correo' => 'boolean',
+        'mostrar_ubicacion' => 'boolean',
+    ];
+
     // Valores válidos para campos de sección
     public const PUBLICO  = 'publico';
     public const PRIVADO  = 'privado';

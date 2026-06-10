@@ -28,7 +28,6 @@ export default function ModalIdioma({ onClose, onSave, duplicadoWarning }: Modal
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -60,8 +59,7 @@ export default function ModalIdioma({ onClose, onSave, duplicadoWarning }: Modal
         visibilidad: form.visibilidad,
       });
       if (guardado === false) return;
-      setSuccessMsg("¡Idioma registrado correctamente!");
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch (error: any) {
       console.error(error?.response?.data || error);
       setErrors({ nombre: "Error al guardar. Revisa los datos." });
@@ -82,9 +80,6 @@ export default function ModalIdioma({ onClose, onSave, duplicadoWarning }: Modal
           <button className={styles.modalClose} onClick={onClose}>×</button>
         </div>
 
-        {successMsg ? (
-          <div style={{ textAlign: "center", padding: 30 }}>✓ {successMsg}</div>
-        ) : (
           <>
             <div className={styles.modalGrid}>
               {duplicadoWarning && (
@@ -163,7 +158,6 @@ export default function ModalIdioma({ onClose, onSave, duplicadoWarning }: Modal
               </button>
             </div>
           </>
-        )}
       </div>
     </div>
   );

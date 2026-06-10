@@ -75,6 +75,48 @@ class LogroController extends Controller
         return response()->json(['message' => 'Logro eliminado correctamente']);
     }
 
+    public function update(Request $request, $id)
+    {
+        $user = $request->user();
+ 
+        $logro = Logro::where('id_logro', $id)
+            ->where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->first();
+ 
+        if (!$logro) {
+            return response()->json(['message' => 'Logro no encontrado'], 404);
+        }
+
+        $camposPermitidos = ['descripcion', 'visibilidad'];
+        $camposNoPermitidos = array_values(array_diff(array_keys($request->all()), $camposPermitidos));
+
+        if (!empty($camposNoPermitidos)) {
+            return response()->json([
+                'message' => 'No se pueden modificar campos bloqueados del logro.',
+                'errors' => collect($camposNoPermitidos)->mapWithKeys(function ($campo) {
+                    return [$campo => ['Este campo no puede modificarse en la edicion.']];
+                }),
+            ], 422);
+        }
+
+        // CA4 y CA5: Solo validar y guardar los campos permitidos
+        $data = $request->validate([
+            'descripcion'     => 'nullable|string|max:255',
+            'visibilidad'     => 'nullable|in:publico,privado',
+        ]);
+
+        $logro->update([
+            'descripcion' => array_key_exists('descripcion', $data) ? $data['descripcion'] : $logro->descripcion,
+            'visibilidad' => $data['visibilidad'] ?? $logro->visibilidad,
+        ]);
+ 
+        return response()->json([
+            'message' => 'Logro actualizado correctamente',
+            'logro'   => $logro->fresh()->load('entidadEmisora'),
+        ]);
+    }
+
     public function sugerencias(Request $request)
     {
         $q = $request->query('q', '');
@@ -119,5 +161,20 @@ public function show(Request $request, $id)
     }
 
     return response()->json(['logro' => $logro]);
+}
+public function updateVisibilidad(Request $request, $id)
+{
+    $user = $request->user();
+ 
+    $item = Logro::where('id_logro', $id)
+        ->where('usuario_id', $user->id_usuario)
+        ->firstOrFail();
+ 
+    $request->validate(['visibilidad' => 'required|in:publico,privado']);
+ 
+    $item->visibilidad = $request->visibilidad;
+    $item->save();
+ 
+    return response()->json(['visibilidad' => $item->visibilidad]);
 }
 }

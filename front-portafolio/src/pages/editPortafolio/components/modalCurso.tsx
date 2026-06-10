@@ -2,6 +2,8 @@ import { useState, useEffect, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
 import { addCurso, getSugerenciasCurso } from "../../../services/portafolioservice";
 import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
+import type { RolCurso } from "../../../types/portafolioTypes";
+import { ROL_CURSO_LABELS } from "../../../types/portafolioTypes";
 
 interface ModalCursoProps {
   onClose: () => void;
@@ -12,23 +14,32 @@ interface ModalCursoProps {
 interface FormErrors {
   nombre_curso?: string;
   institucion?: string;
+  rol_curso?: string;
   fecha_inicio?: string;
   fecha_fin?: string;
 }
 
+const ROLES_ORDENADOS: RolCurso[] = [
+  "estudiante",
+  "auxiliar",
+  "docente",
+  "profesor",
+  "no_aplica",
+];
+
 export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalCursoProps) {
   const [form, setForm] = useState({
     nombre_curso: "",
-    institucion: "",
+    institucion:  "",
+    rol_curso:    "" as RolCurso | "",
     fecha_inicio: "",
-    fecha_fin: "",
-    es_actual: false,
-    descripcion: "",
-    visibilidad: "privado" as "publico" | "privado",
+    fecha_fin:    "",
+    es_actual:    false,
+    descripcion:  "",
+    visibilidad:  "privado" as "publico" | "privado",
   });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [errors, setErrors]         = useState<FormErrors>({});
+  const [loading, setLoading]       = useState(false);
 
   useEffect(() => {
     if (form.es_actual) {
@@ -57,8 +68,9 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
     const hoy = new Date().toISOString().split("T")[0];
 
     if (!form.nombre_curso.trim()) newErrors.nombre_curso = "El nombre del curso es obligatorio.";
-    if (!form.institucion.trim()) newErrors.institucion = "La institución es obligatoria.";
-    if (!form.fecha_inicio) newErrors.fecha_inicio = "La fecha de inicio es obligatoria.";
+    if (!form.institucion.trim())  newErrors.institucion  = "La institución es obligatoria.";
+    if (!form.rol_curso)           newErrors.rol_curso    = "El rol en el curso es obligatorio.";
+    if (!form.fecha_inicio)        newErrors.fecha_inicio = "La fecha de inicio es obligatoria.";
 
     if (form.fecha_inicio && form.fecha_fin) {
       if (form.fecha_inicio > form.fecha_fin) {
@@ -79,17 +91,17 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
     try {
       const guardado = await onSave({
         nombre_curso: form.nombre_curso.trim(),
-        institucion: form.institucion.trim(),
+        institucion:  form.institucion.trim(),
+        rol_curso:    form.rol_curso as RolCurso,
         fecha_inicio: form.fecha_inicio,
-        fecha_fin: form.es_actual ? undefined : (form.fecha_fin || undefined),
-        es_actual: form.es_actual,
-        descripcion: form.descripcion.trim() || undefined,
-        visibilidad: form.visibilidad,
+        fecha_fin:    form.es_actual ? undefined : (form.fecha_fin || undefined),
+        es_actual:    form.es_actual,
+        descripcion:  form.descripcion.trim() || undefined,
+        visibilidad:  form.visibilidad,
       });
       if (guardado === false) return;
 
-      setSuccessMsg("¡Curso registrado correctamente!");
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch {
       setErrors({ nombre_curso: "Error al guardar. Intenta de nuevo." });
     } finally {
@@ -109,11 +121,6 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
           <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar">×</button>
         </div>
 
-        {successMsg ? (
-          <div style={{ textAlign: "center", padding: "32px 0", color: "var(--accent)", fontWeight: 700, fontSize: 15 }}>
-            ✓ {successMsg}
-          </div>
-        ) : (
           <>
             <div className={styles.modalGrid}>
               {duplicadoWarning && (
@@ -154,6 +161,27 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
                   minChars={3}
                 />
                 {errMsg(errors.institucion)}
+              </div>
+
+              {/* HU-14: Rol en el curso — campo obligatorio */}
+              <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
+                <label htmlFor="curso-rol">Rol en el curso *</label>
+                <select
+                  id="curso-rol"
+                  name="rol_curso"
+                  value={form.rol_curso}
+                  onChange={handleChange}
+                  aria-required="true"
+                  style={errors.rol_curso ? errStyle : {}}
+                >
+                  <option value="">Seleccionar rol...</option>
+                  {ROLES_ORDENADOS.map((r) => (
+                    <option key={r} value={r}>
+                      {ROL_CURSO_LABELS[r]}
+                    </option>
+                  ))}
+                </select>
+                {errMsg(errors.rol_curso)}
               </div>
 
               <div className={styles.modalField}>
@@ -217,7 +245,6 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
                   <option value="privado">Privado</option>
                 </select>
               </div>
-
             </div>
 
             <div className={styles.modalActions}>
@@ -234,7 +261,6 @@ export default function ModalCurso({ onClose, onSave, duplicadoWarning }: ModalC
               </button>
             </div>
           </>
-        )}
       </div>
     </div>
   );

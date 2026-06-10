@@ -109,4 +109,52 @@ class IdiomaController extends Controller
 
         return response()->json(['sugerencias' => $sugerencias]);
     }
+    public function updateVisibilidad(Request $request, $id)
+{
+    $user = $request->user();
+ 
+    $item = UsuarioIdioma::where('id_usuario_idioma', $id)
+        ->where('usuario_id', $user->id_usuario)
+        ->firstOrFail();
+ 
+    $request->validate(['visibilidad' => 'required|in:publico,privado']);
+ 
+    $item->visibilidad = $request->visibilidad;
+    $item->save();
+ 
+    return response()->json(['visibilidad' => $item->visibilidad]);
+}
+public function update(Request $request, $id)
+{
+    $user = $request->user();
+
+    $usuarioIdioma = UsuarioIdioma::where('id_usuario_idioma', $id)
+        ->where('usuario_id', $user->id_usuario)
+        ->where('eliminado', false)
+        ->firstOrFail();
+
+    $camposPermitidos = ['nivel', 'visibilidad'];
+    $camposNoPermitidos = array_values(array_diff(array_keys($request->all()), $camposPermitidos));
+
+    if (!empty($camposNoPermitidos)) {
+        return response()->json([
+            'message' => 'No se pueden modificar campos bloqueados del idioma.',
+            'errors' => collect($camposNoPermitidos)->mapWithKeys(function ($campo) {
+                return [$campo => ['Este campo no puede modificarse en la edicion.']];
+            }),
+        ], 422);
+    }
+
+    $data = $request->validate([
+        'nivel'       => 'sometimes|required|in:a1,a2,b1,b2,c1,c2,nativo',
+        'visibilidad' => 'nullable|in:publico,privado',
+    ]);
+
+    $usuarioIdioma->update($data);
+
+    return response()->json([
+        'message' => 'Idioma actualizado correctamente',
+        'idioma'  => $usuarioIdioma->load('idioma'),
+    ]);
+}
 }

@@ -6,6 +6,11 @@ import { getDashboardPortafolios, guardarPortafolio } from '../../services/porta
 import type { EstadoPublicacionPortafolio, PortafolioPublicoResumen } from '../../types/portafolioTypes';
 import MyPublicationPanel from './components/MyPublicationPanel';
 import PublicPortfolioSection from './components/PublicPortfolioSection';
+import EditarPerfil from '../SoloPerfil/editarPerfil';
+import CreateAccount from '../createAccount/createAccount';
+import PageLoader from '../../components/ui/PageLoader/PageLoader';
+import TopRankingSection from "./components/TopRankingSection";
+
 import "./Dashboard.css";
 
 const DASHBOARD_CACHE_KEY = 'dashboardPortafoliosCache';
@@ -48,6 +53,13 @@ const writeDashboardCache = (data: Omit<DashboardCache, 'cachedAt'>) => {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [activeView, setActiveView] = useState<'inicio' | 'perfil'>('inicio');
+  const [profileStatus, setProfileStatus] = useState<'checking' | 'exists' | 'missing'>(() => {
+    const stored = localStorage.getItem('hasProfile');
+    if (stored === 'true') return 'exists';
+    if (stored === 'false') return 'missing';
+    return 'checking';
+  });
   const cachedDashboard = readDashboardCache();
   const [publicacion, setPublicacion] = useState<EstadoPublicacionPortafolio | null>(cachedDashboard?.publicacion ?? null);
   const [portafolios, setPortafolios] = useState<PortafolioPublicoResumen[]>(cachedDashboard?.portafolios ?? []);
@@ -58,6 +70,12 @@ const Dashboard: React.FC = () => {
   const [savingSlug, setSavingSlug] = useState<string | null>(null);
 
   useEffect(() => {
+    if (cachedDashboard && Date.now() - cachedDashboard.cachedAt < 30_000) {
+      setLoadingPublicacion(false);
+      setLoadingPortafolios(false);
+      return;
+    }
+
     getDashboardPortafolios(12)
       .then((data) => {
         setPublicacion(data.publicacion);
@@ -78,6 +96,27 @@ const Dashboard: React.FC = () => {
       .finally(() => {
         setLoadingPublicacion(false);
         setLoadingPortafolios(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    if (!token) return;
+
+    fetch('http://localhost:8000/api/perfil/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const exists = Boolean(data.has_profile);
+        localStorage.setItem('hasProfile', exists ? 'true' : 'false');
+        if (exists) localStorage.setItem('hasPortafolio', 'true');
+        setProfileStatus(exists ? 'exists' : 'missing');
+      })
+      .catch(() => {
+        const stored = localStorage.getItem('hasProfile');
+        setProfileStatus(stored === 'true' ? 'exists' : 'missing');
       });
   }, []);
 
@@ -108,35 +147,96 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleSidebarNavigate = (id: string) => {
+    if (id === 'inicio') {
+      setActiveView('inicio');
+      return;
+    }
+
+    if (id === 'perfil') {
+      const storedProfile = localStorage.getItem('hasProfile');
+      if (storedProfile === null) {
+        setProfileStatus('checking');
+      } else {
+        setProfileStatus(storedProfile === 'true' ? 'exists' : 'missing');
+      }
+      setActiveView('perfil');
+      return;
+    }
+
+    if (id === 'bookmarks') {
+      navigate('/guardados');
+    }
+  };
+
+  const handleProfileCreated = () => {
+    localStorage.setItem('hasProfile', 'true');
+    localStorage.setItem('hasPortafolio', 'true');
+    setProfileStatus('exists');
+    setActiveView('perfil');
+  };
+
   return (
     <div className="dashboard-page">
       <Header />
       <div className="dashboard-layout">
-        <Sidebar />
+        <Sidebar activeItem={activeView === 'perfil' ? 'perfil' : 'inicio'} onNavigate={handleSidebarNavigate} />
         <main className="dashboard-main">
-          <section className="dashboard-content">
-            <div className="dashboard-feed">
-              <section className="dashboard-section">
-                <MyPublicationPanel
-                  publicacion={publicacion}
-                  loading={loadingPublicacion}
-                  copied={copied}
-                  onCopy={handleCopy}
-                  onOpen={abrirPortafolio}
-                  onConfigure={() => navigate('/portafolio/visibilidad')}
-                />
-              </section>
-
-              <PublicPortfolioSection
-                portafolios={portafolios}
-                loading={loadingPortafolios}
-                error={portafoliosError}
-                savingSlug={savingSlug}
+          {activeView === 'perfil' ? (
+            <section className="dashboard-profile-content">
+              {profileStatus === 'checking' ? (
+                <PageLoader message="Verificando perfil..." />
+              ) : profileStatus === 'exists' ? (
+                <EditarPerfil embedded onBack={() => setActiveView('inicio')} />
+              ) : (
+                <CreateAccount embedded onSaved={handleProfileCreated} onCancel={() => setActiveView('inicio')} />
+              )}
+            </section>
+          ) : (
+            <section className="dashboard-content">
+                      <div className="dashboard-feed">
+            <section className="dashboard-views-card" aria-label="Visualizaciones del portafolio">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span className="dashboard-views-label">Visualizaciones</span>
+                <strong className="dashboard-views-value">
+                  {loadingPublicacion ? "..." : publicacion?.visualizaciones ?? 0}
+                </strong>
+              </div>
+              <button
+                type="button"
+                className="publication-small-btn"
+                onClick={() => navigate('/portafolio/estadisticas')}
+                style={{ marginLeft: 'auto', alignSelf: 'center' }}
+              >
+                Mis estadísticas
+              </button>
+            </section>
+          
+            <section className="dashboard-section">
+              <MyPublicationPanel
+                publicacion={publicacion}
+                loading={loadingPublicacion}
+                copied={copied}
+                onCopy={handleCopy}
                 onOpen={abrirPortafolio}
-                onSave={guardarDesdeHome}
+                onConfigure={() => navigate('/portafolio/publicar')}
               />
-            </div>
-          </section>
+            </section>
+          
+            {/* ── Ranking mensual Top 3 ── */}
+            <TopRankingSection />
+          
+            <PublicPortfolioSection
+              portafolios={portafolios}
+              loading={loadingPortafolios}
+              error={portafoliosError}
+              savingSlug={savingSlug}
+              onOpen={abrirPortafolio}
+              onSave={guardarDesdeHome}
+            />
+          </div>
+            </section>
+          )}
         </main>
       </div>
     </div>

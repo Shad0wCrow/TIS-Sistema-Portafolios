@@ -35,18 +35,13 @@
   overflow: hidden;
 }
 
+.embedded {
+  height: 100%;
+}
+
 
 .sidebar {
-  width: 230px;
-  min-width: 230px;
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--sidebar-border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  overflow-y: auto;
-  position: relative;
+  display: none;
 }
 
 .sidebarTop {
@@ -314,14 +309,7 @@
 }
 
 .topbar {
-  height: 52px;
-  background: var(--bg3);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  flex-shrink: 0;
+  display: none;
 }
 
 .topbarLeft {
@@ -494,6 +482,26 @@
   border-color: var(--accent) !important;
   background: #ffffff !important;
   box-shadow: none !important;
+}
+
+.phoneRow {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 8px;
+  align-items: stretch;
+}
+
+.phonePrefix {
+  min-height: 38px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-md);
+  color: var(--accent);
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .textarea {

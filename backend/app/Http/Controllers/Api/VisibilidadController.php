@@ -11,7 +11,7 @@ class VisibilidadController extends Controller
     private const VALORES_VALIDOS = ['publico', 'privado'];
 
     private const DEFAULTS = [
-        'mostrar_correo'                       => false,
+        'mostrar_correo'                       => true,
         'mostrar_ubicacion'                    => false,
         'visibilidad_proyectos_por_defecto'    => 'privado',
         'visibilidad_habilidades_por_defecto'  => 'privado',
@@ -42,7 +42,10 @@ class VisibilidadController extends Controller
         );
 
         return response()->json([
-            'configuracion' => $config->only(ConfiguracionPrivacidad::SECCIONES),
+            'configuracion' => array_merge(
+                $config->only(ConfiguracionPrivacidad::SECCIONES),
+                ['mostrar_correo' => (bool) $config->mostrar_correo]
+            ),
         ]);
     }
 
@@ -64,6 +67,7 @@ class VisibilidadController extends Controller
             'seccion_certificaciones' => 'required|in:publico,privado',
             'seccion_logros'          => 'required|in:publico,privado',
             'seccion_idiomas'         => 'required|in:publico,privado',
+            'mostrar_correo'          => 'required|boolean',
         ]);
 
         // CA-4: al menos una sección debe estar pública
@@ -81,7 +85,10 @@ class VisibilidadController extends Controller
 
         return response()->json([
             'message'       => 'Configuración de visibilidad guardada correctamente.',
-            'configuracion' => $config->only(ConfiguracionPrivacidad::SECCIONES),
+            'configuracion' => array_merge(
+                $config->only(ConfiguracionPrivacidad::SECCIONES),
+                ['mostrar_correo' => (bool) $config->mostrar_correo]
+            ),
         ]);
     }
 }

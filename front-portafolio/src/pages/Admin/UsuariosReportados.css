@@ -1,0 +1,203 @@
+/* UsuariosReportados.css — extends AdminDashboard.css */
+
+/* ── Page wrapper padding ── */
+.admin-users-page .admin-main {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 28px 32px 48px;
+}
+
+/* ── Navigation pills ── */
+.admin-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-nav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(240, 248, 244, 0.75);
+  padding: 0 14px;
+  font: 600 12px/1 var(--admin-font, 'DM Sans', system-ui, sans-serif);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.admin-nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.admin-nav-link--active {
+  background: rgba(95, 204, 150, 0.2);
+  color: #7adea8;
+  border-color: rgba(95, 204, 150, 0.3);
+}
+
+/* ── Users shell (section inner padding) ── */
+.admin-users-shell {
+  padding: 22px;
+}
+
+/* ── Head actions ── */
+.admin-users-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.admin-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: var(--admin-radius-sm, 7px);
+  background: #ffffff;
+  color: var(--admin-text-muted);
+  padding: 0 14px;
+  font: 600 12px/1 var(--admin-font, 'DM Sans', system-ui, sans-serif);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.admin-refresh-btn:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+  background: var(--admin-accent-soft);
+}
+
+/* ─────────────────────────────────────────────────
+   TWO-COLUMN LAYOUT
+   Left: table (grows)  |  Right: sidebar (fixed width)
+───────────────────────────────────────────────── */
+.admin-users-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  margin-top: 18px;
+  align-items: start;
+}
+
+/* Table zone must never overflow its column */
+.admin-users-table-zone {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────
+   SIDEBAR — always a single vertical column
+───────────────────────────────────────────────── */
+.admin-users-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  width: 100%;
+  position: sticky;
+  top: 80px;
+}
+
+/* Every direct card inside the sidebar takes full width */
+.admin-users-sidebar > * {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/*
+ * FIX: AdminReportsPanel renders .admin-reports as a 3-col grid
+ * globally. Inside the sidebar we need it to be a single column.
+ */
+.admin-users-sidebar .admin-reports {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px;
+}
+
+/* Also force every report card inside sidebar to be full width */
+.admin-users-sidebar .admin-report-card,
+.admin-users-sidebar .admin-section {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Sidebar note card */
+.admin-users-note .admin-empty-text {
+  margin-top: 10px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1280px) {
+  .admin-users-layout {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+}
+
+@media (max-width: 1100px) {
+  /* Stack table above sidebar */
+  .admin-users-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-users-sidebar {
+    position: static;
+    /* In stacked mode, show reports side by side again (3 col) */
+  }
+
+  .admin-users-sidebar .admin-reports {
+    display: grid !important;
+    flex-direction: unset !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .admin-users-sidebar .admin-reports {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-users-page .admin-main {
+    padding: 18px 16px 40px;
+  }
+
+  .admin-users-shell {
+    padding: 16px;
+  }
+
+  .admin-nav {
+    width: 100%;
+  }
+
+  .admin-nav-link {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .admin-section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-users-head-actions {
+    justify-content: flex-end;
+  }
+
+  .admin-users-sidebar .admin-reports {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: unset !important;
+  }
+}

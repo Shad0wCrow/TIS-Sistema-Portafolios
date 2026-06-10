@@ -1,0 +1,450 @@
+.container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: #f3f4f6;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  overflow: hidden;
+}
+
+.controls {
+  width: 320px;
+  background-color: #ffffff;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 10;
+}
+
+.controls h2 {
+  font-size: 1.25rem;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.printBtn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.printBtn:hover {
+  background-color: #0056b3;
+}
+
+.backBtn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.backBtn:hover {
+  background-color: #5a6268;
+}
+
+.controlSection {
+  margin-top: 10px;
+}
+
+.controlSection h3 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #444;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 4px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  cursor: pointer;
+  color: #555;
+}
+
+.cvPreview {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.cvDocument {
+  background-color: white;
+  width: 100%;
+  max-width: 800px;
+  min-height: 1131px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  color: #333;
+  display: flex;
+  flex-direction: column;
+}
+
+.templateButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.templateBtn {
+  background-color: #f3f4f6;
+  border: 1px solid #ddd;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 0.85rem;
+  color: #444;
+  transition: all 0.2s;
+}
+
+.templateBtn:hover {
+  background-color: #e2e8f0;
+}
+
+.active {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+  font-weight: bold;
+}
+
+.colorPicker {
+  width: 100%;
+  height: 40px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+.colorPicker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.colorPicker::-webkit-color-swatch {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* ================= CASCADE ================= */
+.cascadeLayout {
+  display: flex;
+  min-height: 100%;
+  flex: 1;
+}
+.cascadeLeft {
+  width: 35%;
+  background-color: var(--cv-primary-color, #5c1825);
+  color: white;
+  padding: 40px 20px;
+}
+.cascadePhoto {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 20px;
+  display: block;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+}
+.cascadeName {
+  font-size: 1.6rem;
+  margin-bottom: 30px;
+  text-align: center;
+  line-height: 1.2;
+}
+.cascadeSectionTitleLeft {
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  margin-top: 30px;
+}
+.cascadeText {
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+.cascadeRight {
+  width: 65%;
+  padding: 40px 30px;
+  background-color: white;
+  color: #333;
+}
+.cascadeSection {
+  margin-bottom: 30px;
+}
+.cascadeSectionTitle {
+  font-size: 1.3rem;
+  color: var(--cv-primary-color, #5c1825);
+  border-bottom: 2px solid var(--cv-primary-color, #5c1825);
+  padding-bottom: 5px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+.cascadeItem {
+  margin-bottom: 15px;
+}
+.cascadeItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.cascadeItemTitle {
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #333;
+}
+.cascadeItemDate {
+  font-size: 0.85rem;
+  color: #777;
+}
+.cascadeItemSub {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 4px;
+}
+.cascadeItemDesc {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.4;
+  margin: 0;
+}
+.cascadeSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cascadeSkillBadge {
+  background-color: #f3f4f6;
+  color: var(--cv-primary-color, #5c1825);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ================= CLASSIC ================= */
+.classicLayout {
+  padding: 50px;
+  background-color: white;
+  min-height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.classicHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+.classicHeaderInfo {
+  text-align: center;
+  flex: 1;
+}
+.classicName {
+  font-size: 2.2rem;
+  color: #333;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.classicContact {
+  font-size: 0.95rem;
+  color: #666;
+}
+.classicPhoto {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-left: 20px;
+}
+.classicSection {
+  display: flex;
+  margin-bottom: 30px;
+}
+.classicSectionTitle {
+  width: 25%;
+  padding-right: 20px;
+  border-right: 2px solid var(--cv-primary-color, #008080);
+  text-align: right;
+}
+.classicSectionTitle h2 {
+  font-size: 1.1rem;
+  color: var(--cv-primary-color, #008080);
+  text-transform: uppercase;
+  margin: 0;
+}
+.classicSectionContent {
+  width: 75%;
+  padding-left: 20px;
+}
+.classicItem {
+  margin-bottom: 15px;
+}
+.classicItemTitle {
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #333;
+}
+.classicItemSub {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #555;
+  margin-bottom: 4px;
+}
+.classicItemDate {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 4px;
+}
+.classicItemDesc {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #444;
+  margin: 0;
+}
+
+/* ================= INFLUX ================= */
+.influxLayout {
+  background-color: white;
+  min-height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.influxHeader {
+  background-color: var(--cv-primary-color, #1a2b4c);
+  color: white;
+  padding: 40px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.influxHeaderInfo {
+  flex: 1;
+}
+.influxName {
+  font-size: 2.4rem;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+.influxContact {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+.influxPhoto {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+}
+.influxBody {
+  padding: 50px;
+}
+.influxSection {
+  margin-bottom: 35px;
+}
+.influxSectionTitle {
+  font-size: 1.3rem;
+  color: var(--cv-primary-color, #1a2b4c);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+.influxGrid {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+.influxItemDate {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 600;
+  padding-top: 2px;
+}
+.influxItemContent {
+  /* No se requieren estilos especiales */
+}
+.influxItemTitle {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+}
+.influxItemSub {
+  font-size: 0.95rem;
+  color: var(--cv-primary-color, #1a2b4c);
+  margin-bottom: 6px;
+}
+.influxItemDesc {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.5;
+  margin: 0;
+}
+.influxSkillBadge {
+  display: inline-block;
+  background-color: #e2e8f0;
+  color: var(--cv-primary-color, #1a2b4c);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+@media print {
+  :global(body), :global(html), :global(#root) {
+    background-color: white !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .container {
+    display: block;
+    height: auto;
+    background-color: white;
+  }
+  .controls {
+    display: none !important;
+  }
+  .cvPreview {
+    padding: 0;
+    display: block;
+    overflow: visible;
+  }
+  .cvDocument {
+    box-shadow: none;
+    max-width: 100%;
+    width: 100%;
+    min-height: auto;
+    margin: 0;
+  }
+}

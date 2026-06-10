@@ -215,3 +215,22 @@
   color: #dc2626;
   border-color: #fca5a5;
 }
+.itemClickable {
+  cursor: pointer;
+  border: 1.5px dashed var(--accent);
+}
+.itemClickable:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+.actionBanner {
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 12px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px dashed var(--accent-md);
+}

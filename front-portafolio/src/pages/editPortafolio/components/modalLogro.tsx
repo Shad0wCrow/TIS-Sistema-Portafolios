@@ -2,14 +2,16 @@ import { useState, type ChangeEvent } from "react";
 import styles from "./modals.module.css";
 import { addLogro, getSugerenciasEntidad } from "../../../services/portafolioservice";
 import AutocompleteInput from "../../../components/ui/AutocompleteInput/AutocompleteInput";
+import type { Logro } from "../../../types/portafolioTypes";
 
 interface ModalLogroProps {
+  logro?: Logro | null;
   onClose: () => void;
   onSave: (data: Parameters<typeof addLogro>[0]) => Promise<boolean | void>;
-  logrosExistentes?: { identificador?: string | null }[];
+  logrosExistentes?: { id_logro?: number; identificador?: string | null }[];
   duplicadoWarning?: string;
 }
-
+//Comentario
 interface FormErrors {
   titulo?: string;
   nombre_entidad?: string;
@@ -18,19 +20,18 @@ interface FormErrors {
   descripcion?: string;
 }
 
-export default function ModalLogro({ onClose, onSave, logrosExistentes = [], duplicadoWarning }: ModalLogroProps) {
+export default function ModalLogro({ onClose, onSave, logro, logrosExistentes = [], duplicadoWarning }: ModalLogroProps) {
   const [form, setForm] = useState({
-    titulo: "",
-    nombre_entidad: "",
-    fecha_obtencion: "",
-    identificador: "",
-    descripcion: "",
-    visibilidad: "publico" as "publico" | "privado",
+    titulo: logro?.titulo ?? "",
+    nombre_entidad: logro?.entidad_nombre ?? "",
+    fecha_obtencion: logro?.fecha_obtencion ?? "",
+    identificador: logro?.identificador ?? "",
+    descripcion: logro?.descripcion ?? "",
+    visibilidad: (logro?.visibilidad as "publico" | "privado") ?? "publico",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -65,7 +66,7 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [], dup
 
     if (form.identificador.trim().length > 50) {
       newErrors.identificador = "Máximo 50 caracteres.";
-    } else if (form.identificador.trim()) {
+    } else if (!logro && form.identificador.trim()) {
       const idNormalizado = form.identificador.trim().toLowerCase();
       const duplicado = logrosExistentes.some(
         (l) => l.identificador && l.identificador.trim().toLowerCase() === idNormalizado
@@ -98,13 +99,22 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [], dup
       });
       if (guardado === false) return;
 
-      setSuccessMsg("¡Logro registrado correctamente!");
-      setTimeout(() => onClose(), 1200);
+      onClose();
     } catch (error: any) {
       console.error(error?.response?.data || error);
-      setErrors({
-        titulo: "Error al guardar. Revisa los datos.",
-      });
+      const backErrors = error?.response?.data?.errors;
+      if (backErrors) {
+        const newErrors: FormErrors = {};
+        if (backErrors.titulo) newErrors.titulo = backErrors.titulo[0];
+        if (backErrors.nombre_entidad) newErrors.nombre_entidad = backErrors.nombre_entidad[0];
+        if (backErrors.fecha_obtencion) newErrors.fecha_obtencion = backErrors.fecha_obtencion[0];
+        if (backErrors.identificador) newErrors.identificador = backErrors.identificador[0];
+        if (backErrors.descripcion) newErrors.descripcion = backErrors.descripcion[0];
+        if (backErrors.visibilidad) newErrors.titulo = backErrors.visibilidad[0];
+        setErrors(newErrors);
+      } else {
+        setErrors({ titulo: error?.response?.data?.message || "Error al guardar. Revisa los datos." });
+      }
     } finally {
       setLoading(false);
     }
@@ -118,15 +128,10 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [], dup
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={`${styles.modal} ${styles.modalLg}`} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHead}>
-          <span className={styles.modalTitle}>Registrar Logro</span>
+          <span className={styles.modalTitle}>{logro ? "Editar Logro" : "Registrar Logro"}</span>
           <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar formulario de logro">×</button>
         </div>
 
-        {successMsg ? (
-          <div style={{ textAlign: "center", padding: 30 }}>
-            ✓ {successMsg}
-          </div>
-        ) : (
           <>
             <div className={styles.modalGrid}>
               {duplicadoWarning && (
@@ -147,21 +152,30 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [], dup
                   value={form.titulo}
                   onChange={handleChange}
                   style={errors.titulo ? errStyle : {}}
+                  disabled={!!logro}
                 />
                 {errMsg(errors.titulo)}
               </div>
 
               <div className={`${styles.modalField} ${styles.modalFieldFull}`}>
                 <label>Entidad emisora *</label>
-                <AutocompleteInput
-                  name="nombre_entidad"
-                  value={form.nombre_entidad}
-                  onChange={(v) => setForm((prev) => ({ ...prev, nombre_entidad: v }))}
-                  placeholder="Ej: Universidad, Organización..."
-                  fetchSuggestions={getSugerenciasEntidad}
-                  hasError={!!errors.nombre_entidad}
-                  minChars={2}
-                />
+                {logro ? (
+                  <input
+                    name="nombre_entidad"
+                    value={form.nombre_entidad}
+                    disabled
+                  />
+                ) : (
+                  <AutocompleteInput
+                    name="nombre_entidad"
+                    value={form.nombre_entidad}
+                    onChange={(v) => setForm((prev) => ({ ...prev, nombre_entidad: v }))}
+                    placeholder="Ej: Universidad, Organización..."
+                    fetchSuggestions={getSugerenciasEntidad}
+                    hasError={!!errors.nombre_entidad}
+                    minChars={2}
+                  />
+                )}
                 {errMsg(errors.nombre_entidad)}
               </div>
 
@@ -173,6 +187,7 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [], dup
                   value={form.fecha_obtencion}
                   onChange={handleChange}
                   style={errors.fecha_obtencion ? errStyle : {}}
+                  disabled={!!logro}
                 />
                 {errMsg(errors.fecha_obtencion)}
               </div>
@@ -186,6 +201,7 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [], dup
                   onChange={handleChange}
                   aria-describedby={errors.identificador ? "logro-id-err" : undefined}
                   style={errors.identificador ? errStyle : {}}
+                  disabled={!!logro}
                 />
                 {errors.identificador && (
                   <span id="logro-id-err">{errMsg(errors.identificador)}</span>
@@ -230,7 +246,6 @@ export default function ModalLogro({ onClose, onSave, logrosExistentes = [], dup
               </button>
             </div>
           </>
-        )}
       </div>
     </div>
   );

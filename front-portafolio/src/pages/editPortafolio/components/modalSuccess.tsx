@@ -18,11 +18,21 @@ interface ModalSuccessProps {
 }
 
 export default function ModalSuccess({
-  title = "Eliminado correctamente",
-  message = "El registro ha sido eliminado de tu portafolio.",
+  title,
+  message = "Operación completada con éxito.",
   autoCloseDuration = 2500,
   onClose,
 }: ModalSuccessProps) {
+  
+  let displayTitle = title;
+  if (!displayTitle) {
+    const msgLower = message.toLowerCase();
+    if (msgLower.includes("eliminad")) displayTitle = "Eliminado correctamente";
+    else if (msgLower.includes("actualizad") || msgLower.includes("editad")) displayTitle = "Actualizado correctamente";
+    else if (msgLower.includes("agregad") || msgLower.includes("registrad") || msgLower.includes("guardad")) displayTitle = "Guardado correctamente";
+    else displayTitle = "Operación exitosa";
+  }
+
   // Cierre automático
   useEffect(() => {
     const timer = setTimeout(onClose, autoCloseDuration);
@@ -44,7 +54,7 @@ export default function ModalSuccess({
         </div>
 
         <p className={styles.title} id="success-title">
-          {title}
+          {displayTitle}
         </p>
         <p className={styles.message} id="success-message">
           {message}

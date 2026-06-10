@@ -1,10 +1,14 @@
 import styles from "./logroCard.module.css";
 import type { Logro } from "../../../types/portafolioTypes";
 
+type SectionAction = "mostrar" | "registrar" | "editar" | "eliminar";
+
 interface LogroCardProps {
   logros: Logro[];
   onAdd: () => void;
   onRemove: (id: number) => void;
+  onEdit?: (logro: Logro) => void;
+  activeAction?: SectionAction;
 }
 
 function formatFecha(fecha: string | null): string {
@@ -14,7 +18,18 @@ function formatFecha(fecha: string | null): string {
   return `${meses[parseInt(m) - 1]} ${y}`;
 }
 
-export default function LogroCard({ logros, onAdd, onRemove }: LogroCardProps) {
+export default function LogroCard({
+  logros,
+  onRemove,
+  onEdit,
+  activeAction,
+}: LogroCardProps) {
+  const showRemove = activeAction === "eliminar";
+  const showEdit = activeAction === "editar";
+
+  const isActionActive = showRemove || showEdit;
+  const actionText = showEdit ? "SELECCIONA EL LOGRO A EDITAR" : showRemove ? "SELECCIONA EL LOGRO A ELIMINAR" : "";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -25,9 +40,6 @@ export default function LogroCard({ logros, onAdd, onRemove }: LogroCardProps) {
           </span>
         </div>
 
-        <button className={styles.btnAdd} onClick={onAdd}>
-          <span>+</span> Agregar
-        </button>
       </div>
 
       {logros.length === 0 ? (
@@ -40,8 +52,25 @@ export default function LogroCard({ logros, onAdd, onRemove }: LogroCardProps) {
         </div>
       ) : (
         <ul className={styles.list}>
+          {isActionActive && <div className={styles.actionBanner}>{actionText}</div>}
           {logros.map((logro) => (
-            <li key={logro.id_logro} className={styles.item}>
+            <li 
+              key={logro.id_logro} 
+              className={`${styles.item} ${isActionActive ? styles.itemClickable : ""}`}
+              onClick={() => {
+                if (showEdit && onEdit) onEdit(logro);
+                if (showRemove) onRemove(logro.id_logro);
+              }}
+              tabIndex={isActionActive ? 0 : undefined}
+              role={isActionActive ? "button" : undefined}
+              onKeyDown={(e) => {
+                if (isActionActive && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  if (showEdit && onEdit) onEdit(logro);
+                  if (showRemove) onRemove(logro.id_logro);
+                }
+              }}
+            >
               <div className={styles.itemIcon}>🏅</div>
 
               <div className={styles.itemInfo}>
@@ -80,14 +109,6 @@ export default function LogroCard({ logros, onAdd, onRemove }: LogroCardProps) {
                 >
                   {logro.visibilidad === "publico" ? "Público" : "Privado"}
                 </span>
-
-                <button
-                  className={styles.btnRemove}
-                  onClick={() => onRemove(logro.id_logro)}
-                  title="Eliminar"
-                >
-                  Eliminar
-                </button>
               </div>
             </li>
           ))}

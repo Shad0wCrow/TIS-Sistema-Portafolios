@@ -116,6 +116,12 @@
   margin-top: 4px;
 }
 
+/* ── Grupo por sección (item + dropdown) ── */
+.navGroup {
+  display: flex;
+  flex-direction: column;
+}
+
 .navItem {
   display: flex;
   align-items: center;
@@ -157,8 +163,13 @@
   opacity: 1;
 }
 
+/* Label del ítem (crece y empuja el badge/chevron) */
+.navItemLabel {
+  flex: 1;
+  text-align: left;
+}
+
 .navBadge {
-  margin-left: auto;
   background: var(--sidebar-active-bg);
   color: var(--sidebar-active);
   border: 1px solid #2e5a40;
@@ -166,8 +177,70 @@
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 20px;
+  flex-shrink: 0;
 }
 
+/* Chevron rotatorio */
+.navChevron {
+  font-size: 14px;
+  color: var(--sidebar-text2);
+  flex-shrink: 0;
+  display: inline-block;
+  transform: rotate(-90deg);
+  transition: transform 0.2s;
+  line-height: 1;
+}
+
+.navChevronOpen {
+  transform: rotate(90deg);
+}
+
+/* ── Dropdown de acciones ── */
+.navDropdown {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.18);
+  border-left: 2px solid var(--sidebar-border);
+  margin-left: 20px;
+  animation: dropdownIn 0.15s ease;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sidebar-text2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  letter-spacing: 0.02em;
+  transition: background 0.12s, color 0.12s;
+  border-left: 2px solid transparent;
+}
+
+.navDropdownItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.navDropdownItemActive {
+  color: var(--sidebar-active);
+  background: var(--sidebar-active-bg);
+  border-left-color: var(--sidebar-active);
+  font-weight: 700;
+}
+
+/* ── Footer ── */
 .sidebarFooter {
   padding: 14px 20px;
   border-top: 1px solid var(--sidebar-border);

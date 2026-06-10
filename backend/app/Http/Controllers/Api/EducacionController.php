@@ -8,8 +8,21 @@ use Illuminate\Http\Request;
 
 class EducacionController extends Controller
 {
+    // Valores válidos del ENUM grado_educacion (HU-8)
+    private const GRADOS_VALIDOS = [
+        'titulo_bachiller',
+        'tecnico_medio',
+        'titulo_superior',
+        'licenciado',
+        'especialidad',
+        'maestria',
+        'doctorado',
+        'post_doctorado',
+    ];
+
     /**
-     * Lista todas las educaciones del usuario autenticado (sin filtro por area_estudio).
+     * Lista todas las formaciones académicas del usuario autenticado.
+     * Excluye cursos (area_estudio = 'curso'), que tienen su propio endpoint.
      */
     public function index(Request $request)
     {
@@ -17,6 +30,7 @@ class EducacionController extends Controller
 
         $educaciones = Educacion::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
+            ->where('area_estudio', '!=', 'curso')
             ->orderByDesc('fecha_inicio')
             ->get();
 
@@ -36,6 +50,7 @@ class EducacionController extends Controller
         }
 
         $sugerencias = Educacion::where('eliminado', false)
+            ->where('area_estudio', '!=', 'curso')
             ->where('institucion', 'like', '%' . $q . '%')
             ->distinct()
             ->orderBy('institucion')
@@ -46,7 +61,8 @@ class EducacionController extends Controller
     }
 
     /**
-     * Registra una nueva educación para el usuario autenticado.
+     * Registra un nuevo grado de formación para el usuario autenticado.
+     * HU-8: el campo "grado" es obligatorio y debe ser uno de los valores del ENUM.
      */
     public function store(Request $request)
     {
@@ -56,6 +72,7 @@ class EducacionController extends Controller
             'institucion'  => 'required|string|max:150',
             'titulo'       => 'required|string|max:150',
             'area_estudio' => 'nullable|string|max:150',
+            'grado'        => 'required|in:' . implode(',', self::GRADOS_VALIDOS),
             'fecha_inicio' => 'required|date',
             'fecha_fin'    => 'nullable|date|after_or_equal:fecha_inicio',
             'descripcion'  => 'nullable|string',
@@ -67,6 +84,7 @@ class EducacionController extends Controller
             'institucion'  => $data['institucion'],
             'titulo'       => $data['titulo'],
             'area_estudio' => $data['area_estudio'] ?? null,
+            'grado'        => $data['grado'],
             'fecha_inicio' => $data['fecha_inicio'],
             'fecha_fin'    => $data['fecha_fin'] ?? null,
             'descripcion'  => $data['descripcion'] ?? null,
@@ -75,13 +93,13 @@ class EducacionController extends Controller
         ]);
 
         return response()->json([
-            'message'   => 'Educación registrada correctamente',
+            'message'   => 'Grado de formación registrado correctamente',
             'educacion' => $educacion,
         ], 201);
     }
 
     /**
-     * Muestra un registro de educación específico del usuario.
+     * Muestra un registro de formación académica específico del usuario.
      */
     public function show(Request $request, $id)
     {
@@ -93,14 +111,77 @@ class EducacionController extends Controller
             ->first();
 
         if (!$educacion) {
-            return response()->json(['message' => 'Educación no encontrada'], 404);
+            return response()->json(['message' => 'Registro de formación no encontrado'], 404);
         }
 
         return response()->json(['educacion' => $educacion]);
     }
 
     /**
-     * Soft-delete de un registro de educación.
+     * Actualiza un registro de formación académica existente.
+     * HU-8: el campo "grado" es obligatorio también en la edición.
+     */
+    public function update(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $educacion = Educacion::where('id_educacion', $id)
+            ->where('usuario_id', $user->id_usuario)
+            ->where('eliminado', false)
+            ->first();
+
+        if (!$educacion) {
+            return response()->json(['message' => 'Registro de formación no encontrado'], 404);
+        }
+
+        $camposBloqueados = [
+            'institucion',
+            'titulo',
+            'area_estudio',
+            'grado',
+            'fecha_inicio',
+        ];
+
+        $camposNoPermitidos = array_values(array_intersect($camposBloqueados, array_keys($request->all())));
+
+        if (!empty($camposNoPermitidos)) {
+            return response()->json([
+                'message' => 'No se pueden modificar campos bloqueados del grado de formacion.',
+                'errors' => collect($camposNoPermitidos)->mapWithKeys(function ($campo) {
+                    return [$campo => ['Este campo no puede modificarse en la edicion.']];
+                }),
+            ], 422);
+        }
+
+        $data = $request->validate([
+            'fecha_fin'    => 'nullable|date',
+            'descripcion'  => 'nullable|string',
+            'visibilidad'  => 'nullable|in:publico,privado',
+        ]);
+
+        if (
+            array_key_exists('fecha_fin', $data)
+            && $data['fecha_fin']
+            && $data['fecha_fin'] < $educacion->fecha_inicio
+        ) {
+            return response()->json([
+                'message' => 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+                'errors' => [
+                    'fecha_fin' => ['La fecha de fin no puede ser anterior a la fecha de inicio.'],
+                ],
+            ], 422);
+        }
+
+        $educacion->update($data);
+
+        return response()->json([
+            'message'   => 'Grado de formación actualizado correctamente',
+            'educacion' => $educacion->fresh(),
+        ]);
+    }
+
+    /**
+     * Soft-delete de un registro de formación académica.
      */
     public function destroy(Request $request, $id)
     {
@@ -112,11 +193,26 @@ class EducacionController extends Controller
             ->first();
 
         if (!$educacion) {
-            return response()->json(['message' => 'Registro de educación no encontrado'], 404);
+            return response()->json(['message' => 'Registro de formación no encontrado'], 404);
         }
 
         $educacion->update(['eliminado' => true]);
 
-        return response()->json(['message' => 'Educación eliminada correctamente']);
+        return response()->json(['message' => 'Registro de formación eliminado correctamente']);
     }
+    public function updateVisibilidad(Request $request, $id)
+{
+    $user = $request->user();
+ 
+    $item = Educacion::where('id_educacion', $id)
+        ->where('usuario_id', $user->id_usuario)
+        ->firstOrFail();
+ 
+    $request->validate(['visibilidad' => 'required|in:publico,privado']);
+ 
+    $item->visibilidad = $request->visibilidad;
+    $item->save();
+ 
+    return response()->json(['visibilidad' => $item->visibilidad]);
+}
 }

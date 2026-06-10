@@ -1,16 +1,23 @@
-import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./editarperfil.module.css";
-import { getPortafolio, updatePerfil, getSugerenciasProfecion } from "../../services/portafolioservice";
+import { getPerfilMe, updatePerfil, getSugerenciasProfecion } from "../../services/portafolioservice";
 import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput";
 import Input from "../../components/ui/Input/input";
 import PageLoader from "../../components/ui/PageLoader/PageLoader";
-import { IconPersona } from "../editPortafolio/components/icons";
+import ConfirmModal from "../../components/ui/ConfirmModal/ConfirmModal";
+import AdvancedProfileSection, { type ProfileLinkForm } from "./components/AdvancedProfileSection";
+import ModalSuccess from "../editPortafolio/components/modalSuccess";
+import ModalError from "../editPortafolio/components/ModalError";
+import ProfilePhotoField from "./components/ProfilePhotoField";
+import { DEFAULT_COUNTRY_PHONE, getDepartmentsByCountry, getPhonePrefixByCountry, normalizeDepartmentByCountry } from "../../utils/countryPhoneOptions";
 
 const SOLO_LETRAS = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
 const SOLO_NUMEROS = /^\+?[0-9\s\-()]{7,20}$/;
 const CARACTERES_PELIGROSOS = /[<>"'`;{}()]/;
 const URL_VALIDA = /^(https?:\/\/.+\..+|data:image\/.+)/;
+const LINK_URL_VALIDA = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface FormState {
     nombre_perfil: string;
@@ -18,6 +25,10 @@ interface FormState {
     profesion: string;
     celular: string;
     descripcion: string;
+    ciudad: string;
+    pais: string;
+    prefijo_celular: string;
+    correo_contacto: string;
 }
 
 interface FormErrors {
@@ -26,10 +37,62 @@ interface FormErrors {
     profesion?: string;
     celular?: string;
     descripcion?: string;
+    ciudad?: string;
+    pais?: string;
+    prefijo_celular?: string;
+    correo_contacto?: string;
     foto?: string;
+    [key: string]: string | undefined;
 }
 
-function validar(form: FormState, fotoUrl: string): FormErrors {
+interface ProfileSnapshot {
+    form: FormState;
+    fotoUrl: string;
+    enlaces: ProfileLinkForm[];
+}
+
+type ConfirmAction = "save" | "discard" | null;
+
+const EMPTY_FORM: FormState = {
+    nombre_perfil: "",
+    apellido_perfil: "",
+    profesion: "",
+    celular: "",
+    descripcion: "",
+    ciudad: "",
+    pais: DEFAULT_COUNTRY_PHONE.country,
+    prefijo_celular: DEFAULT_COUNTRY_PHONE.prefix,
+    correo_contacto: "",
+};
+
+function normalizeLinks(enlaces: ProfileLinkForm[]): ProfileLinkForm[] {
+    return enlaces
+        .map((enlace) => ({
+            titulo: enlace.titulo.trim(),
+            url: enlace.url.trim(),
+        }))
+        .filter((enlace) => enlace.titulo || enlace.url);
+}
+
+function normalizeSnapshot(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): ProfileSnapshot {
+    return {
+        form: {
+            nombre_perfil: form.nombre_perfil.trim(),
+            apellido_perfil: form.apellido_perfil.trim(),
+            profesion: form.profesion.trim(),
+            celular: form.celular.trim(),
+            descripcion: form.descripcion.trim(),
+            ciudad: form.ciudad.trim(),
+            pais: form.pais.trim(),
+            prefijo_celular: form.prefijo_celular.trim(),
+            correo_contacto: form.correo_contacto.trim(),
+        },
+        fotoUrl: fotoUrl.trim(),
+        enlaces: normalizeLinks(enlaces),
+    };
+}
+
+function validar(form: FormState, fotoUrl: string, enlaces: ProfileLinkForm[]): FormErrors {
     const errs: FormErrors = {};
 
     if (!form.nombre_perfil.trim()) errs.nombre_perfil = "El nombre es obligatorio.";
@@ -55,130 +118,174 @@ function validar(form: FormState, fotoUrl: string): FormErrors {
     if (limpiaFoto && !URL_VALIDA.test(limpiaFoto)) errs.foto = "La URL de foto debe comenzar con http:// o https://.";
     /*else if (limpiaFoto.length > 100000) errs.foto = "La URL de foto no puede superar 100000 caracteres.";
 */
+    if (form.pais.trim() && CARACTERES_PELIGROSOS.test(form.pais)) errs.pais = "Caracteres no permitidos.";
+    else if (form.pais.trim().length > 100) errs.pais = "Máximo 100 caracteres.";
+
+    if (!form.pais.trim()) {
+        errs.pais = "El pais es obligatorio.";
+    } else if (!getPhonePrefixByCountry(form.pais)) {
+        errs.pais = "Seleccione un pais de la lista.";
+    }
+
+    if (!form.ciudad.trim()) {
+        errs.ciudad = "Seleccione una ciudad.";
+    } else if (!getDepartmentsByCountry(form.pais).includes(form.ciudad)) {
+        errs.ciudad = "Seleccione una ciudad de la lista.";
+    }
+
+    if (!form.prefijo_celular.trim()) {
+        errs.prefijo_celular = "Seleccione un pais para asignar el prefijo.";
+    }
+
+    if (!form.celular.trim()) {
+        errs.celular = "El telefono es obligatorio.";
+    } else if (!/^[0-9]{7,14}$/.test(form.celular.trim())) {
+        errs.celular = "Ingrese solo numeros, entre 7 y 14 digitos.";
+    }
+
+    if (form.correo_contacto.trim()) {
+        if (!EMAIL_VALIDO.test(form.correo_contacto.trim())) {
+            errs.correo_contacto = "Ingrese un correo válido.";
+        } else if (!form.correo_contacto.trim().toLowerCase().endsWith("@gmail.com")) {
+            errs.correo_contacto = "El correo de contacto debe ser una dirección de @gmail.com.";
+        }
+    }
+
+    enlaces.forEach((enlace, index) => {
+        const titulo = enlace.titulo.trim();
+        const url = enlace.url.trim();
+
+        if (!titulo && !url) return;
+
+        if (!titulo) errs[`enlaces.${index}.titulo`] = "El título es obligatorio.";
+        else if (CARACTERES_PELIGROSOS.test(titulo)) errs[`enlaces.${index}.titulo`] = "Caracteres no permitidos.";
+
+        if (!url) errs[`enlaces.${index}.url`] = "La URL es obligatoria.";
+        else if (!LINK_URL_VALIDA.test(url)) errs[`enlaces.${index}.url`] = "Debe ser una URL válida (ej: https://...).";
+    });
+
     return errs;
 }
 
-export default function EditarPerfil() {
+interface EditarPerfilProps {
+    embedded?: boolean;
+    onBack?: () => void;
+}
+
+export default function EditarPerfil({ embedded = false, onBack }: EditarPerfilProps) {
     const navigate = useNavigate();
 
     const [loadingPage, setLoadingPage] = useState(true);
     const [errorPage, setErrorPage] = useState("");
 
-    const [form, setForm] = useState<FormState>({
-        nombre_perfil: "",
-        apellido_perfil: "",
-        profesion: "",
-        celular: "",
-        descripcion: "",
-    });
+    const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
     const [fotoUrl, setFotoUrl] = useState("");
+    const [enlaces, setEnlaces] = useState<ProfileLinkForm[]>([]);
+    const [originalProfile, setOriginalProfile] = useState<ProfileSnapshot | null>(null);
     const [errors, setErrors] = useState<FormErrors>({});
     const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalTab, setModalTab] = useState<"upload" | "url">("upload");
-    const [modalUrl, setModalUrl] = useState("");
-    const [dragging, setDragging] = useState(false);
-    const [modalPreview, setModalPreview] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
     useEffect(() => {
-        getPortafolio()
+        getPerfilMe()
             .then((res) => {
                 const p = res.perfil;
                 if (p) {
-                    setForm({
+                    const loadedPais = p.pais ?? DEFAULT_COUNTRY_PHONE.country;
+                    const loadedForm = {
                         nombre_perfil: p.nombre_perfil ?? "",
                         apellido_perfil: p.apellido_perfil ?? "",
                         profesion: p.profesion ?? "",
                         celular: p.celular ?? "",
                         descripcion: p.descripcion ?? "",
-                    });
-                    setFotoUrl(p.foto_url ?? "");
+                        ciudad: normalizeDepartmentByCountry(loadedPais, p.ciudad),
+                        pais: loadedPais,
+                        prefijo_celular: p.prefijo_celular ?? (getPhonePrefixByCountry(loadedPais) || DEFAULT_COUNTRY_PHONE.prefix),
+                        correo_contacto: p.correo_contacto ?? "",
+                    };
+                    const loadedFoto = p.foto_url ?? "";
+                    const enlacesPerfil = p.enlaces_personalizados ?? p.enlacesPersonalizados ?? [];
+                    const loadedLinks = enlacesPerfil.map((enlace: ProfileLinkForm) => ({
+                        titulo: enlace.titulo ?? "",
+                        url: enlace.url ?? "",
+                    }));
+
+                    setForm(loadedForm);
+                    setFotoUrl(loadedFoto);
+                    setEnlaces(loadedLinks);
+                    setOriginalProfile(normalizeSnapshot(loadedForm, loadedFoto, loadedLinks));
                 }
             })
             .catch(() => setErrorPage("No se pudo cargar el perfil."))
             .finally(() => setLoadingPage(false));
     }, []);
 
+    const currentSnapshot = useMemo(
+        () => normalizeSnapshot(form, fotoUrl, enlaces),
+        [form, fotoUrl, enlaces]
+    );
+
+    const hasUnsavedChanges = useMemo(() => {
+        if (!originalProfile) return false;
+        return JSON.stringify(currentSnapshot) !== JSON.stringify(originalProfile);
+    }, [currentSnapshot, originalProfile]);
+
     function handleChange(field: keyof FormState) {
         return (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const updated = { ...form, [field]: e.target.value };
             setForm(updated);
-            if (touched[field]) setErrors(validar(updated, fotoUrl));
+            if (touched[field]) setErrors(validar(updated, fotoUrl, enlaces));
         };
     }
 
     function handleBlur(field: keyof FormState) {
         return () => {
             setTouched((prev) => ({ ...prev, [field]: true }));
-            setErrors(validar(form, fotoUrl));
+            setErrors(validar(form, fotoUrl, enlaces));
         };
     }
 
-    function handleQuitarFoto() {
-        setFotoUrl("");
-        setErrors(validar(form, ""));
+    function handleAdvancedFieldChange(field: "ciudad" | "pais" | "prefijo_celular" | "celular" | "correo_contacto", value: string) {
+        const updated = field === "pais"
+            ? { ...form, pais: value, ciudad: "", prefijo_celular: getPhonePrefixByCountry(value) }
+            : { ...form, [field]: value };
+        setForm(updated);
+        setErrors(validar(updated, fotoUrl, enlaces));
     }
 
-    function handleOpenModal() {
-        setModalUrl(fotoUrl);
-        setModalPreview(fotoUrl || null);
-        setModalTab("upload");
-        setDragging(false);
-        setModalOpen(true);
+    function handleLinkChange(index: number, field: keyof ProfileLinkForm, value: string) {
+        const updated = enlaces.map((enlace, currentIndex) => (
+            currentIndex === index ? { ...enlace, [field]: value } : enlace
+        ));
+        setEnlaces(updated);
+        setErrors(validar(form, fotoUrl, updated));
     }
 
-    function handleCloseModal() {
-        setModalOpen(false);
-        setModalUrl("");
-        setModalPreview(null);
-    }
-
-    function handleModalConfirm() {
-    if (modalTab === "url" && modalUrl.trim()) {
-        setFotoUrl(modalUrl.trim());
-        setErrors(validar(form, modalUrl.trim()));
-    } else if (modalTab === "upload" && modalPreview) {
-        setFotoUrl(modalPreview);
-        setErrors(validar(form, modalPreview));
-    }
-    setModalOpen(false);
-}
-
-    function handleDragOver(e: React.DragEvent) {
-        e.preventDefault();
-        setDragging(true);
-    }
-
-    function handleDragLeave() {
-        setDragging(false);
-    }
-
-    function handleDrop(e: React.DragEvent) {
-        e.preventDefault();
-        setDragging(false);
-        const file = e.dataTransfer.files?.[0];
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (ev) => setModalPreview(ev.target?.result as string);
-            reader.readAsDataURL(file);
+    function handleAddLink() {
+        if (enlaces.length >= 8) {
+            setErrors((prev) => ({ ...prev, enlaces: "Máximo 8 enlaces personalizados." }));
+            return;
         }
+
+        setEnlaces((prev) => [...prev, { titulo: "", url: "" }]);
     }
 
-    function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (ev) => setModalPreview(ev.target?.result as string);
-            reader.readAsDataURL(file);
-        }
+    function handleRemoveLink(index: number) {
+        const updated = enlaces.filter((_, currentIndex) => currentIndex !== index);
+        setEnlaces(updated);
+        setErrors(validar(form, fotoUrl, updated));
     }
 
-    async function handleGuardar() {
+    function handleFotoChange(nextFotoUrl: string) {
+        setFotoUrl(nextFotoUrl);
+        setErrors(validar(form, nextFotoUrl, enlaces));
+    }
+
+    function handleGuardar() {
         if (saving) return;
 
         const allTouched = Object.fromEntries(
@@ -186,11 +293,26 @@ export default function EditarPerfil() {
         ) as Record<keyof FormState, boolean>;
         setTouched(allTouched);
 
-        const currentErrors = validar(form, fotoUrl);
+        const currentErrors = validar(form, fotoUrl, enlaces);
         setErrors(currentErrors);
 
-        if (Object.keys(currentErrors).length > 0) return;
+        if (Object.keys(currentErrors).length > 0) {
+            setConfirmAction(null);
+            return;
+        }
 
+        if (!hasUnsavedChanges) {
+            setSuccessMsg("No hay cambios para guardar.");
+            return;
+        }
+
+        setConfirmAction("save");
+    }
+
+    async function confirmGuardar() {
+        if (saving) return;
+
+        const cleanLinks = normalizeLinks(enlaces);
         setSaving(true);
         try {
             await updatePerfil({
@@ -199,15 +321,51 @@ export default function EditarPerfil() {
                 profesion: form.profesion.trim(),
                 celular: form.celular.trim(),
                 descripcion: form.descripcion.trim(),
+                ciudad: form.ciudad.trim() || null,
+                pais: form.pais.trim() || null,
+                prefijo_celular: form.prefijo_celular.trim() || null,
+                correo_contacto: form.correo_contacto.trim() || null,
                 foto_url: fotoUrl.trim() || undefined,
+                enlaces_personalizados: cleanLinks,
             });
+            const savedSnapshot = normalizeSnapshot(form, fotoUrl, cleanLinks);
+            setForm(savedSnapshot.form);
+            setFotoUrl(savedSnapshot.fotoUrl);
+            setEnlaces(savedSnapshot.enlaces);
+            setOriginalProfile(savedSnapshot);
+            setTouched({});
+            setErrors({});
+            setConfirmAction(null);
             setSuccessMsg("Perfil actualizado correctamente.");
-            setTimeout(() => setSuccessMsg(null), 3000);
         } catch {
-            setErrors({ descripcion: "Error al guardar. Intenta de nuevo." });
+            setConfirmAction(null);
+            setErrorMessage("No se pudo guardar el perfil. Verifica tu conexión e intenta de nuevo.");
         } finally {
             setSaving(false);
         }
+    }
+
+    function restoreOriginalProfile() {
+        if (!originalProfile) return;
+
+        setForm(originalProfile.form);
+        setFotoUrl(originalProfile.fotoUrl);
+        setEnlaces(originalProfile.enlaces);
+        setErrors({});
+        setTouched({});
+        setConfirmAction(null);
+        setSuccessMsg("Cambios descartados.");
+    }
+
+    function handleCancelar() {
+        if (saving) return;
+
+        if (hasUnsavedChanges) {
+            setConfirmAction("discard");
+            return;
+        }
+
+        embedded ? onBack?.() : navigate("/dashboard");
     }
 
     if (loadingPage)
@@ -217,7 +375,7 @@ export default function EditarPerfil() {
 
     return (
         <>
-            <div className={styles.layout}>
+            <div className={`${styles.layout} ${embedded ? styles.embedded : ""}`}>
                 <div className={styles.main}>
 
                     <div className={styles.topbar}>
@@ -236,9 +394,36 @@ export default function EditarPerfil() {
                                 </span>
                             )}
                         </div>
+
                     </div>
 
                     <div className={styles.content}>
+                        <div style={{
+                            padding: "16px 20px",
+                            background: "#ffffff",
+                            border: "1px solid var(--border)",
+                            borderRadius: "8px",
+                            marginBottom: "20px"
+                        }}>
+                            <p style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "700", color: "var(--accent, #1a6644)" }}>
+                                Estás editando tu perfil.
+                            </p>
+                            <p style={{ margin: "0", fontSize: "12px", color: "var(--text2, #4a5e54)" }}>
+                                Los campos Nombre, Apellido y Profesión no se pueden editar porque ya fueron registrados.
+                            </p>
+                        </div>
+
+                        <div className={styles.section}>
+                            <div className={styles.sectionHeader}>
+                                <span className={styles.sectionTitle}>Foto de perfil</span>
+                            </div>
+                            <ProfilePhotoField
+                                fotoUrl={fotoUrl}
+                                error={errors.foto}
+                                onChange={handleFotoChange}
+                                onError={(message) => setErrors((prev) => ({ ...prev, foto: message }))}
+                            />
+                        </div>
 
                         {/* ── Sección datos personales ── */}
                         <div className={styles.section}>
@@ -246,71 +431,6 @@ export default function EditarPerfil() {
                                 <span className={styles.sectionTitle}>Datos personales</span>
                             </div>
                             <div className={styles.formCard}>
-                                
-                                {/* ── Foto de perfil centrada arriba ── */}
-                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "32px", textAlign: "center" }}>
-                                    <div className={styles.fotoCircleWrap} style={{ marginBottom: "16px" }}>
-                                        <div className={styles.fotoCircle} onClick={handleOpenModal} style={{ margin: "0 auto", cursor: "pointer" }}>
-                                            {fotoUrl.trim() ? (
-                                                <img
-                                                    src={fotoUrl.trim()}
-                                                    alt="Foto de perfil"
-                                                    onError={() =>
-                                                        setErrors((prev) => ({
-                                                            ...prev,
-                                                            foto: "La URL no pudo cargarse. Revisa el enlace.",
-                                                        }))
-                                                    }
-                                                />
-                                            ) : (
-                                                <IconPersona />
-                                            )}
-                                            <div className={styles.fotoOverlay}>
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                                    <polyline points="17 8 12 3 7 8"/>
-                                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style={{ display: "flex", alignItems: "center", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-                                        <button
-                                            className={styles.addFotoBtn}
-                                            type="button"
-                                            onClick={handleOpenModal}
-                                            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "6px", border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontWeight: 500 }}
-                                        >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                                <polyline points="17 8 12 3 7 8"/>
-                                                <line x1="12" y1="3" x2="12" y2="15"/>
-                                            </svg>
-                                            {fotoUrl.trim() ? "Cambiar foto" : "Agregar foto"}
-                                        </button>
-
-                                        {fotoUrl.trim() && (
-                                            <button
-                                                className={styles.fotoRemoveBtn}
-                                                type="button"
-                                                onClick={handleQuitarFoto}
-                                                style={{ display: "flex", alignItems: "center", gap: "4px", padding: "8px 16px", borderRadius: "6px", border: "none", background: "none", color: "#e11d48", cursor: "pointer", fontWeight: 500 }}
-                                            >
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <polyline points="3 6 5 6 21 6"/>
-                                                    <path d="M19 6l-1 14H6L5 6"/>
-                                                    <path d="M10 11v6M14 11v6"/>
-                                                </svg>
-                                                Quitar
-                                            </button>
-                                        )}
-                                    </div>
-                                    {errors.foto && (
-                                        <span style={{ color: "#e11d48", fontSize: "13px", marginTop: "8px", display: "block" }}>{errors.foto}</span>
-                                    )}
-                                </div>
-
                                 <div className={styles.grid}>
                                     <div className={styles.fieldGroup}>
                                         <label className={styles.label}>Nombre</label>
@@ -352,7 +472,7 @@ export default function EditarPerfil() {
                                             onChange={(v) => {
                                                 const updated = { ...form, profesion: v };
                                                 setForm(updated);
-                                                if (touched.profesion) setErrors(validar(updated, fotoUrl));
+                                                if (touched.profesion) setErrors(validar(updated, fotoUrl, enlaces));
                                             }}
                                             onBlur={handleBlur("profesion")}
                                             placeholder="Ej: Ingeniero de Software"
@@ -363,20 +483,6 @@ export default function EditarPerfil() {
                                         />
                                         {touched.profesion && errors.profesion && (
                                             <span className={styles.fieldError}>{errors.profesion}</span>
-                                        )}
-                                    </div>
-                                    <div className={styles.fieldGroup}>
-                                        <label className={styles.label}>Teléfono</label>
-                                        <input
-                                            className={`${styles.input} ${errors.celular && touched.celular ? styles.inputError : ""}`}
-                                            value={form.celular}
-                                            onChange={handleChange("celular")}
-                                            onBlur={handleBlur("celular")}
-                                            placeholder="+591 7XXXXXXX"
-                                            maxLength={20}
-                                        />
-                                        {touched.celular && errors.celular && (
-                                            <span className={styles.fieldError}>{errors.celular}</span>
                                         )}
                                     </div>
                                     <div className={`${styles.fieldGroup} ${styles.fieldFull}`}>
@@ -398,17 +504,35 @@ export default function EditarPerfil() {
                                 </div>
                             </div>
                         </div>
+
+                        <AdvancedProfileSection
+                            ciudad={form.ciudad}
+                            pais={form.pais}
+                            prefijoCelular={form.prefijo_celular}
+                            celular={form.celular}
+                            correoContacto={form.correo_contacto}
+                            enlaces={enlaces}
+                            errors={errors}
+                            onFieldChange={handleAdvancedFieldChange}
+                            onLinkChange={handleLinkChange}
+                            onAddLink={handleAddLink}
+                            onRemoveLink={handleRemoveLink}
+                        />
                     </div>
 
                     {/* ── Footer ── */}
                     <div className={styles.footer}>
                         <span className={styles.footerHint}>
-                            Los cambios se guardan al presionar el botón
+                            {Object.keys(errors).length > 0 
+                                ? <span style={{ color: "var(--red, #e53e3e)", fontWeight: 500 }}>Hay errores de validación. Revisa los campos.</span>
+                                : hasUnsavedChanges
+                                    ? "Tienes cambios sin guardar"
+                                    : "Los cambios se guardan al presionar el botón"}
                         </span>
                         <div className={styles.footerActions}>
                             <button
                                 className={styles.cancelBtn}
-                                onClick={() => navigate("/dashboard")}
+                                onClick={handleCancelar}
                                 disabled={saving}
                             >
                                 Cancelar
@@ -432,128 +556,41 @@ export default function EditarPerfil() {
                 </div>
             </div>
 
-            {/* ── Modal foto ── */}
-            {modalOpen && (
-                <div className={styles.modalOverlay} onClick={handleCloseModal}>
-                    <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <ConfirmModal
+                open={confirmAction === "save"}
+                title="Guardar cambios"
+                message="Se actualizará tu perfil avanzado y la información quedará visible en tu portafolio público según tu configuración."
+                confirmLabel="Guardar"
+                cancelLabel="Revisar"
+                loading={saving}
+                onConfirm={confirmGuardar}
+                onCancel={() => setConfirmAction(null)}
+            />
 
-                        <div className={styles.modalHeader}>
-                            <span className={styles.modalTitle}>Foto de perfil</span>
-                            <button className={styles.modalClose} onClick={handleCloseModal} type="button">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                            </button>
-                        </div>
+            <ConfirmModal
+                open={confirmAction === "discard"}
+                title="Descartar cambios"
+                message="Se perderán los cambios hechos en pantalla y se restaurarán los datos guardados en la base de datos."
+                confirmLabel="Descartar"
+                cancelLabel="Seguir editando"
+                variant="danger"
+                onConfirm={restoreOriginalProfile}
+                onCancel={() => setConfirmAction(null)}
+            />
 
-                        <div className={styles.modalTabs}>
-                            <button
-                                className={`${styles.modalTab} ${modalTab === "upload" ? styles.modalTabActive : ""}`}
-                                onClick={() => setModalTab("upload")}
-                                type="button"
-                            >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                    <polyline points="17 8 12 3 7 8"/>
-                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                </svg>
-                                Subir archivo
-                            </button>
-                            <button
-                                className={`${styles.modalTab} ${modalTab === "url" ? styles.modalTabActive : ""}`}
-                                onClick={() => setModalTab("url")}
-                                type="button"
-                            >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                                </svg>
-                                Desde URL
-                            </button>
-                        </div>
+            {successMsg && (
+                <ModalSuccess
+                    title="Operación completada"
+                    message={successMsg}
+                    onClose={() => setSuccessMsg(null)}
+                />
+            )}
 
-                        <div className={styles.modalBody}>
-                            {modalTab === "upload" ? (
-                                <div
-                                    className={`${styles.dropzone} ${dragging ? styles.dropzoneDragging : ""}`}
-                                    onDragOver={handleDragOver}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={handleDrop}
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        style={{ display: "none" }}
-                                        onChange={handleFileSelect}
-                                    />
-                                    {modalPreview ? (
-                                        <div className={styles.dropzonePreview}>
-                                            <img src={modalPreview} alt="Vista previa" />
-                                            <span className={styles.dropzoneChange}>Haz clic para cambiar</span>
-                                        </div>
-                                    ) : (
-                                        <div className={styles.dropzoneEmpty}>
-                                            <div className={styles.dropzoneIcon}>
-                                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                                    <polyline points="17 8 12 3 7 8"/>
-                                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                                </svg>
-                                            </div>
-                                            <p className={styles.dropzoneText}>Arrastra tu foto aquí</p>
-                                            <p className={styles.dropzoneSubtext}>o haz clic para seleccionar · JPG, PNG, WEBP</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className={styles.modalUrlTab}>
-                                    <label className={styles.modalLabel}>URL de la imagen</label>
-                                    <input
-                                        className={styles.modalInput}
-                                        type="url"
-                                        value={modalUrl}
-                                        onChange={(e) => {
-                                            setModalUrl(e.target.value);
-                                            if (URL_VALIDA.test(e.target.value.trim())) {
-                                                setModalPreview(e.target.value.trim());
-                                            } else {
-                                                setModalPreview(null);
-                                            }
-                                        }}
-                                        placeholder="https://ejemplo.com/mi-foto.jpg"
-                                        autoFocus
-                                    />
-                                    {modalPreview && (
-                                        <div className={styles.modalUrlPreview}>
-                                            <img
-                                                src={modalPreview}
-                                                alt="Vista previa"
-                                                onError={() => setModalPreview(null)}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className={styles.modalFooter}>
-                            <button className={styles.modalCancelBtn} onClick={handleCloseModal} type="button">
-                                Cancelar
-                            </button>
-                            <button
-                                className={styles.modalConfirmBtn}
-                                onClick={handleModalConfirm}
-                                type="button"
-                                disabled={modalTab === "url" && !modalUrl.trim()}
-                            >
-                                Aplicar foto
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {errorMessage && (
+                <ModalError
+                    message={errorMessage}
+                    onClose={() => setErrorMessage(null)}
+                />
             )}
         </>
     );

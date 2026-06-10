@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Perfil;
+use App\Models\PerfilEnlace;
 use App\Models\UsuarioHabilidad;
 use App\Models\Proyecto;
 use App\Models\ProyectoUsuario;
 use App\Models\Educacion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Logro;
 use App\Models\UsuarioIdioma;
 class PortafolioController extends Controller
@@ -19,6 +21,7 @@ class PortafolioController extends Controller
 
         $perfil = Perfil::where('usuario_id', $user->id_usuario)
             ->where('eliminado', false)
+            ->with('enlacesPersonalizados')
             ->first();
 
         // habilidades
@@ -135,14 +138,29 @@ class PortafolioController extends Controller
             ->where('eliminado', false)
             ->firstOrFail();
 
+        if ($request->filled('enlaces_personalizados_json')) {
+            $decodedLinks = json_decode($request->input('enlaces_personalizados_json'), true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedLinks)) {
+                $request->merge(['enlaces_personalizados' => $decodedLinks]);
+            }
+        }
+
         $data = $request->validate([
             'nombre_perfil'   => 'sometimes|string|max:255',
             'apellido_perfil' => 'sometimes|string|max:255',
             'profesion'       => 'sometimes|string|max:150',
-            'celular'         => 'sometimes|string|max:20',
-            'descripcion'     => 'sometimes|string|max:200',
+            'celular'         => ['sometimes', 'string', 'regex:/^[0-9]{7,14}$/', 'max:20'],
+            'descripcion'     => 'sometimes|string|max:300',
+            'ciudad'          => 'sometimes|nullable|string|max:100',
+            'pais'            => 'sometimes|nullable|string|max:100',
+            'prefijo_celular' => ['sometimes', 'nullable', 'string', 'regex:/^\+[0-9]{1,4}$/', 'max:10'],
+            'correo_contacto' => 'sometimes|nullable|email|max:255',
             'foto_url'        => 'sometimes|nullable|string|max:500',
             'foto_file'       => 'sometimes|nullable|image|max:5120',
+            'enlaces_personalizados' => 'sometimes|array|max:8',
+            'enlaces_personalizados.*.titulo' => 'required_with:enlaces_personalizados|string|max:80',
+            'enlaces_personalizados.*.url' => 'required_with:enlaces_personalizados|url|max:500',
         ]);
 
         if ($request->hasFile('foto_file')) {
@@ -153,9 +171,35 @@ class PortafolioController extends Controller
             $data['foto_url'] = $resultado->getSecurePath();
         }
 
-        unset($data['foto_file']);
+        $enlaces = $data['enlaces_personalizados'] ?? null;
+        unset($data['foto_file'], $data['enlaces_personalizados']);
 
-        $perfil->update($data);
+        // Prevent modifying restricted fields if they are already set
+        foreach (['nombre_perfil', 'apellido_perfil', 'profesion'] as $restrictedField) {
+            if (isset($data[$restrictedField]) && !empty($perfil->$restrictedField)) {
+                unset($data[$restrictedField]);
+            }
+        }
+
+        DB::transaction(function () use ($perfil, $data, $enlaces) {
+            $perfil->update($data);
+
+            if (is_array($enlaces)) {
+                PerfilEnlace::where('perfil_id', $perfil->id_perfil)->update(['eliminado' => true]);
+
+                foreach (array_values($enlaces) as $index => $enlace) {
+                    PerfilEnlace::create([
+                        'perfil_id' => $perfil->id_perfil,
+                        'titulo' => trim($enlace['titulo']),
+                        'url' => trim($enlace['url']),
+                        'orden' => $index,
+                        'eliminado' => false,
+                    ]);
+                }
+            }
+        });
+
+        $perfil->load('enlacesPersonalizados');
 
         return response()->json([
             'message' => 'Perfil actualizado correctamente',
@@ -362,4 +406,25 @@ class PortafolioController extends Controller
 
         return response()->json(['message' => 'Proyecto eliminado correctamente']);
     }
+    public function updateColor(Request $request)
+{
+    $user = $request->user();
+
+    $data = $request->validate([
+        'color_acento' => 'nullable|string|max:7',
+    ]);
+
+    $publicacion = \App\Models\PortafolioPublicacion::where('usuario_id', $user->id_usuario)
+        ->first();
+
+    if (!$publicacion) {
+        // Aún no ha publicado, guardar en perfil temporalmente
+        return response()->json(['color_acento' => $data['color_acento'] ?? null]);
+    }
+
+    $publicacion->color_acento = $data['color_acento'] ?? null;
+    $publicacion->save();
+
+    return response()->json(['color_acento' => $publicacion->color_acento]);
+}
 }

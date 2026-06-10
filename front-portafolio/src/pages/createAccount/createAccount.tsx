@@ -1,4 +1,4 @@
-import { useState, useRef, type ChangeEvent } from "react"
+import { useState, type ChangeEvent } from "react"
 import styles from "./createAccount-styles.module.css"
 import Input from "../../components/ui/Input/input"
 import ErrorMessage from "../../components/ui/ErrorMessage/ErrorMessage"
@@ -6,7 +6,9 @@ import Button from "../../components/ui/Button/button"
 import { createProfile } from "../../services/profile"
 import { useNavigate } from "react-router-dom"
 import AutocompleteInput from "../../components/ui/AutocompleteInput/AutocompleteInput"
-import SuccessModal from "../../components/ui/SuccessModal/SuccessModal";
+import SuccessModal from "../../components/ui/SuccessModal/SuccessModal"
+import ProfilePhotoField from "../SoloPerfil/components/ProfilePhotoField"
+import { COUNTRY_PHONE_OPTIONS, getDepartmentsByCountry, getPhonePrefixByCountry } from "../../utils/countryPhoneOptions"
 
 const PROFESIONES = [
     "Ingeniero de Software",
@@ -21,8 +23,12 @@ const PROFESIONES = [
     "Especialista en Ciberseguridad",
 ]
 
-// 🚀 ACTUALIZADO: Para soportar URLs normales y archivos locales (Base64)
-const URL_VALIDA = /^(https?:\/\/.+\..+|data:image\/.+)/;
+const URL_VALIDA = /^(https?:\/\/.+\..+|data:image\/.+)/
+
+export interface ProfileLinkForm {
+    titulo: string;
+    url: string;
+}
 
 interface FormValues {
     nombre: string
@@ -30,6 +36,10 @@ interface FormValues {
     profesion: string
     celular: string
     descripcion: string
+    ciudad: string
+    pais: string
+    prefijo_celular: string
+    correo_contacto: string
 }
 
 interface FormErrors {
@@ -38,89 +48,163 @@ interface FormErrors {
     profesion?: string
     celular?: string
     descripcion?: string
+    ciudad?: string
+    pais?: string
+    prefijo_celular?: string
+    correo_contacto?: string
     foto?: string
+    enlaces?: string
+    [key: string]: string | undefined
 }
 
-function validate(values: FormValues): FormErrors {
+function validate(values: FormValues, enlaces: ProfileLinkForm[]): FormErrors {
     const errors: FormErrors = {}
 
-    if (!values.nombre.trim())
+    if (!values.nombre.trim()) {
         errors.nombre = "El nombre es requerido"
-    else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(values.nombre))
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(values.nombre)) {
         errors.nombre = "Solo se permiten letras"
+    }
 
-    if (!values.apellido.trim())
+    if (!values.apellido.trim()) {
         errors.apellido = "El apellido es requerido"
-    else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(values.apellido))
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(values.apellido)) {
         errors.apellido = "Solo se permiten letras"
+    }
 
-    if (!values.profesion.trim())
+    if (!values.profesion.trim()) {
         errors.profesion = "La profesión es requerida"
+    } else if (/[<>"'`;{}()]/.test(values.profesion)) {
+        errors.profesion = "Caracteres no permitidos"
+    }
 
-    if (!values.celular.trim())
+    if (!values.celular.trim()) {
         errors.celular = "El celular es requerido"
-    else if (!/^\d{7,15}$/.test(values.celular))
-        errors.celular = "Ingresa un número válido (7-15 dígitos)"
+    } else if (!/^\+?[0-9\s\-()]{7,20}$/.test(values.celular)) {
+        errors.celular = "Ingresa un número válido (7-20 dígitos)"
+    }
 
-    if (values.descripcion.length > 300)
-        errors.descripcion = "Máximo 300 caracteres"
-    else if (!values.descripcion.trim())
+    if (!values.descripcion.trim()) {
         errors.descripcion = "La descripción es requerida"
+    } else if (/[<>"'`;{}()]/.test(values.descripcion)) {
+        errors.descripcion = "Caracteres no permitidos"
+    } else if (values.descripcion.length > 300) {
+        errors.descripcion = "Máximo 300 caracteres"
+    }
+
+    if (values.pais.trim()) {
+        if (/[<>"'`;{}()]/.test(values.pais)) {
+            errors.pais = "Caracteres no permitidos"
+        } else if (values.pais.trim().length > 100) {
+            errors.pais = "Máximo 100 caracteres"
+        }
+    }
+
+    if (!values.pais.trim()) {
+        errors.pais = "El pais es requerido"
+    } else if (!getPhonePrefixByCountry(values.pais)) {
+        errors.pais = "Seleccione un pais de la lista"
+    }
+
+    if (!values.ciudad.trim()) {
+        errors.ciudad = "Seleccione una ciudad"
+    } else if (!getDepartmentsByCountry(values.pais).includes(values.ciudad)) {
+        errors.ciudad = "Seleccione una ciudad de la lista"
+    }
+
+    if (!values.prefijo_celular.trim()) {
+        errors.prefijo_celular = "Seleccione un pais para asignar el prefijo"
+    }
+
+    if (!values.celular.trim()) {
+        errors.celular = "El celular es requerido"
+    } else if (!/^[0-9]{7,14}$/.test(values.celular.trim())) {
+        errors.celular = "Ingrese solo numeros, entre 7 y 14 digitos"
+    }
+
+    if (values.correo_contacto.trim()) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.correo_contacto.trim())) {
+            errors.correo_contacto = "Ingrese un correo válido"
+        } else if (!values.correo_contacto.trim().toLowerCase().endsWith("@gmail.com")) {
+            errors.correo_contacto = "El correo de contacto debe ser una dirección de @gmail.com"
+        }
+    }
+
+    enlaces.forEach((enlace, index) => {
+        const titulo = enlace.titulo.trim()
+        const url = enlace.url.trim()
+
+        if (!titulo && !url) return
+
+        if (!titulo) {
+            errors[`enlaces.${index}.titulo`] = "El título es obligatorio"
+        } else if (/[<>"'`;{}()]/.test(titulo)) {
+            errors[`enlaces.${index}.titulo`] = "Caracteres no permitidos"
+        }
+
+        if (!url) {
+            errors[`enlaces.${index}.url`] = "La URL es obligatoria"
+        } else if (!LINK_URL_VALIDA.test(url)) {
+            errors[`enlaces.${index}.url`] = "Debe ser una URL válida (ej: https://...)"
+        }
+    })
 
     return errors
 }
 
-// 🚀 ACTUALIZADO: Para manejar tanto enlaces externos como archivos subidos
+const LINK_URL_VALIDA = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/
+
 function validarFotoUrl(url: string): string | undefined {
     const limpia = url.trim()
     if (!limpia) return undefined
-    if (!URL_VALIDA.test(limpia)) return "Ingresa una URL válida o sube un archivo."
-    if (!limpia.startsWith("data:image/") && limpia.length > 300) return "La URL no puede superar 300 caracteres"
+    if (!URL_VALIDA.test(limpia)) return "Ingresa una URL válida que comience con http:// o https://"
+    if (limpia.startsWith("data:image/")) return undefined
+    if (limpia.length > 300) return "La URL no puede superar 300 caracteres"
     return undefined
 }
 
-// 🔥 FILTRO FRONTEND (sin backend)
 async function fetchProfesiones(q: string): Promise<string[]> {
     return PROFESIONES.filter((p) =>
         p.toLowerCase().includes(q.toLowerCase())
     )
 }
 
-export default function CreateAccount() {
+interface CreateAccountProps {
+    embedded?: boolean
+    onSaved?: () => void
+    onCancel?: () => void
+}
+
+export default function CreateAccount({ embedded = false, onSaved, onCancel }: CreateAccountProps) {
     const navigate = useNavigate()
-    
+
     const [values, setValues] = useState<FormValues>({
         nombre: "",
         apellido: "",
         profesion: "",
         celular: "",
         descripcion: "",
+        ciudad: "",
+        pais: "",
+        prefijo_celular: "",
+        correo_contacto: "",
     })
 
+    const [enlaces, setEnlaces] = useState<ProfileLinkForm[]>([])
     const [errors, setErrors] = useState<FormErrors>({})
     const [touched, setTouched] = useState<Partial<Record<keyof FormValues, boolean>>>({})
     const [saving, setSaving] = useState(false)
-    
-    // Estados para la foto principal
     const [fotoUrl, setFotoUrl] = useState("")
     const [fotoError, setFotoError] = useState<string | undefined>(undefined)
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [globalError, setGlobalError] = useState<string | null>(null);
-
-    // 🚀 NUEVOS ESTADOS PARA EL MODAL DE FOTO
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalTab, setModalTab] = useState<"upload" | "url">("upload");
-    const [modalUrl, setModalUrl] = useState("");
-    const [dragging, setDragging] = useState(false);
-    const [modalPreview, setModalPreview] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [showSuccess, setShowSuccess] = useState(false)
+    const [submitError, setSubmitError] = useState<string | null>(null)
 
     function handleChange(field: keyof FormValues) {
-        return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        return (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const updated = { ...values, [field]: e.target.value }
             setValues(updated)
             if (touched[field]) {
-                setErrors(validate(updated))
+                setErrors(validate(updated, enlaces))
             }
         }
     }
@@ -128,86 +212,56 @@ export default function CreateAccount() {
     function handleBlur(field: keyof FormValues) {
         return () => {
             setTouched((prev) => ({ ...prev, [field]: true }))
-            setErrors(validate(values))
+            setErrors(validate(values, enlaces))
         }
     }
 
-    // 🚀 LÓGICA DEL MODAL
-    function handleOpenModal() {
-        setModalUrl(fotoUrl);
-        setModalPreview(fotoUrl || null);
-        setModalTab("upload");
-        setDragging(false);
-        setModalOpen(true);
+    function handleFotoUrlChange(next: string) {
+        setFotoUrl(next)
+        setFotoError(validarFotoUrl(next))
     }
 
-    function handleCloseModal() {
-        setModalOpen(false);
-        setModalUrl("");
-        setModalPreview(null);
+    function handleAdvancedFieldChange(field: "ciudad" | "pais" | "prefijo_celular" | "correo_contacto", value: string) {
+        const updated = field === "pais"
+            ? { ...values, pais: value, ciudad: "", prefijo_celular: getPhonePrefixByCountry(value) }
+            : { ...values, [field]: value }
+        setValues(updated)
+        setErrors(validate(updated, enlaces))
     }
 
-    function handleModalConfirm() {
-        let finalUrl = "";
-        if (modalTab === "url" && modalUrl.trim()) {
-            finalUrl = modalUrl.trim();
-        } else if (modalTab === "upload" && modalPreview) {
-            finalUrl = modalPreview;
+    function handleLinkChange(index: number, field: keyof ProfileLinkForm, value: string) {
+        const updated = enlaces.map((enlace, currentIndex) => (
+            currentIndex === index ? { ...enlace, [field]: value } : enlace
+        ))
+        setEnlaces(updated)
+        setErrors(validate(values, updated))
+    }
+
+    function handleAddLink() {
+        if (enlaces.length >= 8) {
+            setErrors((prev) => ({ ...prev, enlaces: "Máximo 8 enlaces personalizados." }))
+            return
         }
-
-        setFotoUrl(finalUrl);
-        setFotoError(validarFotoUrl(finalUrl));
-        setModalOpen(false);
+        setEnlaces((prev) => [...prev, { titulo: "", url: "" }])
     }
 
-    function handleDragOver(e: React.DragEvent) {
-        e.preventDefault();
-        setDragging(true);
-    }
-
-    function handleDragLeave() {
-        setDragging(false);
-    }
-
-    function handleDrop(e: React.DragEvent) {
-        e.preventDefault();
-        setDragging(false);
-        const file = e.dataTransfer.files?.[0];
-        if (file && file.type.startsWith("image/")) {
-            if (file.size > 2 * 1024 * 1024) {
-                alert("La imagen no debe superar los 2MB");
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = (ev) => setModalPreview(ev.target?.result as string);
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (file && file.type.startsWith("image/")) {
-            if (file.size > 2 * 1024 * 1024) {
-                alert("La imagen no debe superar los 2MB");
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = (ev) => setModalPreview(ev.target?.result as string);
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function handleQuitarFoto() {
-        setFotoUrl("");
-        setFotoError(undefined);
+    function handleRemoveLink(index: number) {
+        const updated = enlaces.filter((_, currentIndex) => currentIndex !== index)
+        setEnlaces(updated)
+        setErrors(validate(values, updated))
     }
 
     const handleCancelar = () => {
-        navigate("/dashboard")
+        if (embedded && onCancel) {
+            onCancel()
+        } else {
+            navigate("/dashboard")
+        }
     }
 
     async function handleGuardar() {
         if (saving) return
+        setSubmitError(null)
 
         const allTouched = Object.fromEntries(
             (Object.keys(values) as (keyof FormValues)[]).map((k) => [k, true])
@@ -215,31 +269,42 @@ export default function CreateAccount() {
 
         setTouched(allTouched)
 
-        const currentErrors = validate(values)
+        const currentErrors = validate(values, enlaces)
         setErrors(currentErrors)
+
         const fotoUrlError = validarFotoUrl(fotoUrl)
         setFotoError(fotoUrlError)
-
-        // Limpiamos errores previos del servidor antes de intentar de nuevo
-        setFotoError(undefined);
 
         if (Object.keys(currentErrors).length === 0 && !fotoUrlError) {
             setSaving(true)
             try {
+                const cleanLinks = enlaces
+                    .map((enlace) => ({
+                        titulo: enlace.titulo.trim(),
+                        url: enlace.url.trim(),
+                    }))
+                    .filter((enlace) => enlace.titulo || enlace.url)
+
                 await createProfile({
                     nombre_perfil: values.nombre,
                     apellido_perfil: values.apellido,
                     profesion: values.profesion,
                     celular: values.celular,
                     descripcion: values.descripcion,
+                    ciudad: values.ciudad.trim(),
+                    pais: values.pais.trim(),
+                    prefijo_celular: values.prefijo_celular.trim(),
+                    correo_contacto: values.correo_contacto.trim() || undefined,
+                    enlaces_personalizados: cleanLinks.length > 0 ? cleanLinks : undefined,
                     foto_url: fotoUrl.trim() || undefined,
                 })
+
                 localStorage.setItem("hasProfile", "true")
                 setShowSuccess(true)
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error al guardar perfil:", error)
-                // 🔥 AHORA SÍ LE AVISAMOS AL USUARIO SI HAY UN ERROR
-                setFotoError("Error al guardar. Si subiste un archivo, puede que sea muy pesado para el servidor. Intenta con una URL.");
+                const msg = error.response?.data?.message || error.response?.data?.error || "Error al guardar el perfil. Por favor, intenta de nuevo."
+                setSubmitError(msg)
             } finally {
                 setSaving(false)
             }
@@ -247,8 +312,7 @@ export default function CreateAccount() {
     }
 
     return (
-        <main className={styles.page}>
-
+        <main className={`${styles.page} ${embedded ? styles.embedded : ""}`}>
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarTop}>
                     <div className={styles.brand}>
@@ -256,53 +320,6 @@ export default function CreateAccount() {
                     </div>
                     <p className={styles.brandName}>Crear perfil</p>
                     <p className={styles.brandSub}>Configuración de cuenta</p>
-                </div>
-
-                <div className={styles.avatarZone}>
-                    <span className={styles.avatarZoneLabel}>Foto de perfil</span>
-                    <div className={styles.avatarRow}>
-                        <div className={styles.avatar} onClick={handleOpenModal} style={{ cursor: "pointer" }}>
-                            {fotoUrl.trim() ? (
-                                <img
-                                    src={fotoUrl.trim()}
-                                    alt="Foto de perfil"
-                                    className={styles.avatarPreview}
-                                    onError={() => setFotoError("La imagen no pudo cargarse.")}
-                                />
-                            ) : (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.avatarIconSvg}>
-                                    <circle cx="12" cy="8" r="4" />
-                                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                                </svg>
-                            )}
-                        </div>
-                        <div className={styles.avatarInfo}>
-                            <button
-                                type="button"
-                                className={styles.addFotoBtn}
-                                onClick={handleOpenModal}
-                                style={{ marginBottom: "8px", padding: "6px 12px", cursor: "pointer", borderRadius: "6px", border: "1px solid #ccc", background: "#fff" }}
-                            >
-                                {fotoUrl.trim() ? "Cambiar foto" : "Subir o enlazar foto"}
-                            </button>
-                            
-                            {fotoUrl && (
-                                <button
-                                    type="button"
-                                    className={styles.quitarFoto}
-                                    onClick={handleQuitarFoto}
-                                    style={{ marginLeft: "10px", color: "#e11d48", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
-                                >
-                                    Quitar
-                                </button>
-                            )}
-                            <br />
-                            <span className={styles.avatarLabel}>JPG, PNG, WEBP permitidos</span>
-                            {fotoError && (
-                                <span className={styles.avatarError} style={{ color: "red", display: "block", marginTop: "4px" }}>{fotoError}</span>
-                            )}
-                        </div>
-                    </div>
                 </div>
 
                 <div className={styles.steps}>
@@ -353,7 +370,6 @@ export default function CreateAccount() {
             </aside>
 
             <div className={styles.main}>
-
                 <div className={styles.topbar}>
                     <div className={styles.topbarLeft}>
                         <span className={styles.topbarStep}>Paso 2</span>
@@ -372,6 +388,53 @@ export default function CreateAccount() {
                 </div>
 
                 <div className={styles.formBody}>
+                    <div style={{
+                        padding: "16px 20px",
+                        background: "#ffffff",
+                        border: "1px solid var(--border2)",
+                        borderRadius: "10px",
+                        marginBottom: "10px"
+                    }}>
+                        <p style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "700", color: "var(--accent)" }}>
+                            Estás registrando tu perfil por primera vez.
+                        </p>
+                        <p style={{ margin: "0", fontSize: "12px", color: "var(--text2)" }}>
+                            Advertencia: Los campos Nombre, Apellido y Profesión son definitivos y no se podrán cambiar después de guardar el registro.
+                        </p>
+                    </div>
+
+                    {submitError && (
+                        <div style={{
+                            padding: "12px 20px",
+                            background: "#fde8e8",
+                            border: "1px solid #f8b4b4",
+                            borderRadius: "10px",
+                            marginBottom: "10px",
+                            color: "#c81e1e",
+                            fontSize: "13px",
+                            fontWeight: "600"
+                        }}>
+                            {submitError}
+                        </div>
+                    )}
+
+                    <div className={styles.section}>
+                        <div className={styles.sectionTag}>
+                            <div className={styles.sectionTagLeft}>
+                                <div className={styles.tagNum}>0</div>
+                                <span className={styles.tagLabel}>Foto de perfil</span>
+                            </div>
+                        </div>
+
+                        <div className={styles.sectionCard}>
+                            <ProfilePhotoField
+                                fotoUrl={fotoUrl}
+                                error={fotoError}
+                                onChange={handleFotoUrlChange}
+                                onError={setFotoError}
+                            />
+                        </div>
+                    </div>
 
                     <div className={styles.section}>
                         <div className={styles.sectionTag}>
@@ -380,6 +443,7 @@ export default function CreateAccount() {
                                 <span className={styles.tagLabel}>Datos personales</span>
                             </div>
                         </div>
+
                         <div className={styles.sectionCard}>
                             <div className={styles.grid}>
                                 <div className={styles.fieldGroup}>
@@ -395,6 +459,7 @@ export default function CreateAccount() {
                                     />
                                     <ErrorMessage message={touched.nombre ? errors.nombre : undefined} />
                                 </div>
+
                                 <div className={styles.fieldGroup}>
                                     <label className={styles.label}>Apellido</label>
                                     <Input
@@ -419,6 +484,7 @@ export default function CreateAccount() {
                                 <span className={styles.tagLabel}>Información profesional</span>
                             </div>
                         </div>
+
                         <div className={styles.sectionCard}>
                             <div className={styles.grid}>
                                 <div className={styles.fieldGroup}>
@@ -429,7 +495,7 @@ export default function CreateAccount() {
                                         onChange={(v) => {
                                             const updated = { ...values, profesion: v }
                                             setValues(updated)
-                                            if (touched.profesion) setErrors(validate(updated))
+                                            if (touched.profesion) setErrors(validate(updated, enlaces))
                                         }}
                                         onBlur={handleBlur("profesion")}
                                         placeholder="Ej: Ingeniero de Software"
@@ -440,19 +506,7 @@ export default function CreateAccount() {
                                     />
                                     <ErrorMessage message={touched.profesion ? errors.profesion : undefined} />
                                 </div>
-                                <div className={styles.fieldGroup}>
-                                    <label className={styles.label}>Celular</label>
-                                    <Input
-                                        type="tel"
-                                        placeholder=""
-                                        classname={styles.input}
-                                        value={values.celular}
-                                        onChange={handleChange("celular")}
-                                        onBlur={handleBlur("celular")}
-                                        error={!!errors.celular && touched.celular}
-                                    />
-                                    <ErrorMessage message={touched.celular ? errors.celular : undefined} />
-                                </div>
+
                                 <div className={`${styles.fieldGroup} ${styles.textareaWrapper}`}>
                                     <label className={styles.label}>Descripción</label>
                                     <textarea
@@ -471,18 +525,182 @@ export default function CreateAccount() {
                         </div>
                     </div>
 
+                    <div className={styles.section}>
+                        <div className={styles.sectionTag}>
+                            <div className={styles.sectionTagLeft}>
+                                <div className={styles.tagNum}>3</div>
+                                <span className={styles.tagLabel}>Ubicación y contacto</span>
+                            </div>
+                        </div>
+
+                        <div className={styles.sectionCard}>
+                            <div className={styles.grid}>
+                                <div className={styles.fieldGroup}>
+                                    <label className={styles.label}>País</label>
+                                    <select
+                                        className={`${styles.input} ${errors.pais ? styles.inputError : ""}`}
+                                        value={values.pais}
+                                        onChange={(e) => handleAdvancedFieldChange("pais", e.target.value)}
+                                    >
+                                        <option value="">Seleccione un pais</option>
+                                        {COUNTRY_PHONE_OPTIONS.map((option) => (
+                                            <option key={option.country} value={option.country}>
+                                                {option.country}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <ErrorMessage message={errors.pais} />
+                                </div>
+
+                                <div className={styles.fieldGroup}>
+                                    <label className={styles.label}>Ciudad</label>
+                                    <select
+                                        className={`${styles.input} ${errors.ciudad ? styles.inputError : ""}`}
+                                        value={values.ciudad}
+                                        onChange={(e) => handleAdvancedFieldChange("ciudad", e.target.value)}
+                                        disabled={!values.pais}
+                                    >
+                                        <option value="">
+                                            {values.pais ? "Seleccione una ciudad" : "Primero seleccione un pais"}
+                                        </option>
+                                        {getDepartmentsByCountry(values.pais).map((department) => (
+                                            <option key={department} value={department}>
+                                                {department}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <ErrorMessage message={errors.ciudad} />
+                                </div>
+
+                                <div className={styles.fieldGroup}>
+                                    <label className={styles.label}>Celular</label>
+                                    <div className={styles.phoneRow}>
+                                        <span className={styles.phonePrefix}>{values.prefijo_celular}</span>
+                                        <Input
+                                            type="tel"
+                                            placeholder="78937439"
+                                            classname={styles.input}
+                                            value={values.celular}
+                                            onChange={handleChange("celular")}
+                                            onBlur={handleBlur("celular")}
+                                            error={!!errors.celular && touched.celular}
+                                        />
+                                    </div>
+                                    <ErrorMessage message={errors.prefijo_celular || (touched.celular ? errors.celular : undefined)} />
+                                </div>
+
+                                <div className={`${styles.fieldGroup} ${styles.textareaWrapper}`}>
+                                    <label className={styles.label}>Correo de contacto</label>
+                                    <Input
+                                        type="email"
+                                        placeholder="correo@ejemplo.com"
+                                        classname={styles.input}
+                                        value={values.correo_contacto}
+                                        onChange={(e) => handleAdvancedFieldChange("correo_contacto", e.target.value)}
+                                        error={!!errors.correo_contacto}
+                                    />
+                                    <ErrorMessage message={errors.correo_contacto} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={styles.section}>
+                        <div className={styles.sectionTag}>
+                            <div className={styles.sectionTagLeft}>
+                                <div className={styles.tagNum}>4</div>
+                                <span className={styles.tagLabel}>Enlaces personalizados</span>
+                            </div>
+                            <button
+                                type="button"
+                                style={{
+                                    background: "var(--accent-bg)",
+                                    border: "1px solid var(--accent-md)",
+                                    color: "var(--accent)",
+                                    padding: "6px 12px",
+                                    borderRadius: "6px",
+                                    fontSize: "11px",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    fontFamily: "inherit"
+                                }}
+                                onClick={handleAddLink}
+                            >
+                                Agregar enlace
+                            </button>
+                        </div>
+
+                        <div className={styles.sectionCard}>
+                            {errors.enlaces && <ErrorMessage message={errors.enlaces} />}
+                            
+                            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                {enlaces.length === 0 ? (
+                                    <p style={{ margin: "0", fontSize: "12px", color: "var(--text3)", textAlign: "center", padding: "10px 0" }}>
+                                        Aún no has agregado enlaces personalizados.
+                                    </p>
+                                ) : (
+                                    enlaces.map((enlace, index) => (
+                                        <div key={index} style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "1fr 1.5fr auto",
+                                            gap: "12px",
+                                            alignItems: "end",
+                                            borderBottom: "1px solid var(--border)",
+                                            paddingBottom: "16px"
+                                        }}>
+                                            <div className={styles.fieldGroup}>
+                                                <label className={styles.label}>Título</label>
+                                                <input
+                                                    className={`${styles.input} ${errors[`enlaces.${index}.titulo`] ? styles.inputError : ""}`}
+                                                    value={enlace.titulo}
+                                                    onChange={(e) => handleLinkChange(index, "titulo", e.target.value)}
+                                                    placeholder="Ej: CV, LinkedIn, GitHub"
+                                                    maxLength={80}
+                                                />
+                                                <ErrorMessage message={errors[`enlaces.${index}.titulo`]} />
+                                            </div>
+
+                                            <div className={styles.fieldGroup}>
+                                                <label className={styles.label}>URL</label>
+                                                <input
+                                                    className={`${styles.input} ${errors[`enlaces.${index}.url`] ? styles.inputError : ""}`}
+                                                    value={enlace.url}
+                                                    onChange={(e) => handleLinkChange(index, "url", e.target.value)}
+                                                    placeholder="https://..."
+                                                    maxLength={500}
+                                                />
+                                                <ErrorMessage message={errors[`enlaces.${index}.url`]} />
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                style={{
+                                                    background: "#ffffff",
+                                                    border: "1.5px solid var(--border2)",
+                                                    color: "var(--red)",
+                                                    padding: "8px 12px",
+                                                    borderRadius: "7px",
+                                                    fontSize: "12px",
+                                                    fontWeight: "600",
+                                                    cursor: "pointer",
+                                                    height: "38px"
+                                                }}
+                                                onClick={() => handleRemoveLink(index)}
+                                            >
+                                                Quitar
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div className={styles.greenAccent} />
 
-                {globalError && (
-                    <div style={{ color: "#e53e3e", padding: "12px 32px", fontSize: "14px", fontWeight: 500, backgroundColor: "#fff5f5", borderLeft: "4px solid #e53e3e", marginBottom: "16px", marginLeft: "32px", marginRight: "32px", borderRadius: "4px" }}>
-                        {globalError}
-                    </div>
-                )}
-
                 <div className={styles.actions}>
-                    <span className={styles.actionsHint}>Puedes omitir este paso y crear tu perfil después</span>
+                    <span className={styles.actionsHint}>Completa tu perfil para mostrarlo en tu portafolio.</span>
                     <div className={styles.actionsRight}>
                         <Button text="Omitir" className={styles.cancel} onClick={handleCancelar} />
                         <Button
@@ -494,141 +712,16 @@ export default function CreateAccount() {
                         />
                     </div>
                 </div>
-
             </div>
 
             <SuccessModal
                 open={showSuccess}
                 onClose={() => {
                     setShowSuccess(false)
-                    navigate("/dashboard")
+                    onSaved?.()
+                    if (!embedded) navigate("/dashboard")
                 }}
             />
-
-            {/* ── MODAL FOTO REPLICADO ── */}
-            {modalOpen && (
-                <div className={styles.modalOverlay} onClick={handleCloseModal}>
-                    <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-
-                        <div className={styles.modalHeader}>
-                            <span className={styles.modalTitle}>Foto de perfil</span>
-                            <button className={styles.modalClose} onClick={handleCloseModal} type="button">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div className={styles.modalTabs}>
-                            <button
-                                className={`${styles.modalTab} ${modalTab === "upload" ? styles.modalTabActive : ""}`}
-                                onClick={() => setModalTab("upload")}
-                                type="button"
-                            >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                    <polyline points="17 8 12 3 7 8"/>
-                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                </svg>
-                                Subir archivo
-                            </button>
-                            <button
-                                className={`${styles.modalTab} ${modalTab === "url" ? styles.modalTabActive : ""}`}
-                                onClick={() => setModalTab("url")}
-                                type="button"
-                            >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                                </svg>
-                                Desde URL
-                            </button>
-                        </div>
-
-                        <div className={styles.modalBody}>
-                            {modalTab === "upload" ? (
-                                <div
-                                    className={`${styles.dropzone} ${dragging ? styles.dropzoneDragging : ""}`}
-                                    onDragOver={handleDragOver}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={handleDrop}
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        style={{ display: "none" }}
-                                        onChange={handleFileSelect}
-                                    />
-                                    {modalPreview ? (
-                                        <div className={styles.dropzonePreview}>
-                                            <img src={modalPreview} alt="Vista previa" />
-                                            <span className={styles.dropzoneChange}>Haz clic para cambiar</span>
-                                        </div>
-                                    ) : (
-                                        <div className={styles.dropzoneEmpty}>
-                                            <div className={styles.dropzoneIcon}>
-                                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                                    <polyline points="17 8 12 3 7 8"/>
-                                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                                </svg>
-                                            </div>
-                                            <p className={styles.dropzoneText}>Arrastra tu foto aquí</p>
-                                            <p className={styles.dropzoneSubtext}>o haz clic para seleccionar · JPG, PNG, WEBP</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className={styles.modalUrlTab}>
-                                    <label className={styles.modalLabel}>URL de la imagen</label>
-                                    <input
-                                        className={styles.modalInput}
-                                        type="url"
-                                        value={modalUrl}
-                                        onChange={(e) => {
-                                            setModalUrl(e.target.value);
-                                            if (URL_VALIDA.test(e.target.value.trim())) {
-                                                setModalPreview(e.target.value.trim());
-                                            } else {
-                                                setModalPreview(null);
-                                            }
-                                        }}
-                                        placeholder="https://ejemplo.com/mi-foto.jpg"
-                                        autoFocus
-                                    />
-                                    {modalPreview && (
-                                        <div className={styles.modalUrlPreview}>
-                                            <img
-                                                src={modalPreview}
-                                                alt="Vista previa"
-                                                onError={() => setModalPreview(null)}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className={styles.modalFooter}>
-                            <button className={styles.modalCancelBtn} onClick={handleCloseModal} type="button">
-                                Cancelar
-                            </button>
-                            <button
-                                className={styles.modalConfirmBtn}
-                                onClick={handleModalConfirm}
-                                type="button"
-                                disabled={modalTab === "url" && !modalUrl.trim()}
-                            >
-                                Aplicar foto
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
         </main>
     )
 }

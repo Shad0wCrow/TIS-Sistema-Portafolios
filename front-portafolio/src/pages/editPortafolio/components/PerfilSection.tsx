@@ -1,4 +1,5 @@
 import type { Perfil } from "../../../types/portafolioTypes";
+import { formatPhoneWithPrefix } from "../../../utils/countryPhoneOptions";
 import { IconPersona } from "./icons";
 import styles from "../edicionPortafolio.module.css";
 
@@ -8,6 +9,8 @@ interface PerfilSectionProps {
 }
 
 export default function PerfilSection({ perfil, nombreCompleto }: PerfilSectionProps) {
+  const telefono = formatPhoneWithPrefix(perfil?.prefijo_celular, perfil?.celular);
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
@@ -41,7 +44,7 @@ export default function PerfilSection({ perfil, nombreCompleto }: PerfilSectionP
         <div className={styles.profileActions}>
           <div className={styles.contactBlock}>
             <p className={styles.contactLabel}>Teléfono</p>
-            <p className={styles.contactValue}>{perfil?.celular ?? "—"}</p>
+            <p className={styles.contactValue}>{telefono || "—"}</p>
           </div>
         </div>
       </div>

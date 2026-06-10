@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Perfil;
+use App\Models\PerfilEnlace;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class PerfilController extends Controller
@@ -23,14 +25,29 @@ class PerfilController extends Controller
             return response()->json(['message' => 'El perfil ya existe'], 400);
         }
 
+        if ($request->filled('enlaces_personalizados_json')) {
+            $decodedLinks = json_decode($request->input('enlaces_personalizados_json'), true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedLinks)) {
+                $request->merge(['enlaces_personalizados' => $decodedLinks]);
+            }
+        }
+
         $data = $request->validate([
             'nombre_perfil'   => 'required|string|max:255',
             'apellido_perfil' => 'required|string|max:255',
             'profesion'       => 'required|string|max:150',
-            'celular'         => 'required|string|max:20',
+            'celular'         => ['required', 'string', 'regex:/^[0-9]{7,14}$/', 'max:20'],
             'descripcion'     => 'required|string|max:1000',
             'foto_url'        => 'nullable|string|max:500',
             'foto_file'       => 'nullable|image|max:5120',
+            'ciudad'          => 'required|string|max:100',
+            'pais'            => 'required|string|max:100',
+            'prefijo_celular' => ['required', 'string', 'regex:/^\+[0-9]{1,4}$/', 'max:10'],
+            'correo_contacto' => 'nullable|email|max:255',
+            'enlaces_personalizados' => 'sometimes|array|max:8',
+            'enlaces_personalizados.*.titulo' => 'required_with:enlaces_personalizados|string|max:80',
+            'enlaces_personalizados.*.url' => 'required_with:enlaces_personalizados|url|max:500',
         ]);
 
         $fotoUrl = $data['foto_url'] ?? null;
@@ -42,22 +59,45 @@ class PerfilController extends Controller
             $fotoUrl = $resultado->getSecurePath();
         }
 
+        $enlaces = $data['enlaces_personalizados'] ?? null;
+        unset($data['foto_file'], $data['enlaces_personalizados']);
+
         try {
-            $perfil = Perfil::create([
-                'usuario_id'      => $user->id_usuario,
-                'nombre_perfil'   => $data['nombre_perfil'],
-                'apellido_perfil' => $data['apellido_perfil'],
-                'profesion'       => $data['profesion'],
-                'celular'         => $data['celular'],
-                'descripcion'     => $data['descripcion'],
-                'foto_url'        => $fotoUrl,
-                'eliminado'       => false,
-                'visibilidad'     => 'privado',
-            ]);
+            $perfil = DB::transaction(function () use ($user, $data, $fotoUrl, $enlaces) {
+                $perfil = Perfil::create([
+                    'usuario_id'      => $user->id_usuario,
+                    'nombre_perfil'   => $data['nombre_perfil'],
+                    'apellido_perfil' => $data['apellido_perfil'],
+                    'profesion'       => $data['profesion'],
+                    'celular'         => $data['celular'],
+                    'descripcion'     => $data['descripcion'],
+                    'foto_url'        => $fotoUrl,
+                    'ciudad'          => $data['ciudad'],
+                    'pais'            => $data['pais'],
+                    'prefijo_celular' => $data['prefijo_celular'],
+                    'correo_contacto' => $data['correo_contacto'] ?? null,
+                    'eliminado'       => false,
+                    'visibilidad'     => 'privado',
+                ]);
+
+                if (is_array($enlaces)) {
+                    foreach (array_values($enlaces) as $index => $enlace) {
+                        PerfilEnlace::create([
+                            'perfil_id' => $perfil->id_perfil,
+                            'titulo' => trim($enlace['titulo']),
+                            'url' => trim($enlace['url']),
+                            'orden' => $index,
+                            'eliminado' => false,
+                        ]);
+                    }
+                }
+
+                return $perfil;
+            });
 
             return response()->json([
                 'message' => 'Perfil creado correctamente',
-                'perfil'  => $perfil,
+                'perfil'  => $perfil->load('enlacesPersonalizados'),
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -81,10 +121,14 @@ class PerfilController extends Controller
             'nombre_perfil'   => 'sometimes|string|max:255',
             'apellido_perfil' => 'sometimes|string|max:255',
             'profesion'       => 'sometimes|string|max:150',
-            'celular'         => 'sometimes|string|max:20',
+            'celular'         => ['sometimes', 'string', 'regex:/^[0-9]{7,14}$/', 'max:20'],
             'descripcion'     => 'sometimes|string|max:1000',
             'foto_url'        => 'nullable|string|max:500',
             'foto_file'       => 'nullable|image|max:5120',
+            'ciudad'          => 'sometimes|nullable|string|max:100',
+            'pais'            => 'sometimes|nullable|string|max:100',
+            'prefijo_celular' => ['sometimes', 'nullable', 'string', 'regex:/^\+[0-9]{1,4}$/', 'max:10'],
+            'correo_contacto' => 'sometimes|nullable|email|max:255',
         ]);
 
         if ($request->hasFile('foto_file')) {
@@ -95,6 +139,13 @@ class PerfilController extends Controller
         }
 
         unset($data['foto_file']);
+
+        // Prevent modifying restricted fields if they are already set
+        foreach (['nombre_perfil', 'apellido_perfil', 'profesion'] as $restrictedField) {
+            if (isset($data[$restrictedField]) && !empty($perfil->$restrictedField)) {
+                unset($data[$restrictedField]);
+            }
+        }
 
         $perfil->update($data);
 
@@ -108,7 +159,7 @@ class PerfilController extends Controller
     {
         $user = $request->user();
 
-        $perfil = Perfil::where('usuario_id', $user->id_usuario)->first();
+        $perfil = Perfil::with('enlacesPersonalizados')->where('usuario_id', $user->id_usuario)->first();
 
         return response()->json([
             'has_profile' => $perfil ? true : false,

@@ -63,9 +63,8 @@ export default function ModalEditarHabilidad({ habilidad, onClose, onSave }: Mod
               value={habilidad.nombre}
               disabled
               aria-disabled="true"
-              style={{ opacity: 0.55, cursor: "not-allowed" }}
             />
-            <span style={{ fontSize: 11, color: "var(--text2)", marginTop: 4, display: "block" }}>
+            <span className={styles.fieldHint}>
               El nombre de la habilidad no puede modificarse.
             </span>
           </div>
@@ -83,7 +82,7 @@ export default function ModalEditarHabilidad({ habilidad, onClose, onSave }: Mod
               ))}
             </select>
             {nivelError && (
-              <span style={{ fontSize: 12, color: "var(--red)", marginTop: 4, display: "block" }}>
+              <span className={styles.fieldError}>
                 {nivelError}
               </span>
             )}

@@ -5,6 +5,7 @@ import {
   getExperiencias,
   getPortafolio,
   getVisibilidadSecciones,
+  guardarColorAcento,
 } from "../../services/portafolioservice";
 import type {
   Certificacion,
@@ -28,6 +29,8 @@ import {
   DEFAULTS_SECCIONES,
   DEFAULT_SECTION_ORDER,
   SECTION_LABELS,
+  applyAccentColor,
+  resetAccentColor,
   isSectionPublic,
   loadSectionOrder,
   saveSectionOrder,
@@ -36,6 +39,45 @@ import {
   readPreviewCache,
 } from "./components/portafolioUtils";
 import type { SectionId } from "./components/portafolioUtils";
+import { formatPhoneWithPrefix } from "../../utils/countryPhoneOptions";
+
+// ── Colores de acento disponibles ────────────────────────────────────────────
+const COLOR_STORAGE_KEY = "portafolio_accent_color";
+
+/** Valor centinela que indica "usar paleta del sistema" */
+const SYSTEM_COLOR = "system";
+
+const PRESET_COLORS = [
+  { id: "indigo",   label: "Índigo",     value: "#4f46e5" },
+  { id: "sky",      label: "Cielo",      value: "#0ea5e9" },
+  { id: "emerald",  label: "Esmeralda",  value: "#10b981" },
+  { id: "rose",     label: "Rosa",       value: "#f43f5e" },
+  { id: "amber",    label: "Ámbar",      value: "#f59e0b" },
+  { id: "violet",   label: "Violeta",    value: "#8b5cf6" },
+  { id: "slate",    label: "Pizarra",    value: "#475569" },
+  { id: "teal",     label: "Verde azul", value: "#14b8a6" },
+] as const;
+
+/** Devuelve el color guardado, o SYSTEM_COLOR si el usuario nunca eligió uno */
+function loadAccentColor(): string {
+  try {
+    return localStorage.getItem(COLOR_STORAGE_KEY) ?? SYSTEM_COLOR;
+  } catch {
+    return SYSTEM_COLOR;
+  }
+}
+
+function saveAccentColor(color: string): void {
+  try {
+    if (color === SYSTEM_COLOR) {
+      localStorage.removeItem(COLOR_STORAGE_KEY);
+    } else {
+      localStorage.setItem(COLOR_STORAGE_KEY, color);
+    }
+  } catch { /* noop */ }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 export default function Portafolio() {
   const navigate = useNavigate();
@@ -53,94 +95,139 @@ export default function Portafolio() {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  // ── Color de acento ─────────────────────────────────────────────────────────
+  const [accentColor, setAccentColor] = useState<string>(loadAccentColor);
+  const [showColorModal, setShowColorModal] = useState(false);
+  const [draftColor, setDraftColor] = useState<string>(loadAccentColor);
+
+  // Aplica el color guardado al montar el componente
+  useEffect(() => {
+    if (accentColor === SYSTEM_COLOR) {
+      resetAccentColor();
+    } else {
+      applyAccentColor(accentColor);
+    }
+  }, [accentColor]);
+
+  const openColorModal = () => {
+    setDraftColor(accentColor);
+    setShowColorModal(true);
+  };
+
+  const saveColor = () => {
+    saveAccentColor(draftColor);
+    setAccentColor(draftColor);
+    if (draftColor === SYSTEM_COLOR) {
+      resetAccentColor();
+      guardarColorAcento("").catch(() => undefined);
+    } else {
+      applyAccentColor(draftColor);
+      guardarColorAcento(draftColor).catch(() => undefined);
+    }
+    setShowColorModal(false);
+  };
+  // ────────────────────────────────────────────────────────────────────────────
+
   // ── PDF export ──────────────────────────────────────────────────────────────
   const [exporting, setExporting] = useState(false);
 
   const handleExportPdf = async () => {
-  setExporting(true);
-  try {
-    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-      import("html2canvas"),
-      import("jspdf"),
-    ]);
+    setExporting(true);
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
 
-    const element = document.querySelector<HTMLElement>("#portafolio-content");
-    if (!element) throw new Error("Elemento no encontrado");
+      const element = document.querySelector<HTMLElement>("#portafolio-content");
+      if (!element) throw new Error("Elemento no encontrado");
 
-    // Ocultar secciones sin contenido usando su id en el DOM
-    const sectionsToHide: HTMLElement[] = [];
-    (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
-      if (!sectionHasContent[id]) {
-        // Busca tanto el elemento con ese id como cualquier ancestro section/article/div con ese id
-        const el = document.getElementById(id);
-        if (el) {
-          el.style.visibility = "hidden";
-          el.style.height = "0";
-          el.style.overflow = "hidden";
-          el.style.padding = "0";
-          el.style.margin = "0";
-          sectionsToHide.push(el);
+      const sectionsToHide: HTMLElement[] = [];
+      (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
+        if (!sectionHasContent[id]) {
+          const el = document.getElementById(id);
+          if (el) {
+            el.style.visibility = "hidden";
+            el.style.height = "0";
+            el.style.overflow = "hidden";
+            el.style.padding = "0";
+            el.style.margin = "0";
+            sectionsToHide.push(el);
+          }
         }
+      });
+
+const canvas = await html2canvas(element, {
+  scale: 2,
+  useCORS: true,
+  logging: false,
+  backgroundColor: "#ffffff",
+  ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
+  onclone: (clonedDoc) => {
+    const root = clonedDoc.documentElement;
+    const style = clonedDoc.createElement("style");
+    style.textContent = `
+      :root {
+        --color-accent: ${accentColor};
+        --color-accent-soft: rgba(26, 102, 68, 0.12);
+        --color-accent-dark: #14523a;
+        --color-accent-bg: rgba(26, 102, 68, 0.18);
+        --color-accent-bg2: rgba(26, 102, 68, 0.12);
+        --color-accent-border: rgba(26, 102, 68, 0.22);
+        --color-accent-ring: rgba(26, 102, 68, 0.28);
       }
-    });
+    `;
+    root.appendChild(style);
+  },
+});
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff",
-      ignoreElements: (el: Element) => el.classList.contains("pdf-ignore"),
-    });
-
-    // Restaurar todo
-    sectionsToHide.forEach((el) => {
-      el.style.visibility = "";
-      el.style.height = "";
-      el.style.overflow = "";
-      el.style.padding = "";
-      el.style.margin = "";
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.92);
-    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position -= pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    const filename = `portafolio-${nombreCompleto.replace(/\s+/g, "-").toLowerCase()}.pdf`;
-    pdf.save(filename);
-  } catch (err) {
-    console.error("Error al exportar PDF:", err);
-    // Asegurarse de restaurar si hay error
-    (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) {
+      sectionsToHide.forEach((el) => {
         el.style.visibility = "";
         el.style.height = "";
         el.style.overflow = "";
         el.style.padding = "";
         el.style.margin = "";
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
-    });
-    alert("No se pudo generar el PDF. Intenta nuevamente.");
-  } finally {
-    setExporting(false);
-  }
-};
+
+      const filename = `portafolio-${nombreCompleto.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+      pdf.save(filename);
+    } catch (err) {
+      console.error("Error al exportar PDF:", err);
+      (Object.keys(sectionHasContent) as SectionId[]).forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.visibility = "";
+          el.style.height = "";
+          el.style.overflow = "";
+          el.style.padding = "";
+          el.style.margin = "";
+        }
+      });
+      alert("No se pudo generar el PDF. Intenta nuevamente.");
+    } finally {
+      setExporting(false);
+    }
+  };
   // ────────────────────────────────────────────────────────────────────────────
 
   const openOrderModal = () => {
@@ -211,6 +298,9 @@ export default function Portafolio() {
   }, [data]);
 
   const perfil = data?.perfil ?? null;
+  const enlacesPerfil = perfil?.enlaces_personalizados ?? perfil?.enlacesPersonalizados ?? [];
+  const ubicacionPerfil = [perfil?.ciudad, perfil?.pais].filter(Boolean).join(", ");
+  const telefonoPerfil = formatPhoneWithPrefix(perfil?.prefijo_celular, perfil?.celular);
   const habilidadesTecnicas = data?.habilidades_tecnicas ?? [];
   const habilidadesBlandas = data?.habilidades_blandas ?? [];
   const proyectos = data?.proyectos ?? [];
@@ -219,7 +309,14 @@ export default function Portafolio() {
   const logros = (data?.logros ?? ([] as Logro[])).filter((item) => item.visibilidad === "publico");
   const idiomas = (data?.idiomas ?? ([] as Idioma[])).filter((item) => item.visibilidad === "publico");
   const experienciasPublicas = experiencias.filter((item) => item.visibilidad !== "privado");
-  const certificacionesPublicas = certificaciones.filter((item) => item.visibilidad === "publico");
+  const certificacionesConImagenes = useMemo(() => {
+    return certificaciones.map((c) => ({
+      ...c,
+      url_imagen: c.url_imagen ?? c.imagen_url ?? null,
+    }));
+  }, [certificaciones]);
+
+  const certificacionesPublicas = certificacionesConImagenes.filter((item) => item.visibilidad === "publico");
 
   const cfg = secciones;
 
@@ -262,8 +359,37 @@ export default function Portafolio() {
 
               <div className={styles.profileInfoCard}>
                 <p className={styles.fieldLabel}>Teléfono</p>
-                <p className={styles.fieldValue}>{perfil?.celular ?? "Sin información"}</p>
+                <p className={styles.fieldValue}>{telefonoPerfil || "Sin información"}</p>
               </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Ubicación</p>
+                <p className={styles.fieldValue}>{ubicacionPerfil || "Sin información"}</p>
+              </div>
+
+              <div className={styles.profileInfoCard}>
+                <p className={styles.fieldLabel}>Correo</p>
+                <p className={styles.fieldValue}>{perfil?.correo_contacto ?? "Sin información"}</p>
+              </div>
+
+              {enlacesPerfil.length > 0 && (
+                <div className={`${styles.profileInfoCard} ${styles.profileInfoCardFull}`}>
+                  <p className={styles.fieldLabel}>Enlaces personalizados</p>
+                  <div className={styles.profileLinks}>
+                    {enlacesPerfil.map((enlace, index) => (
+                      <a
+                        key={`${enlace.url}-${index}`}
+                        href={enlace.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.profileLink}
+                      >
+                        {enlace.titulo}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </SectionShell>
         );
@@ -536,6 +662,23 @@ export default function Portafolio() {
             <IconSort />
             Ordenar secciones
           </button>
+
+          {/* ── Botón Color ── */}
+          <button type="button" className={styles.secondaryButton} onClick={openColorModal}>
+            <span
+              style={{
+                display: "inline-block",
+                width: 13,
+                height: 13,
+                borderRadius: "50%",
+                background: accentColor === SYSTEM_COLOR ? "var(--color-accent, #1a6644)" : accentColor,
+                border: "2px solid currentColor",
+                flexShrink: 0,
+              }}
+            />
+            {accentColor === SYSTEM_COLOR ? "Color (sistema)" : "Color"}
+          </button>
+
           <button
             type="button"
             className={styles.secondaryButton}
@@ -543,7 +686,6 @@ export default function Portafolio() {
           >
             Configurar visibilidad
           </button>
-          {/* ── Botón Exportar PDF ── */}
           <button
             type="button"
             className={styles.secondaryButton}
@@ -552,7 +694,7 @@ export default function Portafolio() {
           >
             {exporting ? "Generando PDF…" : "⬇ Exportar PDF"}
           </button>
-          <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/visibilidad")}>
+          <button type="button" className={styles.primaryButton} onClick={() => navigate("/portafolio/publicar")}>
             Publicar
           </button>
         </div>
@@ -567,6 +709,7 @@ export default function Portafolio() {
             <div className={styles.profileHeader}>
               <h2 className={styles.profileName}>{nombreCompleto}</h2>
               {perfil?.profesion && <p className={styles.profileRole}>{perfil.profesion}</p>}
+              {ubicacionPerfil && <p className={styles.profileRole}>{ubicacionPerfil}</p>}
               {perfil?.descripcion && <p className={styles.profileDescription}>{perfil.descripcion}</p>}
             </div>
           </div>
@@ -588,6 +731,7 @@ export default function Portafolio() {
         </section>
       </main>
 
+      {/* ── Modal: Ordenar secciones ── */}
       {showOrderModal && (
         <div className={styles.modalOverlay} onClick={() => setShowOrderModal(false)}>
           <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
@@ -632,6 +776,216 @@ export default function Portafolio() {
               </button>
               <button type="button" className={styles.primaryButton} onClick={saveOrder}>
                 Guardar orden
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Color del portafolio ── */}
+      {showColorModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowColorModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Color del portafolio</h2>
+            <p className={styles.modalSub}>
+              Elige el color de acento que verán quienes visiten tu portafolio.
+            </p>
+
+            {/* Vista previa del color seleccionado */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                padding: "0.75rem 1rem",
+                borderRadius: "0.5rem",
+                background: draftColor === SYSTEM_COLOR
+                  ? "rgba(26,102,68,0.08)"
+                  : `rgba(${parseInt(draftColor.slice(1, 3), 16)},${parseInt(draftColor.slice(3, 5), 16)},${parseInt(draftColor.slice(5, 7), 16)},0.10)`,
+                border: `1.5px solid ${draftColor === SYSTEM_COLOR ? "#1a6644" : draftColor}`,
+                marginBottom: "1.25rem",
+                transition: "all 0.2s",
+              }}
+            >
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: draftColor === SYSTEM_COLOR ? "var(--color-accent, #1a6644)" : draftColor,
+                  display: "block",
+                  flexShrink: 0,
+                  boxShadow: `0 0 0 4px ${draftColor === SYSTEM_COLOR ? "#1a664433" : draftColor + "33"}`,
+                }}
+              />
+              <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>
+                {draftColor === SYSTEM_COLOR
+                  ? "Paleta del sistema (predeterminado)"
+                  : <>Color seleccionado:&nbsp;<code style={{ fontFamily: "monospace", letterSpacing: "0.03em" }}>{draftColor}</code></>
+                }
+              </span>
+            </div>
+
+            {/* Opción: Paleta del sistema */}
+            <button
+              type="button"
+              onClick={() => setDraftColor(SYSTEM_COLOR)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.65rem",
+                width: "100%",
+                padding: "0.65rem 0.85rem",
+                borderRadius: "0.5rem",
+                border: draftColor === SYSTEM_COLOR
+                  ? "2px solid #1a6644"
+                  : "2px solid var(--color-border, #e2e8f0)",
+                background: draftColor === SYSTEM_COLOR
+                  ? "rgba(26,102,68,0.08)"
+                  : "var(--color-surface-alt, #f8fafc)",
+                cursor: "pointer",
+                marginBottom: "1rem",
+                transition: "border 0.15s, background 0.15s",
+                textAlign: "left",
+              }}
+            >
+              <span
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  background: "conic-gradient(#1a6644 0% 33%, #4f46e5 33% 66%, #f43f5e 66% 100%)",
+                  display: "block",
+                  flexShrink: 0,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                }}
+              />
+              <div>
+                <span style={{ fontSize: "0.83rem", fontWeight: 600, display: "block", color: "var(--color-text, #0f172a)" }}>
+                  Paleta del sistema
+                </span>
+                <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted, #64748b)" }}>
+                  Usa el color predeterminado de la aplicación
+                </span>
+              </div>
+              {draftColor === SYSTEM_COLOR && (
+                <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#1a6644", fontWeight: 700 }}>✓</span>
+              )}
+            </button>
+
+            {/* Paleta de colores predefinidos */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "0.65rem",
+                marginBottom: "1.25rem",
+              }}
+            >
+              {PRESET_COLORS.map((preset) => {
+                const isSelected = draftColor === preset.value;
+                const r = parseInt(preset.value.slice(1, 3), 16);
+                const g = parseInt(preset.value.slice(3, 5), 16);
+                const b = parseInt(preset.value.slice(5, 7), 16);
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    title={preset.label}
+                    onClick={() => setDraftColor(preset.value)}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                      padding: "0.65rem 0.4rem",
+                      borderRadius: "0.5rem",
+                      border: isSelected
+                        ? `2px solid ${preset.value}`
+                        : "2px solid transparent",
+                      background: isSelected
+                        ? `rgba(${r},${g},${b},0.10)`
+                        : "var(--color-surface-alt, #f8fafc)",
+                      cursor: "pointer",
+                      transition: "border 0.15s, background 0.15s, transform 0.1s",
+                      transform: isSelected ? "scale(1.04)" : "scale(1)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: "50%",
+                        background: preset.value,
+                        display: "block",
+                        boxShadow: isSelected
+                          ? `0 0 0 3px ${preset.value}55`
+                          : "0 1px 3px rgba(0,0,0,0.15)",
+                        transition: "box-shadow 0.15s",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "0.68rem",
+                        color: "var(--color-text-muted, #64748b)",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {preset.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Color personalizado */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                padding: "0.65rem 0.75rem",
+                borderRadius: "0.5rem",
+                background: "var(--color-surface-alt, #f8fafc)",
+                border: "1.5px solid var(--color-border, #e2e8f0)",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <span style={{ fontSize: "0.82rem", color: "var(--color-text-muted, #64748b)", flexShrink: 0 }}>
+                Personalizado:
+              </span>
+              <input
+                type="color"
+                value={draftColor === SYSTEM_COLOR ? "#1a6644" : draftColor}
+                onChange={(e) => setDraftColor(e.target.value)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "0.375rem",
+                  border: "1.5px solid var(--color-border, #e2e8f0)",
+                  cursor: "pointer",
+                  padding: 2,
+                  background: "none",
+                }}
+              />
+              <code
+                style={{
+                  fontSize: "0.78rem",
+                  color: "var(--color-text-muted, #64748b)",
+                  fontFamily: "monospace",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {draftColor === SYSTEM_COLOR ? "sistema" : draftColor}
+              </code>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.secondaryButton} onClick={() => setShowColorModal(false)}>
+                Cancelar
+              </button>
+              <button type="button" className={styles.primaryButton} onClick={saveColor}>
+                Aplicar color
               </button>
             </div>
           </div>

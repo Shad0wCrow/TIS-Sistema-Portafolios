@@ -12,6 +12,10 @@ class PortafolioPublicacionRepository
         return PortafolioPublicacion::where('usuario_id', $usuarioId)->first();
     }
 
+    /**
+     * Busca por slug solo si está publicado en plataforma.
+     * Usado por el listado público de la plataforma.
+     */
     public function buscarPublicadoPorSlug(string $slug): ?PortafolioPublicacion
     {
         return PortafolioPublicacion::where('slug_publico', $slug)
@@ -19,9 +23,15 @@ class PortafolioPublicacionRepository
             ->first();
     }
 
-    public function buscarPorSlug(string $slug): ?PortafolioPublicacion
+    /**
+     * Busca por slug si el enlace externo está activo.
+     * Usado por la vista pública de enlace compartido.
+     */
+    public function buscarPorSlugConEnlaceActivo(string $slug): ?PortafolioPublicacion
     {
-        return PortafolioPublicacion::where('slug_publico', $slug)->first();
+        return PortafolioPublicacion::where('slug_publico', $slug)
+            ->where('enlace_activo', true)
+            ->first();
     }
 
     public function existeSlug(string $slug): bool
@@ -29,7 +39,7 @@ class PortafolioPublicacionRepository
         return PortafolioPublicacion::where('slug_publico', $slug)->exists();
     }
 
-    public function listarPublicadosAjenos(?int $usuarioId, int $limite)
+    public function listarPublicadosAjenos(?int $usuarioId, int $limite, ?string $busqueda = null)
     {
         $query = DB::table('portafolio_publicacion as publicacion')
             ->join('usuario', 'usuario.id_usuario', '=', 'publicacion.usuario_id')
@@ -43,6 +53,21 @@ class PortafolioPublicacionRepository
 
         if ($usuarioId) {
             $query->where('publicacion.usuario_id', '!=', $usuarioId);
+        }
+
+        $criterio = trim((string) $busqueda);
+
+        if ($criterio !== '') {
+            $like = '%' . mb_strtolower($criterio) . '%';
+
+            $query->where(function ($subquery) use ($like) {
+                $subquery
+                    ->whereRaw('LOWER(usuario.nombre_usuario) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(perfil.nombre_perfil) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(perfil.apellido_perfil) LIKE ?', [$like])
+                    ->orWhereRaw("LOWER(CONCAT(COALESCE(perfil.nombre_perfil, ''), ' ', COALESCE(perfil.apellido_perfil, ''))) LIKE ?", [$like])
+                    ->orWhereRaw('LOWER(perfil.profesion) LIKE ?', [$like]);
+            });
         }
 
         return $query
@@ -64,14 +89,61 @@ class PortafolioPublicacionRepository
             ]);
     }
 
+    /**
+     * Lee el Top 3 ya calculado y guardado en ranking_mensual para el mes anterior.
+     * Incluye los datos de perfil necesarios para armar la tarjeta.
+     */
+    public function listarTopMensualCerrado(int $anio, int $mes)
+    {
+        return DB::table('ranking_mensual as r')
+            ->join('portafolio_publicacion as pub', 'pub.id_publicacion', '=', 'r.publicacion_id')
+            ->join('usuario', 'usuario.id_usuario', '=', 'pub.usuario_id')
+            ->leftJoin('perfil', function ($join) {
+                $join->on('perfil.usuario_id', '=', 'pub.usuario_id')
+                     ->where('perfil.eliminado', false);
+            })
+            ->leftJoin('configuracion_privacidad as privacidad', 'privacidad.usuario_id', '=', 'pub.usuario_id')
+            ->where('r.anio', $anio)
+            ->where('r.mes', $mes)
+            ->orderBy('r.posicion')
+            ->get([
+                'pub.id_publicacion',
+                'pub.usuario_id',
+                'pub.slug_publico',
+                'pub.publicado_en',
+                'usuario.nombre_usuario',
+                'perfil.nombre_perfil',
+                'perfil.apellido_perfil',
+                'perfil.profesion',
+                'perfil.descripcion',
+                'perfil.foto_url',
+                'privacidad.seccion_perfil',
+                'r.posicion',
+                'r.total_visualizaciones',
+                'r.anio',
+                'r.mes',
+            ]);
+    }
+
+    public function guardarColorAcento(int $usuarioId, ?string $color): void
+    {
+        PortafolioPublicacion::updateOrCreate(
+            ['usuario_id' => $usuarioId],
+            ['color_acento' => $color]
+        );
+    }
+
+    /**
+     * Publica el portafolio en plataforma. Recibe el slug generado por el Service.
+     */
     public function guardarPublicacion(int $usuarioId, string $slug): PortafolioPublicacion
     {
         return PortafolioPublicacion::updateOrCreate(
             ['usuario_id' => $usuarioId],
             [
-                'slug_publico' => $slug,
-                'publicado' => true,
-                'publicado_en' => now(),
+                'slug_publico'    => $slug,
+                'publicado'       => true,
+                'publicado_en'    => now(),
                 'despublicado_en' => null,
             ]
         );
@@ -80,9 +152,33 @@ class PortafolioPublicacionRepository
     public function despublicar(PortafolioPublicacion $publicacion): PortafolioPublicacion
     {
         $publicacion->update([
-            'publicado' => false,
+            'publicado'       => false,
             'despublicado_en' => now(),
         ]);
+
+        return $publicacion;
+    }
+
+    /**
+     * Activa el enlace externo. Crea el registro si no existe (sin publicar en plataforma).
+     */
+    public function activarEnlace(int $usuarioId, string $slug): PortafolioPublicacion
+    {
+        return PortafolioPublicacion::updateOrCreate(
+            ['usuario_id' => $usuarioId],
+            [
+                'slug_publico'  => $slug,
+                'enlace_activo' => true,
+            ]
+        );
+    }
+
+    /**
+     * Desactiva el enlace externo sin afectar la publicación en plataforma.
+     */
+    public function desactivarEnlace(PortafolioPublicacion $publicacion): PortafolioPublicacion
+    {
+        $publicacion->update(['enlace_activo' => false]);
 
         return $publicacion;
     }
