@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API = "http://localhost:8000/api";
+import { API_BASE_URL } from "./apiConfig";
 
 const authHeaders = () => {
   const token = localStorage.getItem("token");
@@ -84,7 +83,7 @@ export const getAdminUsers = async (params: {
   page?: number;
   per_page?: number;
 }): Promise<AdminUsersResponse> => {
-  const res = await axios.get(`${API}/admin/usuarios`, {
+  const res = await axios.get(`${API_BASE_URL}/admin/usuarios`, {
     headers: authHeaders(),
     params,
   });
@@ -96,7 +95,7 @@ export const getPortafoliosMasVisitados = async (
   fecha?: string,
   limit: number = 15
 ) => {
-  const res = await axios.get(`${API}/admin/mas-visitados`, {
+  const res = await axios.get(`${API_BASE_URL}/admin/mas-visitados`, {
     headers: authHeaders(),
     params: { periodo, fecha, limit },
   });
@@ -108,7 +107,7 @@ export const updateAdminUserStatus = async (
   eliminado: boolean
 ): Promise<{ message: string; usuario: AdminUser }> => {
   const res = await axios.patch(
-    `${API}/admin/usuarios/${id}/estado`,
+    `${API_BASE_URL}/admin/usuarios/${id}/estado`,
     { eliminado },
     { headers: authHeaders() }
   );
@@ -146,7 +145,7 @@ export const getAdminUserStateHistory = async (params?: {
   page?: number;
   per_page?: number;
 }): Promise<AdminUserStateHistoryResponse> => {
-  const res = await axios.get(`${API}/admin/usuarios/historial-estados`, {
+  const res = await axios.get(`${API_BASE_URL}/admin/usuarios/historial-estados`, {
     headers: authHeaders(),
     params,
   });
@@ -154,7 +153,7 @@ export const getAdminUserStateHistory = async (params?: {
 };
 
 export const getAdminReportSummary = async (): Promise<AdminReportSummary> => {
-  const res = await axios.get(`${API}/admin/reportes/resumen`, {
+  const res = await axios.get(`${API_BASE_URL}/admin/reportes/resumen`, {
     headers: authHeaders(),
   });
   return res.data;
@@ -197,7 +196,7 @@ export const getReportesPortafolios = async (params?: {
   page?: number;
   per_page?: number;
 }): Promise<ReportesPortafolioResponse> => {
-  const res = await axios.get(`${API}/admin/reportes/portafolios`, {
+  const res = await axios.get(`${API_BASE_URL}/admin/reportes/portafolios`, {
     headers: authHeaders(),
     params,
   });
@@ -213,7 +212,7 @@ export const resolverReporte = async (
   }
 ): Promise<{ message: string; reporte: ReportePortafolio }> => {
   const res = await axios.patch(
-    `${API}/admin/reportes/portafolios/${idReporte}/resolver`,
+    `${API_BASE_URL}/admin/reportes/portafolios/${idReporte}/resolver`,
     data,
     { headers: authHeaders() }
   );
@@ -259,7 +258,7 @@ export const getReportesPorPublicacion = async (params?: {
 
   do {
     const res = await axios.get<ReportesPortafolioResponse>(
-      `${API}/admin/reportes/portafolios`,
+      `${API_BASE_URL}/admin/reportes/portafolios`,
       {
         headers: authHeaders(),
         params: { estado: params?.estado ?? "todos", page, per_page: PER_PAGE },
@@ -355,7 +354,7 @@ export const getSolicitudesReactivacion = async (params?: {
   page?: number;
   per_page?: number;
 }): Promise<SolicitudesReactivacionResponse> => {
-  const res = await axios.get(`${API}/admin/solicitudes-reactivacion`, {
+  const res = await axios.get(`${API_BASE_URL}/admin/solicitudes-reactivacion`, {
     headers: authHeaders(),
     params,
   });
@@ -367,7 +366,7 @@ export const resolverSolicitudReactivacion = async (
   accion: "aceptar" | "rechazar"
 ): Promise<{ message: string; solicitud: SolicitudReactivacion }> => {
   const res = await axios.patch(
-    `${API}/admin/solicitudes-reactivacion/${idSolicitud}/resolver`,
+    `${API_BASE_URL}/admin/solicitudes-reactivacion/${idSolicitud}/resolver`,
     { accion },
     { headers: authHeaders() }
   );
@@ -387,7 +386,7 @@ export const enviarSolicitudReactivacion = async (
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const res = await axios.post(
-    `${API}/solicitudes-reactivacion`,
+    `${API_BASE_URL}/solicitudes-reactivacion`,
     { mensaje, ...(correo ? { correo } : {}) },
     { headers }
   );
@@ -411,7 +410,7 @@ export interface PortfolioStatsResponse {
 }
 
 export const getAdminUserStats = async (rango: string, fecha?: string): Promise<UserStatsResponse> => {
-  const res = await axios.get(`${API}/admin/estadisticas/usuarios`, {
+  const res = await axios.get(`${API_BASE_URL}/admin/estadisticas/usuarios`, {
     headers: authHeaders(),
     params: { rango, fecha },
   });
@@ -423,7 +422,7 @@ export const getAdminPortfolioStats = async (
   profesion?: string,
   fecha?: string
 ): Promise<PortfolioStatsResponse> => {
-  const res = await axios.get(`${API}/admin/estadisticas/portafolios`, {
+  const res = await axios.get(`${API_BASE_URL}/admin/estadisticas/portafolios`, {
     headers: authHeaders(),
     params: { rango, profesion: profesion || undefined, fecha },
   });

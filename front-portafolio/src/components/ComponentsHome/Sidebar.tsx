@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import HomeIcon from "../../assets/icons/Home.svg";
@@ -34,9 +34,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
 
   const [showModal, setShowModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isMobile, setIsMobile] = useState<boolean>(
-    typeof window !== "undefined" ? window.innerWidth <= 768 : false
-  );
+
+  const prevPathRef = useRef(location.pathname);
 
   const menuItems: MenuItem[] = [
     { id: "inicio", name: "Inicio", icon: HomeIcon },
@@ -56,17 +55,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
       { label: "Generar CV", description: "Crear un CV desde tu informacion", action: "generar-cv" },
     ],
   };
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -90,13 +78,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
   }, []);
 
   useEffect(() => {
-    if (isMobile) {
-      closeSidebar();
+    if (prevPathRef.current !== location.pathname) {
+      if (window.innerWidth <= 768) {
+        closeSidebar();
+      }
+      prevPathRef.current = location.pathname;
     }
-  }, [location.pathname, isMobile, closeSidebar]);
+  }, [location.pathname, closeSidebar]);
 
   const closeIfMobile = () => {
-    if (isMobile) {
+    if (window.innerWidth <= 768) {
       closeSidebar();
     }
   };
@@ -234,7 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
 
   return (
     <>
-      {isMobile && isOpen && (
+      {isOpen && window.innerWidth <= 768 && (
         <button
           type="button"
           className="dashboard-sidebar-overlay"
@@ -247,7 +238,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
         className={[
           "dashboard-sidebar",
           isOpen ? "dashboard-sidebar-open" : "dashboard-sidebar-closed",
-          isMobile ? "dashboard-sidebar-mobile" : "dashboard-sidebar-desktop",
+          window.innerWidth <= 768 ? "dashboard-sidebar-mobile" : "dashboard-sidebar-desktop",
         ].join(" ")}
       >
         <nav className="dashboard-menu">

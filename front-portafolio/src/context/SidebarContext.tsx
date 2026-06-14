@@ -1,33 +1,46 @@
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-interface SidebarContextType {
+interface SidebarContextValue {
   isOpen: boolean;
   toggleSidebar: () => void;
+  openSidebar: () => void;
   closeSidebar: () => void;
 }
 
-const SidebarContext = createContext<SidebarContextType | null>(null);
+const SidebarContext = createContext<SidebarContextValue | undefined>(undefined);
 
-export const SidebarProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  const [isOpen, setIsOpen] = useState(window.innerWidth > 768);
+const getInitialSidebarState = (): boolean => {
+  if (typeof window === "undefined") return true;
 
-  const toggleSidebar = () => setIsOpen((prev) => !prev);
-  const closeSidebar = () => setIsOpen(false);
+  const saved = localStorage.getItem("sidebarOpen");
+  if (saved !== null) {
+    return saved === "true";
+  }
 
-  return (
-    <SidebarContext.Provider
-      value={{ isOpen, toggleSidebar, closeSidebar }}
-    >
-      {children}
-    </SidebarContext.Provider>
-  );
+  return window.innerWidth > 768;
 };
 
-export const useSidebar = () => {
+export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isOpen, setIsOpen] = useState<boolean>(getInitialSidebarState);
+
+  useEffect(() => {
+    localStorage.setItem("sidebarOpen", String(isOpen));
+  }, [isOpen]);
+
+  const value = useMemo<SidebarContextValue>(
+    () => ({
+      isOpen,
+      toggleSidebar: () => setIsOpen((prev) => !prev),
+      openSidebar: () => setIsOpen(true),
+      closeSidebar: () => setIsOpen(false),
+    }),
+    [isOpen]
+  );
+
+  return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;
+};
+
+export const useSidebar = (): SidebarContextValue => {
   const context = useContext(SidebarContext);
 
   if (!context) {

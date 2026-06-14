@@ -1,7 +1,6 @@
 import axios from "axios";
 import { dataUrlToBlob } from "./portafolioservice";
-
-const API = "http://localhost:8000/api";
+import { API_BASE_URL } from "./apiConfig";
 
 export const createProfile = async (data: {
   nombre_perfil: string;
@@ -38,7 +37,7 @@ export const createProfile = async (data: {
     const ext = blob.type.split("/")[1] ?? "jpg";
     formData.append("foto_file", blob, `foto.${ext}`);
 
-    const response = await axios.post(`${API}/perfil`, formData, {
+    const response = await axios.post(`${API_BASE_URL}/perfil`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -47,7 +46,7 @@ export const createProfile = async (data: {
     return response.data;
   }
 
-  const response = await axios.post(`${API}/perfil`, data, {
+  const response = await axios.post(`${API_BASE_URL}/perfil`, data, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

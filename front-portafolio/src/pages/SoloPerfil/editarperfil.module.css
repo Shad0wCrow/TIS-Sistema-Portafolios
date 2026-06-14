@@ -45,8 +45,9 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow: hidden;
-  height: 100vh;
+  overflow: auto;
+  min-height: 100vh;
+  height: auto;
 }
 
 .embedded .main {
