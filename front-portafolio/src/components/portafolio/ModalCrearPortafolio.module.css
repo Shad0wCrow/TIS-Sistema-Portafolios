@@ -72,3 +72,27 @@
   border: none;
   cursor: pointer;
 }
+
+@media (max-width: 480px) {
+  .card {
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 24px 20px;
+  }
+  .title {
+    font-size: 18px;
+  }
+  .desc {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .btnOmitir, .btnCrear {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+  }
+}

@@ -35,3 +35,10 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
+@media (max-width: 480px) {
+  .modal {
+    width: min(320px, calc(100vw - 32px));
+    padding: 20px 16px;
+  }
+}

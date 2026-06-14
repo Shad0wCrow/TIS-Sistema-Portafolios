@@ -97,3 +97,28 @@
   opacity: 0.88;
   transform: translateY(-1px);
 }
+
+@media (max-width: 480px) {
+  .modal {
+    max-width: min(380px, calc(100vw - 32px));
+    padding: 18px 16px;
+  }
+  .title {
+    font-size: 14px;
+  }
+  .message {
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+  .actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .btnCancel, .btnConfirm {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    padding: 10px;
+  }
+}

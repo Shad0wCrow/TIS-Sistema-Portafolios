@@ -110,3 +110,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+@media (max-width: 480px) {
+  .item {
+    min-height: 44px;
+    padding: 12px 14px;
+  }
+}

@@ -41,7 +41,7 @@
 
 .landing-title {
   margin: 0;
-  color: #c9f1df;
+  color: #c9dfef;
   font-size: 72px;
   font-weight: 800;
   line-height: 1.08;
@@ -64,7 +64,7 @@
 .landing-main-button {
   padding: 0 36px;
   height: 52px;
-  background: #b0e4cc;
+  background: #b0cce4;
   border: 2px solid #111111;
   border-radius: 10px;
   color: #111111;

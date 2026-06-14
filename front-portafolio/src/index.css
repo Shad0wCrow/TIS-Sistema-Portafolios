@@ -13,5 +13,10 @@ body {
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
 }
