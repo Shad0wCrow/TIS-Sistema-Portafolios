@@ -10,6 +10,7 @@ class CorsMiddleware
     private const ALLOWED_ORIGINS = [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
+        'http://enigma.tis.cs.umss.edu.bo',
     ];
 
     public function handle(Request $request, Closure $next)

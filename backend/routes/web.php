@@ -7,3 +7,7 @@ Route::get('/portafolio/publico/{slug}', function (string $slug) {
 
     return redirect()->away($frontendUrl . '/portafolio/publico/' . $slug);
 });
+
+Route::get('/{any}', function () {
+    return view('index');
+})->where('any', '.*');
