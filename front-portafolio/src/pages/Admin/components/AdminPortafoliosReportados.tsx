@@ -212,7 +212,7 @@ export default function AdminPortafoliosReportados() {
                     </span>
                     {r.slug_publico && (
                       <a
-                        href={`/portafolio/publico/${r.slug_publico}`}
+                        href={`/#/portafolio/publico/${r.slug_publico}`}
                         target="_blank"
                         rel="noreferrer"
                         style={{ display: "block", fontSize: 11, color: "var(--admin-accent)", marginTop: 2 }}

@@ -1408,7 +1408,7 @@ function PreviewReporteHU95({
 
       {r.slug_publico && (
         <div className="ar-preview-section">
-          <a href={`/portafolio/publico/${r.slug_publico}`} target="_blank" rel="noreferrer"
+          <a href={`/#/portafolio/publico/${r.slug_publico}`} target="_blank" rel="noreferrer"
             className="ar-view-portfolio-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
               fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1554,7 +1554,7 @@ function GrupoPublicacion({
             {g.eliminado ? "Inhabilitado" : "Activo"}
           </span>
           {g.slug_publico && (
-            <a href={`/portafolio/publico/${g.slug_publico}`} target="_blank" rel="noreferrer"
+            <a href={`/#/portafolio/publico/${g.slug_publico}`} target="_blank" rel="noreferrer"
               className="ar-grupo-link" onClick={(e) => e.stopPropagation()}>
               Ver portafolio ↗
             </a>

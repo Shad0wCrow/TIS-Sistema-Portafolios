@@ -22,7 +22,11 @@ const authHeaders = () => {
 const buildPublicPortfolioUrl = (slug: string | null | undefined): string | null => {
   if (!slug) return null;
   const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
-  return `${origin}/portafolio/publico/${slug}`;
+  const basePath =
+    typeof window !== "undefined" && window.location.pathname !== "/"
+      ? window.location.pathname.replace(/\/$/, "")
+      : "";
+  return `${origin}${basePath}/#/portafolio/publico/${slug}`;
 };
 
 const normalizePublicationState = (

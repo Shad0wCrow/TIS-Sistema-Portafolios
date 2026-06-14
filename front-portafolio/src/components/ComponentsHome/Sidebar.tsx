@@ -9,6 +9,7 @@ import LogoutIcon from "../../assets/icons/Logout.svg";
 import ChartIcon from "../../assets/icons/Chart.svg";
 import { useSidebar } from "../../context/SidebarContext";
 import ModalCrearPortafolio from "../portafolio/ModalCrearPortafolio";
+import { API_BASE_URL } from "../../services/apiConfig";
 
 export interface MenuItem {
   name: string;
@@ -63,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate }) => {
 
     const syncProfileState = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/perfil/me", {
+        const res = await fetch(`${API_BASE_URL}/perfil/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

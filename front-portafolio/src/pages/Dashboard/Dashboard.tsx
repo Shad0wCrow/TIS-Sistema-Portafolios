@@ -10,6 +10,7 @@ import EditarPerfil from '../SoloPerfil/editarPerfil';
 import CreateAccount from '../createAccount/createAccount';
 import PageLoader from '../../components/ui/PageLoader/PageLoader';
 import TopRankingSection from "./components/TopRankingSection";
+import { API_BASE_URL } from '../../services/apiConfig';
 
 import "./Dashboard.css";
 
@@ -104,7 +105,7 @@ const Dashboard: React.FC = () => {
 
     if (!token) return;
 
-    fetch('http://localhost:8000/api/perfil/me', {
+    fetch(`${API_BASE_URL}/perfil/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

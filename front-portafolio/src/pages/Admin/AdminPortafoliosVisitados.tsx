@@ -135,7 +135,7 @@ export default function AdminPortafoliosVisitados() {
                 <span className="apv-views-label">vistas</span>
               </div>
               <a
-                href={`/portafolio/publico/${top1.slug_publico}`}
+                href={`/#/portafolio/publico/${top1.slug_publico}`}
                 target="_blank"
                 rel="noreferrer"
                 className="admin-current-user"
@@ -318,7 +318,7 @@ export default function AdminPortafoliosVisitados() {
                           {/* Acción */}
                           <td style={{ textAlign: "center" }}>
                             <a
-                              href={`/portafolio/publico/${item.slug_publico}`}
+                              href={`/#/portafolio/publico/${item.slug_publico}`}
                               target="_blank"
                               rel="noreferrer"
                               className="admin-current-user"

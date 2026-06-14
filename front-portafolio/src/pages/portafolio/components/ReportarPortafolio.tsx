@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./ReportarPortafolio.module.css";
+import { API_BASE_URL } from '../../../services/apiConfig';
 
 const MOTIVOS = [
   { value: "contenido_inapropiado", label: "Contenido inapropiado" },
@@ -57,7 +58,7 @@ export default function ReportarPortafolio({ slug, esPropioPerfil }: Props) {
       setEstado("loading");
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:8000/api/public/portafolios/${encodeURIComponent(slug)}/reportar`, {
+      const res = await fetch(`${API_BASE_URL}/public/portafolios/${encodeURIComponent(slug)}/reportar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
