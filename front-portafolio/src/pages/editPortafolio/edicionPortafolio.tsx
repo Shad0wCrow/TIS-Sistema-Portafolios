@@ -77,6 +77,7 @@ export default function EdicionPortafolio() {
   const [errorPage, setErrorPage] = useState("");
   const [activeSection, setActiveSection] = useState<ActiveSection>("perfil");
   const [activeAction, setActiveAction] = useState<SectionAction>("mostrar");
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   const [modalHab, setModalHab] = useState<"tecnica" | "blanda" | "seleccion" | null>(null);
   const [modalEditarHab, setModalEditarHab] = useState<HabilidadItem | null>(null);
@@ -237,6 +238,12 @@ export default function EdicionPortafolio() {
     setActiveAction("mostrar");
   };
 
+  useEffect(() => {
+    if (window.innerWidth <= 900) {
+      setSidebarVisible(false);
+    }
+  }, []);
+
   if (loadingPage) return <div className={styles.stateScreen}>Cargando portafolio...</div>;
   if (errorPage) return <div className={`${styles.stateScreen} ${styles.stateError}`}>{errorPage}</div>;
   if (!data) return null;
@@ -258,11 +265,20 @@ export default function EdicionPortafolio() {
         onSectionChange={handleSectionChange}
         onActionChange={handleActionChange}
         onBack={() => navigate(-1)}
+        isOpen={sidebarVisible}
+        onClose={() => setSidebarVisible(false)}
       />
 
       <main className={styles.main}>
         <div className={styles.topbar}>
           <div className={styles.topbarLeft}>
+            <button
+              type="button"
+              className={styles.sidebarToggleButton}
+              onClick={() => setSidebarVisible((value) => !value)}
+            >
+              {sidebarVisible ? "Ocultar menú" : "Mostrar menú"}
+            </button>
             <span className={styles.breadcrumb}>
               Portafolio
               <span className={styles.breadcrumbSep}>/</span>

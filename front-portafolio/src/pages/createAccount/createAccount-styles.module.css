@@ -27,12 +27,12 @@
 
 .page {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
   background: var(--bg);
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   color: var(--text);
-  overflow: hidden;
+  overflow: auto;
 }
 
 .embedded {

@@ -313,61 +313,7 @@ export default function CreateAccount({ embedded = false, onSaved, onCancel }: C
 
     return (
         <main className={`${styles.page} ${embedded ? styles.embedded : ""}`}>
-            <aside className={styles.sidebar}>
-                <div className={styles.sidebarTop}>
-                    <div className={styles.brand}>
-                        <span className={styles.brandTag}>Devfolio</span>
-                    </div>
-                    <p className={styles.brandName}>Crear perfil</p>
-                    <p className={styles.brandSub}>Configuración de cuenta</p>
-                </div>
 
-                <div className={styles.steps}>
-                    <span className={styles.stepsLabel}>Pasos</span>
-
-                    <div className={styles.step}>
-                        <div className={`${styles.stepNum} ${styles.stepNumDone}`}>✓</div>
-                        <div className={styles.stepText}>
-                            <div className={styles.stepName}>Cuenta creada</div>
-                            <div className={styles.stepDesc}>Email y contraseña</div>
-                        </div>
-                    </div>
-
-                    <div className={styles.step}>
-                        <div className={`${styles.stepNum} ${styles.stepNumActive}`}>2</div>
-                        <div className={styles.stepText}>
-                            <div className={styles.stepName}>Datos del perfil</div>
-                            <div className={styles.stepDesc}>Nombre, profesión, contacto</div>
-                        </div>
-                    </div>
-
-                    <div className={styles.step}>
-                        <div className={styles.stepNum}>3</div>
-                        <div className={styles.stepText}>
-                            <div className={`${styles.stepName} ${styles.stepNamePending}`}>Portafolio</div>
-                            <div className={styles.stepDesc}>Proyectos y trabajos</div>
-                        </div>
-                    </div>
-
-                    <div className={styles.step}>
-                        <div className={styles.stepNum}>4</div>
-                        <div className={styles.stepText}>
-                            <div className={`${styles.stepName} ${styles.stepNamePending}`}>Publicar</div>
-                            <div className={styles.stepDesc}>Revisa y lanza tu perfil</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className={styles.sidebarFooter}>
-                    <div className={styles.progressLabel}>
-                        <span className={styles.progressLabelText}>Progreso</span>
-                        <span className={styles.progressLabelStep}>Paso 2 de 4</span>
-                    </div>
-                    <div className={styles.progressBar}>
-                        <div className={styles.progressFill} />
-                    </div>
-                </div>
-            </aside>
 
             <div className={styles.main}>
                 <div className={styles.topbar}>

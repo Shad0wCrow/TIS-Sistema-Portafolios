@@ -22,6 +22,7 @@ import type {
   Certificacion,
 } from '../../types/portafolioTypes';
 import { SECCION_LABELS } from '../../types/portafolioTypes';
+import { API_BASE_URL } from '../../services/apiConfig';
 
 // ─── Iconos ───────────────────────────────────────────────────────────────────
 function IconArrowLeft() {
@@ -98,7 +99,6 @@ const DEFAULTS: ConfiguracionSecciones = {
 const esPublico = (v: EstadoVisibilidad) => v === 'publico';
 const toggle    = (v: EstadoVisibilidad): EstadoVisibilidad => v === 'publico' ? 'privado' : 'publico';
 
-const API = 'http://localhost:8000/api';
 const authHeaders = () => {
   const token = localStorage.getItem('token');
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -134,7 +134,7 @@ async function patchVisibilidadElemento(
   const path = pathMap[seccion];
   if (!path) return;
 
-  const res = await fetch(`${API}/${path}`, {
+  const res = await fetch(`${API_BASE_URL}/${path}`, {
     method: 'PATCH',
     headers: authHeaders(),
     body: JSON.stringify({ visibilidad }),

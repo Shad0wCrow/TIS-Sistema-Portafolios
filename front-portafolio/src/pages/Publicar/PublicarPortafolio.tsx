@@ -356,15 +356,36 @@ export default function PublicarPortafolio() {
     if (!publicacion?.url_publica) return;
     setLinkError('');
     try {
-      await navigator.clipboard.writeText(publicacion.url_publica);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(publicacion.url_publica);
+      } else {
+        throw new Error('clipboard_not_supported');
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
-    } catch { setLinkError('No se pudo copiar el enlace.'); }
+    } catch {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = publicacion.url_publica;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        if (!successful) throw new Error('copy-fallback-failed');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch {
+        setLinkError('No se pudo copiar el enlace. Copia manualmente la URL mostrada.');
+      }
+    }
   };
 
   const handleAbrirPublico = () => {
-    if (publicacion?.slug_publico) {
-      window.open(`/portafolio/publico/${publicacion.slug_publico}`, '_blank', 'noopener,noreferrer');
+    if (publicacion?.url_publica) {
+      window.open(publicacion.url_publica, '_blank', 'noopener,noreferrer');
     }
   };
 

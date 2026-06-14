@@ -39,9 +39,11 @@ interface SidebarEdicionProps {
   IdiomasCount: number;
   certificacionesCount: number;
   experienciaCount: number;
+  isOpen: boolean;
   onSectionChange: (section: ActiveSection) => void;
   onActionChange: (action: SectionAction, targetSection?: ActiveSection) => void;
   onBack: () => void;
+  onClose?: () => void;
 }
 
 /**
@@ -85,9 +87,11 @@ export default function SidebarEdicion({
   IdiomasCount,
   certificacionesCount,
   experienciaCount,
+  isOpen,
   onSectionChange,
   onActionChange,
   onBack,
+  onClose,
 }: SidebarEdicionProps) {
   // Controla qué sección tiene el dropdown abierto
   const [openDropdown, setOpenDropdown] = useState<ActiveSection | null>(null);
@@ -132,11 +136,20 @@ export default function SidebarEdicion({
   };
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
       <div className={styles.sidebarBrand}>
         <span className={styles.brandTag}>Portfolio</span>
         <p className={styles.brandName}>Editor</p>
         <p className={styles.brandSub}>Vista de edición</p>
+        {onClose && (
+          <button
+            className={styles.sidebarCloseBtn}
+            type="button"
+            onClick={onClose}
+          >
+            Cerrar
+          </button>
+        )}
       </div>
 
       <div className={styles.sidebarAvatar}>

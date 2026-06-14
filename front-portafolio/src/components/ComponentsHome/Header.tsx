@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import logoDevfolio from "../../assets/devfolio-logo.png";
 import search from "../../assets/icons/Search.svg";
-import { getResumenNotificaciones } from '../../services/portafolioservice';
+import { useSidebar } from "../../context/SidebarContext";
+import { getResumenNotificaciones } from "../../services/portafolioservice";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { isOpen, toggleSidebar } = useSidebar();
   const [notificaciones, setNotificaciones] = useState(0);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return;
 
     getResumenNotificaciones()
@@ -24,6 +27,16 @@ const Header: React.FC = () => {
   return (
     <header className="dashboard-header">
       <div className="dashboard-logo-container">
+        <button
+          type="button"
+          className="dashboard-sidebar-toggle"
+          onClick={toggleSidebar}
+          aria-label={isOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
+          aria-expanded={isOpen}
+        >
+          <span className="dashboard-sidebar-toggle-icon">{isOpen ? "✕" : "☰"}</span>
+        </button>
+
         <img
           src={logoDevfolio}
           alt="DevFolio Logo"
@@ -45,7 +58,7 @@ const Header: React.FC = () => {
         <button
           type="button"
           className="dashboard-notification-button"
-          onClick={() => navigate('/notificaciones')}
+          onClick={() => navigate("/notificaciones")}
           aria-label={`Notificaciones: ${notificaciones} sin leer`}
         >
           <span className="dashboard-notification-icon">!</span>

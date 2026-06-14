@@ -35,9 +35,9 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   background: var(--bg);
-  overflow: hidden;
+  overflow: auto;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   color: var(--text);
 }
@@ -1287,5 +1287,207 @@
   /* Stacking portfolio grid in very small screens */
   .portfolio-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-sidebar-toggle {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  background: var(--search-bg);
+  color: var(--sidebar-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.dashboard-sidebar-toggle:hover,
+.dashboard-sidebar-toggle:focus-visible {
+  border-color: var(--sidebar-active);
+  background: #1e3a2b;
+  color: #ffffff;
+}
+
+.dashboard-sidebar-toggle-icon {
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.dashboard-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.dashboard-sidebar {
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.25s ease, transform 0.25s ease, opacity 0.2s ease;
+}
+
+.dashboard-sidebar-open {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.dashboard-sidebar-closed {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.dashboard-sidebar-desktop.dashboard-sidebar-open {
+  width: 110px;
+}
+
+.dashboard-sidebar-desktop.dashboard-sidebar-closed {
+  width: 0;
+  min-width: 0;
+  border-right: none;
+}
+
+.dashboard-sidebar-overlay {
+  position: fixed;
+  inset: 64px 0 0 0;
+  z-index: 110;
+  border: none;
+  background: rgba(15, 31, 23, 0.5);
+  padding: 0;
+  cursor: pointer;
+}
+
+.dashboard-sidebar-mobile {
+  z-index: 120;
+}
+
+@media (max-width: 820px) {
+  .dashboard-sidebar-toggle {
+    width: 34px;
+    height: 34px;
+  }
+
+  .dashboard-header {
+    padding: 0 14px;
+  }
+
+  .dashboard-search-container {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    height: calc(100vh - 56px);
+    border-right: 1px solid var(--sidebar-border);
+    border-top: none;
+    background: var(--sidebar-bg);
+    transform: translateX(-100%);
+    box-shadow: 18px 0 42px rgba(15, 31, 23, 0.28);
+  }
+
+  .dashboard-sidebar-open {
+    transform: translateX(0);
+  }
+
+  .dashboard-sidebar-closed {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .dashboard-sidebar-desktop.dashboard-sidebar-open,
+  .dashboard-sidebar-desktop.dashboard-sidebar-closed {
+    width: 280px;
+  }
+
+  .dashboard-menu {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 12px 0;
+    width: 100%;
+  }
+
+  .dashboard-menu-group {
+    width: 100%;
+    flex: none;
+  }
+
+  .dashboard-menu-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-left: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .dashboard-menu-item-active {
+    background: linear-gradient(90deg, rgba(111, 207, 160, 0.22), rgba(255, 255, 255, 0.06));
+    box-shadow: inset 4px 0 0 var(--sidebar-active);
+  }
+
+  .dashboard-menu-item-active::after {
+    display: none;
+  }
+
+  .dashboard-menu-icon-svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .dashboard-menu-text {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .dashboard-quick-panel {
+    display: none !important;
+  }
+
+  .dashboard-main {
+    padding-bottom: 0;
+  }
+
+  .dashboard-layout {
+    overflow: visible;
+  }
+
+  .dashboard-header {
+    height: 56px;
+  }
+
+  .dashboard-logo {
+    height: 24px;
+  }
+
+  .dashboard-notification-button span:not(.dashboard-notification-icon) {
+    display: none !important;
+  }
+
+  .dashboard-notification-button {
+    min-height: 32px;
+    padding: 0 8px;
+  }
+
+  .dashboard-notification-badge {
+    min-width: 18px;
+    min-height: 18px;
+    font-size: 10px;
   }
 }

@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../services/apiConfig";
 import PageLoader from "./ui/PageLoader/PageLoader";
 
 export default function ProfileRoute({ children }: { children: React.ReactNode }) {
@@ -15,7 +16,7 @@ export default function ProfileRoute({ children }: { children: React.ReactNode }
 
     const checkProfile = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/perfil/me", {
+        const res = await fetch(`${API_BASE_URL}/perfil/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
