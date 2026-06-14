@@ -89,3 +89,24 @@
   color: #8fa89e;
   margin: 0;
 }
+
+@media (max-width: 480px) {
+  .card {
+    padding: 12px;
+    gap: 6px;
+  }
+  .title {
+    font-size: 13px;
+  }
+  .desc {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .roleTag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  .link {
+    font-size: 11px;
+  }
+}

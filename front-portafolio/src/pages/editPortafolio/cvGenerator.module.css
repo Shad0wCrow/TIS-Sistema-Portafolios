@@ -448,3 +448,36 @@
     margin: 0;
   }
 }
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+    overflow: auto;
+  }
+  .controls {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  .templateButtons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .templateBtn {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+  .cvPreview {
+    padding: 16px 8px;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+  .cvDocument {
+    min-width: 650px;
+  }
+}

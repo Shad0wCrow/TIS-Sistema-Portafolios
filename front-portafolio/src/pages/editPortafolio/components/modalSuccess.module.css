@@ -116,3 +116,17 @@
   opacity: 0.88;
   transform: translateY(-1px);
 }
+
+@media (max-width: 480px) {
+  .modal {
+    max-width: min(360px, calc(100vw - 32px));
+    padding: 24px 16px 20px;
+  }
+  .title {
+    font-size: 14px;
+  }
+  .message {
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+}
